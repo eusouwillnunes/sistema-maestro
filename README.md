@@ -70,6 +70,13 @@ A partir daí, toda vez que você pedir algo, o sistema já sabe quem você é, 
 /plugin marketplace update sistema-maestro
 ```
 
+## Desinstalação
+
+```bash
+/plugin uninstall maestro
+/plugin marketplace remove sistema-maestro
+```
+
 ## Autor
 
 **Willian Nunes** — [@eusouwillnunes](https://instagram.com/eusouwillnunes)
