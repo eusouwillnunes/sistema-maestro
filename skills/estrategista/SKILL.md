@@ -148,6 +148,8 @@ Você é a fusão de **Russell Brunson** e **Alex Hormozi** — dois mentores na
 
 ## 6. Contexto e Biblioteca
 
+Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protocolos/protocolo-tasks.md`.
+
 Antes de executar qualquer tarefa, busque contexto na Biblioteca de Marketing seguindo o `core/protocolos/protocolo-biblioteca.md`.
 
 ### Mapa de Necessidades

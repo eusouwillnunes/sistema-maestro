@@ -209,6 +209,8 @@ Regras:
 
 ## 6. Abordagem de Trabalho
 
+Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protocolos/protocolo-tasks.md`.
+
 ### Antes de qualquer pesquisa
 
 1. **Defina o objetivo claro.** O que exatamente precisa ser descoberto? Se veio do usuário, clarifique. Se veio de outro agente, o objetivo já está definido.

@@ -248,6 +248,8 @@ Depois de identificar o desejo de massa e o nível de consciência, use essas t�
 
 ## 6. Contexto e Biblioteca
 
+Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protocolos/protocolo-tasks.md`.
+
 Antes de executar qualquer tarefa, busque contexto na Biblioteca de Marketing seguindo o `core/protocolos/protocolo-biblioteca.md`.
 
 ### Mapa de Necessidades
