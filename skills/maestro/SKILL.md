@@ -44,7 +44,7 @@ Antes de qualquer ação, verifique o estado do sistema:
 - Prossiga com a orquestração completa
 - Aplique todas as regras, roteamento e validação descritos neste documento
 - **Primeira ativação no projeto:**
-  1. **Biblioteca:** se não existe Biblioteca de Marketing no projeto (sem `index.md` de biblioteca na raiz), ofereça criar: "Quer criar sua Biblioteca de Marketing agora? É uma estrutura organizada no Obsidian onde guardamos todo o contexto do seu negócio." Consultar `[[maestro:biblioteca]]` para o fluxo completo de onboarding.
+  1. **Biblioteca:** se não existe nenhuma pasta de projeto (nenhuma subpasta com `index.md` contendo campo `empresa:`), ofereça criar: "Quer criar sua Biblioteca de Marketing agora? É uma estrutura organizada no Obsidian onde guardamos todo o contexto do seu negócio." Consultar `[[maestro:biblioteca]]` para o fluxo completo de onboarding.
   2. **Memórias de projeto:** se não existe `maestro/memorias/` no vault do projeto, criar a estrutura usando os templates de `core/templates/_memorias-projeto-template.md`:
      - `maestro/memorias/_index.md`
      - `maestro/memorias/contexto.md`
@@ -62,6 +62,42 @@ Antes de qualquer ação, verifique o estado do sistema:
        > Memórias de usuário: [caminho do plugin]/user/memorias/
        ```
   5. **Memórias de usuário:** verificar se `user/memorias/_index.md` existe no plugin. Se não, a estrutura já foi criada na instalação.
+
+---
+
+## 2.1 Detecção de Projeto Ativo
+
+Antes de rotear qualquer tarefa, o Maestro identifica o projeto ativo. O projeto ativo define o escopo de toda a sessão: memórias, templates, biblioteca e config.
+
+### Como detectar
+
+O Maestro analisa o diretório de trabalho atual (CWD) em dois cenários:
+
+**Cenário 1 — CWD é a raiz (contém pastas de projetos):**
+
+1. Escanear subpastas do CWD que contenham `index.md` com campo `empresa:` no frontmatter
+2. **Nenhum projeto encontrado:** seguir normal, sem contexto de projeto. Se o usuário pedir algo que precisa de biblioteca, sugerir criar via Bibliotecário.
+3. **Um ou mais projetos encontrados:** listar e perguntar: "Qual projeto vamos trabalhar?" + opção "Criar novo projeto"
+
+**Cenário 2 — CWD já é dentro de um projeto (tem `index.md` com campo `empresa:`):**
+
+1. Ler o campo `empresa:` do `index.md` no CWD
+2. Confirmar: "Estamos trabalhando na **[Nome da Empresa]**, certo? Quer seguir ou trocar de projeto?"
+
+### Projeto ativo na sessão
+
+- Uma vez confirmado, o caminho do projeto ativo é passado para todos os agentes acionados
+- O contexto vale para a sessão inteira até o usuário pedir para trocar
+- Se o usuário diz "vamos trabalhar na Empresa Y", o Maestro troca o contexto ativo
+- Todas as referências a memórias de projeto, biblioteca e config usam o caminho do projeto ativo
+
+### Impacto no carregamento de memórias
+
+No passo 4 do Fluxo de Execução (seção 5.1), as referências a `{vault}/maestro/memorias/` passam a usar `{projeto-ativo}/memorias/`. Especificamente:
+- `{projeto-ativo}/memorias/_index.md` em vez de `{vault}/maestro/memorias/_index.md`
+- `{projeto-ativo}/memorias/contexto.md` em vez de `{vault}/maestro/memorias/contexto.md`
+- `{projeto-ativo}/memorias/agentes/[agente].md` em vez de `{vault}/maestro/memorias/agentes/[agente].md`
+- `{projeto-ativo}/memorias/sessoes.md` em vez de `{vault}/maestro/memorias/sessoes.md`
 
 ---
 
@@ -121,13 +157,13 @@ Quando a solicitação envolve a Biblioteca de Marketing, o Maestro consulta a s
 2. **Rotear** — comparar termos com a Tabela de Roteamento e identificar o agente
 3. **Identificar produto/projeto** — se a tarefa envolve um produto específico, identificar qual (pelo nome mencionado pelo usuário ou perguntando)
 4. **Carregar memórias** — carregamento seletivo em 2 etapas:
-   - **Etapa 1 (sempre):** ler `user/memorias/_index.md` e `{vault}/maestro/memorias/_index.md`
+   - **Etapa 1 (sempre):** ler `user/memorias/_index.md` e `{projeto-ativo}/memorias/_index.md` (onde `{projeto-ativo}` é o caminho do projeto confirmado na seção 2.1)
    - **Etapa 2 (seletivo):** com base nos indexes e no agente de destino, carregar:
      - `user/memorias/preferencias.md` (sempre)
      - `user/memorias/agentes/[agente].md` (se existir para o agente de destino)
-     - `{vault}/maestro/memorias/agentes/[agente].md` (se existir para o agente de destino)
-     - `{vault}/maestro/memorias/contexto.md` (se a tarefa precisar de contexto do negócio)
-     - `{vault}/maestro/memorias/sessoes.md` (só se o usuário perguntar sobre histórico)
+     - `{projeto-ativo}/memorias/agentes/[agente].md` (se existir para o agente de destino)
+     - `{projeto-ativo}/memorias/contexto.md` (se a tarefa precisar de contexto do negócio)
+     - `{projeto-ativo}/memorias/sessoes.md` (só se o usuário perguntar sobre histórico)
    - **Passar as memórias ao agente** junto com a tarefa, como contexto adicional após as instruções originais da skill
 5. **Delegar imediatamente** — acionar o agente especialista via Agent tool, passando:
    - Skill do agente (hub + habilidade relevante)

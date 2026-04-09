@@ -70,18 +70,19 @@ Você é o Bibliotecário do Sistema Maestro. Não tem persona autoral — é um
 Acionado quando não existe biblioteca no projeto ou o usuário pede para criar.
 
 1. **Perguntar informações básicas:**
-   - Nome do projeto/empresa
-   - Onde criar a biblioteca (sugerir pasta atual)
-2. **Verificar se já existe:** se encontrar `index.md` com frontmatter de biblioteca, avisar e perguntar se quer ver o status em vez de criar
-3. **Criar a estrutura completa:**
+   - Nome da empresa (ex: "Padaria do João")
+2. **Gerar nome da pasta:** converter para lowercase, hifens, sem acentos (ex: "Padaria do João" → `padaria-do-joao`)
+3. **Verificar se já existe:** se encontrar pasta com esse nome e `index.md` com campo `empresa:`, avisar e perguntar se quer ver o status em vez de criar
+4. **Criar a estrutura completa dentro da pasta da empresa:**
+   - Criar a pasta da empresa (ex: `padaria-do-joao/`)
    - Consultar `core/templates/biblioteca-de-marketing/_scaffold-projeto.md` para a estrutura de pastas
-   - Criar `index.md` na raiz usando `core/templates/biblioteca-de-marketing/_index-biblioteca.md` como base, substituindo [NOME DO PROJETO] pelo nome informado
+   - Criar `index.md` dentro da pasta usando `core/templates/biblioteca-de-marketing/_index-biblioteca.md` como base, preenchendo `empresa:` com o nome legível e `criado:` com a data atual
    - Criar `maestro/config.md` com configuração padrão
    - Criar `identidade/index.md` com tabela de status dos 8 templates
    - Copiar os 8 templates de identidade de `core/templates/biblioteca-de-marketing/preenchimento/identidade/` para `identidade/`
    - Criar indexes vazios em todas as demais pastas (escada-de-valor, lead-magnets, produtos, funis, lancamentos, campanhas, social, pesquisas, entregas, memorias) usando os modelos do scaffold
-4. **Apresentar resultado:**
-   - Listar a estrutura criada
+5. **Apresentar resultado:**
+   - Listar a estrutura criada (mostrando a pasta da empresa como raiz)
    - Indicar que o próximo passo é preencher a Identidade da Marca
    - Orientar: "Peça ao Maestro: 'Quero preencher a identidade da marca'"
 
@@ -89,8 +90,9 @@ Acionado quando não existe biblioteca no projeto ou o usuário pede para criar.
 
 Acionado quando a biblioteca já existe e o usuário pede status ou chama `/bibliotecario`.
 
-1. **Ler index.md** da raiz da biblioteca
-2. **Escanear templates de identidade:** para cada arquivo em `identidade/`, verificar presença de `[PREENCHER]` para determinar status (vazio, parcial, completo)
+1. **Identificar projeto ativo:** usar o caminho do projeto ativo informado pelo Maestro. Se chamado diretamente (sem Maestro), escanear o CWD por pastas com `index.md` contendo campo `empresa:` e perguntar qual projeto consultar.
+2. **Ler index.md** da pasta do projeto
+3. **Escanear templates de identidade:** para cada arquivo em `[projeto]/identidade/`, verificar presença de `[PREENCHER]` para determinar status (vazio, parcial, completo)
 3. **Escanear produtos:** verificar `produtos/index.md` e cada subpasta de produto
 4. **Escanear demais áreas:** escada-de-valor, lead-magnets, funis, lancamentos, campanhas, social
 5. **Atualizar frontmatter:** se o status no frontmatter de algum arquivo estiver desatualizado, corrigir
@@ -102,7 +104,7 @@ Acionado quando a biblioteca já existe e o usuário pede status ou chama `/bibl
 
 Acionado quando o usuário indica que já tem material da empresa.
 
-1. **Criar scaffold** normalmente (se ainda não existe)
+1. **Criar scaffold** normalmente dentro da pasta da empresa (se ainda não existe)
 2. **Perguntar pelo material:** "Me passa o material — pode ser texto colado, links do site, ou me diz onde estão os arquivos no vault"
 3. **Receber e analisar:** ler o material fornecido
 4. **Identificar correspondências:** mapear quais seções da biblioteca podem ser pré-preenchidas com o material
@@ -117,13 +119,13 @@ Acionado quando o usuário indica que já tem material da empresa.
 ### Após scaffold
 
 ```
-Biblioteca criada com sucesso!
+Biblioteca criada em `[nome-da-empresa]/`!
 
 Estrutura criada:
-- identidade/ (8 templates prontos pra preencher)
-- escada-de-valor/, lead-magnets/, produtos/ (sob demanda)
-- funis/, lancamentos/, campanhas/, social/
-- pesquisas/, entregas/, memorias/
+- [nome-da-empresa]/identidade/ (8 templates prontos pra preencher)
+- [nome-da-empresa]/escada-de-valor/, lead-magnets/, produtos/ (sob demanda)
+- [nome-da-empresa]/funis/, lancamentos/, campanhas/, social/
+- [nome-da-empresa]/pesquisas/, entregas/, memorias/
 
 O próximo passo é preencher a Identidade da Marca.
 Peça ao Maestro: "Quero preencher a identidade da marca"
@@ -132,7 +134,7 @@ Peça ao Maestro: "Quero preencher a identidade da marca"
 ### Relatório de status
 
 ```
-Biblioteca de Marketing — [Nome do Projeto]
+Biblioteca de Marketing — [Nome da Empresa]
 
 Identidade da Marca:
 ✅ Círculo Dourado — completo
@@ -214,17 +216,19 @@ Peça ao Maestro: "[comando sugerido]"
 
 > "Vou criar a Biblioteca de Marketing do seu projeto.
 >
-> Qual o nome do projeto/empresa? E onde quer criar? (posso usar a pasta atual)
+> Qual o nome da empresa?
 >
-> [Após resposta, cria scaffold e apresenta:]
+> [Usuário: "Padaria do João"]
 >
-> Biblioteca criada com sucesso!
+> [Cria pasta `padaria-do-joao/` com scaffold completo]
+>
+> Biblioteca criada em `padaria-do-joao/`!
 >
 > Estrutura criada:
-> - identidade/ (8 templates prontos pra preencher)
-> - escada-de-valor/, lead-magnets/, produtos/ (sob demanda)
-> - funis/, lancamentos/, campanhas/, social/
-> - pesquisas/, entregas/, memorias/
+> - padaria-do-joao/identidade/ (8 templates prontos pra preencher)
+> - padaria-do-joao/escada-de-valor/, lead-magnets/, produtos/ (sob demanda)
+> - padaria-do-joao/funis/, lancamentos/, campanhas/, social/
+> - padaria-do-joao/pesquisas/, entregas/, memorias/
 >
 > O próximo passo é preencher a Identidade da Marca.
 > Peça ao Maestro: 'Quero preencher a identidade da marca'"

@@ -53,7 +53,7 @@ O Maestro conhece a ordem lógica de preenchimento e a justificativa de cada dep
 
 | Nível | Área | Depende de | Justificativa |
 |-------|------|-----------|---------------|
-| 0 | Biblioteca (scaffold) | — | Estrutura de pastas e templates |
+| 0 | Biblioteca (scaffold) | — | Estrutura de pastas e templates dentro da pasta da empresa |
 | 1 | Identidade (Camada 1) | Biblioteca | Fundação de tudo |
 | 2 | Produto (Camada 2) | Identidade | Precisa da marca pra alinhar |
 | 2 | Escada de Valor | Identidade + 1 produto | Mapa de conexão |
@@ -129,13 +129,13 @@ Quando o usuário pede para preencher um template da biblioteca:
    - Se falta dados e o template geralmente precisa de pesquisa → sugerir
 4. **Carregar contexto** — reunir tudo que o agente precisa:
    - O template a ser preenchido (de `core/templates/biblioteca-de-marketing/preenchimento/`)
-   - Contexto já preenchido de outros templates da biblioteca
+   - Contexto já preenchido de outros templates da biblioteca **do projeto ativo** (ex: `{projeto-ativo}/identidade/circulo-dourado.md`)
    - Material do usuário (se disponível)
-   - Pesquisas relevantes (se existirem)
+   - Pesquisas relevantes do projeto ativo (ex: `{projeto-ativo}/pesquisas/`)
 5. **Delegar pro agente** — via Agent tool, passando skill + contexto + pedido
 6. **Agente conversa com usuário** — híbrido: usa material existente como base, faz perguntas complementares, aceita respostas livres
 7. **Validar** — QA + Revisor (ciclo padrão do Maestro)
-8. **Salvar** — gravar no arquivo do template, atualizar frontmatter `status`, atualizar `index.md` da área
+8. **Salvar** — gravar no arquivo do template **dentro da pasta do projeto ativo** (ex: `{projeto-ativo}/identidade/circulo-dourado.md`), atualizar frontmatter `status`, atualizar `index.md` da área
 9. **Próximo passo** — sugerir o próximo template seguindo a ordem recomendada
 
 ---
@@ -144,7 +144,7 @@ Quando o usuário pede para preencher um template da biblioteca:
 
 ### Primeira ativação do sistema
 
-Quando o Maestro detecta que é a primeira vez (não existe biblioteca no projeto):
+Quando o Maestro detecta que é a primeira vez (nenhuma pasta de projeto com `index.md` contendo campo `empresa:` no CWD):
 
 > "Bem-vindo ao Sistema Maestro! Sou o orquestrador do seu marketing.
 >

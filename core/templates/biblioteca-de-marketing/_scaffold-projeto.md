@@ -3,7 +3,8 @@ titulo: Scaffold do Projeto
 tipo: meta
 descricao: >
   Define a estrutura completa de pastas e indexes vazios que o /biblioteca
-  cria no vault do usuário. Cada index vazio funciona como guia.
+  cria dentro da pasta do projeto (nomeada pela empresa). Cada index
+  vazio funciona como guia.
 tags: [meta, scaffold, biblioteca]
 ---
 
@@ -16,40 +17,41 @@ tags: [meta, scaffold, biblioteca]
 ## Estrutura de Pastas
 
 ```
-[projeto]/
-├── index.md                          ← Index geral (usar _index-biblioteca.md)
-├── maestro/
-│   └── config.md
-├── identidade/
-│   ├── index.md
-│   ├── circulo-dourado.md            ← Camada 1
-│   ├── posicionamento.md             ← Camada 1
-│   ├── perfil-publico.md             ← Camada 1
-│   ├── personalidade-marca.md        ← Camada 1
-│   ├── tom-de-voz.md                 ← Camada 1
-│   ├── identidade-visual.md          ← Camada 1
-│   ├── manifesto.md                  ← Camada 3
-│   └── historia-fundadores.md        ← Camada 3
-├── escada-de-valor/
-│   └── index.md
-├── lead-magnets/
-│   └── index.md
-├── produtos/
-│   └── index.md
-├── funis/
-│   └── index.md
-├── lancamentos/
-│   └── index.md
-├── campanhas/
-│   └── index.md
-├── social/
-│   └── index.md
-├── pesquisas/
-│   └── index.md
-├── entregas/
-│   └── index.md
-└── memorias/
-    └── index.md
+[raiz]/
+├── [nome-da-empresa]/                    ← Pasta do projeto (lowercase, hifens, sem acentos)
+│   ├── index.md                          ← Index geral (usar _index-biblioteca.md)
+│   ├── maestro/
+│   │   └── config.md
+│   ├── identidade/
+│   │   ├── index.md
+│   │   ├── circulo-dourado.md            ← Camada 1
+│   │   ├── posicionamento.md             ← Camada 1
+│   │   ├── perfil-publico.md             ← Camada 1
+│   │   ├── personalidade-marca.md        ← Camada 1
+│   │   ├── tom-de-voz.md                 ← Camada 1
+│   │   ├── identidade-visual.md          ← Camada 1
+│   │   ├── manifesto.md                  ← Camada 3
+│   │   └── historia-fundadores.md        ← Camada 3
+│   ├── escada-de-valor/
+│   │   └── index.md
+│   ├── lead-magnets/
+│   │   └── index.md
+│   ├── produtos/
+│   │   └── index.md
+│   ├── funis/
+│   │   └── index.md
+│   ├── lancamentos/
+│   │   └── index.md
+│   ├── campanhas/
+│   │   └── index.md
+│   ├── social/
+│   │   └── index.md
+│   ├── pesquisas/
+│   │   └── index.md
+│   ├── entregas/
+│   │   └── index.md
+│   └── memorias/
+│       └── index.md
 ```
 
 ## Indexes Vazios por Área
@@ -284,7 +286,8 @@ Memórias dos agentes — feedbacks, preferências e padrões identificados.
 
 ## Ordem de Criação
 
-1. index.md (raiz) — usar template _index-biblioteca.md
-2. maestro/config.md
-3. identidade/ — pasta + index + 8 templates vazios
-4. Demais pastas com indexes vazios
+1. Criar pasta do projeto (`[nome-da-empresa]/`)
+2. index.md (dentro da pasta) — usar template _index-biblioteca.md, preenchendo `empresa:` e `criado:`
+3. maestro/config.md
+4. identidade/ — pasta + index + 8 templates vazios
+5. Demais pastas com indexes vazios

@@ -1,13 +1,15 @@
 ---
 titulo: Biblioteca de Marketing
 tipo: meta
+empresa: "[NOME DA EMPRESA]"
+criado: "[DATA DE CRIAÇÃO]"
 descricao: >
-  Template do index geral da biblioteca. Scaffoldado na raiz do projeto
-  como index.md. Mostra status consolidado de todas as áreas.
+  Index geral da Biblioteca de Marketing do projeto. Mostra status
+  consolidado de todas as áreas. Scaffoldado dentro da pasta do projeto.
 tags: [meta, index, biblioteca]
 ---
 
-# Biblioteca de Marketing — [NOME DO PROJETO]
+# Biblioteca de Marketing — [NOME DA EMPRESA]
 
 > [!info] Sobre este documento
 > Este é o painel de controle da sua Biblioteca de Marketing.
