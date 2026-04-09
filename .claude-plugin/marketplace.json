@@ -1,0 +1,13 @@
+{
+  "name": "sistema-maestro",
+  "owner": {
+    "name": "Willian Nunes"
+  },
+  "plugins": [
+    {
+      "name": "maestro",
+      "source": ".",
+      "description": "Sistema Maestro — equipe de agentes especialistas em marketing e vendas coordenados por IA"
+    }
+  ]
+}
