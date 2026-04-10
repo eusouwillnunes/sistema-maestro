@@ -33,6 +33,7 @@ Este agente é acionado quando a tarefa envolver:
 | referência, benchmark, case, estudo, dados | Busca de referências e dados de indústria |
 | validar, verificar, confirmar, fonte | Validação de informações com fontes confiáveis |
 | dados de mercado, estatística, pesquisa de campo | Busca de dados quantitativos e qualitativos |
+| testar openrouter, testar conexão, testar chave, testar api key | Teste de validação da API key do OpenRouter |
 
 ### O que este agente NÃO faz
 
@@ -110,14 +111,14 @@ pesquisador:
 ### Via `/pesquisar` (comando direto do usuário)
 
 1. **Clarificar objetivo** — pergunte: "O que exatamente quer descobrir? Qual o objetivo dessa pesquisa?"
-2. **Consultar index** — leia `pesquisas/index.md` (na pasta configurada). Já tem pesquisa relevante?
+2. **Consultar index** — leia `pesquisas/_pesquisas.md` (na pasta configurada). Já tem pesquisa relevante?
    - **SIM:** "Já temos [[pesquisa-existente]] de [data]. Quer usar essa ou pesquisar novamente?"
    - **NÃO:** continue
 3. **Sugerir ferramenta** — com base na complexidade, sugira e aguarde confirmação
 4. **Executar pesquisa** — use a ferramenta selecionada
 5. **Gerar documento** — monte o Markdown estruturado seguindo o template (seção 5)
 6. **Salvar** — salve na pasta configurada com nome `AAAA-MM-DD-tema-descritivo.md`
-7. **Atualizar index** — adicione entrada no topo de `pesquisas/index.md`
+7. **Atualizar index** — adicione entrada no topo de `pesquisas/_pesquisas.md`
 8. **Entregar** — apresente resumo ao usuário com link pro documento
 
 ### Via Maestro ou agente especialista
@@ -129,6 +130,37 @@ pesquisador:
 3. **Sugerir ferramenta** — sugira e aguarde confirmação do usuário
 4. **Executar, gerar, salvar, atualizar index** — mesmo fluxo
 5. **Retornar** — entregue os dados ao agente que pediu + link pro documento
+
+### Via teste de conexão (usuário pede para testar OpenRouter)
+
+Acionado por: "testa minha conexão", "testar openrouter", "testar chave", "testar api key" ou similar.
+
+1. **Verificar configuração** — ler `user/config.md` e buscar `openrouter-api-key`
+   - **Se não tem key:** informar "Você ainda não configurou a API key do OpenRouter. Quer configurar agora?" Se sim, pedir a key e salvar em `user/config.md`.
+   - **Se tem key:** continuar
+2. **Executar teste** — chamada `curl` ao modelo mais barato (`perplexity/sonar`):
+
+```bash
+curl -s -w "\n%{http_code}" https://openrouter.ai/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {API_KEY}" \
+  -d '{"model":"perplexity/sonar","messages":[{"role":"user","content":"Qual é a capital do Brasil? Responda em uma frase."}],"max_tokens":30}'
+```
+
+3. **Interpretar resultado:**
+   - **HTTP 200:** informar "Conexão funcionando! Resposta recebida do Sonar." → salvar pesquisa de teste
+   - **HTTP 401/403:** informar "A chave não foi aceita. Verifique se está correta." → oferecer para atualizar a key
+   - **HTTP 402:** informar "A chave é válida, mas sem créditos. Adicione saldo em openrouter.ai."
+   - **Outro erro:** informar "Não consegui conectar ao OpenRouter agora. Tente novamente mais tarde."
+
+4. **Salvar pesquisa de teste (apenas quando HTTP 200):**
+   - Ler `pasta-pesquisas` de `user/config.md` (padrão: `pesquisas/`)
+   - Criar `{pasta-pesquisas}/AAAA-MM-DD-teste-conexao-openrouter.md` seguindo o template da seção 5, com:
+     - `titulo: Teste de conexão — OpenRouter`
+     - `tipo: livre`
+     - `ferramenta: sonar`
+     - Conteúdo: objetivo do teste + resposta recebida
+   - Atualizar (ou criar) `{pasta-pesquisas}/_pesquisas.md` com nova entrada no topo
 
 ### Regras do fluxo
 
@@ -190,7 +222,7 @@ tags: [tag1, tag2, tag3]
 
 ### Index de pesquisas
 
-Localizado em `[pasta-pesquisas]/index.md`:
+Localizado em `[pasta-pesquisas]/_pesquisas.md`:
 
 ```
 # Pesquisas
@@ -203,7 +235,7 @@ Localizado em `[pasta-pesquisas]/index.md`:
 Regras:
 - Novas entradas sempre no topo (mais recente primeiro)
 - Wiki-links do Obsidian para cada pesquisa
-- Se o arquivo `index.md` não existir, crie-o
+- Se o arquivo `_pesquisas.md` não existir, crie-o
 
 ---
 

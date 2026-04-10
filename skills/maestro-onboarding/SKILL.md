@@ -32,6 +32,8 @@ TaskCreate({ subject: "Apresentar o Sistema Maestro", description: "Mensagem de 
 TaskCreate({ subject: "Configurar projeto", description: "Coletar nome da empresa e registrar", activeForm: "Configurando projeto" })
 TaskCreate({ subject: "Criar estrutura de memórias", description: "Setup técnico: memórias, config e CLAUDE.md", activeForm: "Criando estrutura de memórias" })
 TaskCreate({ subject: "Criar Biblioteca de Marketing", description: "Oferecer scaffold da biblioteca no vault", activeForm: "Criando Biblioteca de Marketing" })
+TaskCreate({ subject: "Importar material de referência", description: "Oferecer importação de documentos existentes do negócio", activeForm: "Importando material de referência" })
+TaskCreate({ subject: "Configurar Obsidian", description: "Oferecer guia de instalação e configuração do Obsidian como editor visual", activeForm: "Configurando Obsidian" })
 TaskCreate({ subject: "Configurar Pesquisador", description: "Apresentar opções de pesquisa e configurar se necessário", activeForm: "Configurando Pesquisador" })
 TaskCreate({ subject: "Finalizar onboarding", description: "Encerrar com sugestão de primeira ação", activeForm: "Finalizando onboarding" })
 ```
@@ -114,6 +116,68 @@ Oferecer:
 
 Marcar task "Criar Biblioteca de Marketing" como `completed`.
 
+### 2.4.1 Importar Material de Referência
+
+Marcar task "Importar material de referência" como `in_progress`.
+
+**Só executar se a biblioteca foi criada no passo 2.4.** Se o usuário pulou a biblioteca, pular esta etapa também.
+
+Perguntar:
+
+> "Você já tem documentos sobre seu negócio? Manuais de marca, apresentações, planilhas de produto, textos de site, qualquer coisa com informação sobre a empresa.
+>
+> Se sim, coloca tudo na pasta `{empresa}/referencias/` e me avisa. Eu leio os arquivos e preencho o que der da biblioteca automaticamente."
+
+**Se sim:**
+- Aguardar o usuário colocar os arquivos e confirmar
+- Seguir o fluxo de importação do Maestro Biblioteca (seção 9 da sub-skill `maestro/biblioteca`)
+- O fluxo inclui: listar arquivos → verificar formatos → oferecer instalar ferramentas se necessário → catalogar → perguntar modo (tudo ou um por um) → preencher via especialistas
+
+**Se não/depois:**
+- Informar: "Sem problema! Quando tiver material, coloca na pasta `referencias/` e pede: 'lê meus arquivos de referência'."
+
+Marcar task "Importar material de referência" como `completed`.
+
+### 2.4.2 Obsidian
+
+Marcar task "Configurar Obsidian" como `in_progress`.
+
+Explicar:
+
+> "Todos os arquivos que o Maestro cria — biblioteca, pesquisas, entregas — são Markdown puro. Você pode editar direto no terminal, mas existe uma forma muito mais visual: o **Obsidian**.
+>
+> O Obsidian é um editor gratuito que transforma essa pasta em algo parecido com o Notion — você navega pelos arquivos, edita com formatação visual, e tudo fica conectado por links. É a forma mais confortável de preencher templates e revisar entregas.
+>
+> Quer que eu te guie na instalação e configuração?"
+
+**Se sim:**
+
+1. Verificar se o Obsidian já está instalado:
+   - Tentar detectar via `where obsidian 2>/dev/null` ou verificar se existe em caminhos comuns (`$LOCALAPPDATA/Obsidian`, `/Applications/Obsidian.app`, etc.)
+   - **Se encontrado:** informar "Obsidian já está instalado!" → pular para o passo 3
+
+2. Guiar a instalação:
+   > "Baixe o Obsidian em **obsidian.md** (é grátis). Instale normalmente e abra o app.
+   >
+   > Me avise quando estiver pronto."
+   - Aguardar confirmação do usuário
+
+3. Guiar a criação do vault:
+   > "Agora no Obsidian:
+   > 1. Clique em **'Open folder as vault'** (ou 'Abrir pasta como vault')
+   > 2. Selecione a pasta do seu projeto: `{caminho do CWD}`
+   > 3. Pronto! Você vai ver toda a estrutura de pastas no painel esquerdo.
+   >
+   > A pasta `{nome da empresa}/` é onde fica sua Biblioteca de Marketing. Pode navegar e editar qualquer arquivo por lá."
+
+4. Sugerir configurações opcionais:
+   > "Dica: nas configurações do Obsidian (engrenagem no canto inferior esquerdo), ative **'Files & Links' → 'Detect all file extensions'** para ver todos os arquivos do projeto."
+
+**Se não/depois:**
+- Informar: "Sem problema! Tudo funciona no terminal mesmo. Se quiser configurar depois, rode `/maestro:onboarding` e escolha a opção do Obsidian."
+
+Marcar task "Configurar Obsidian" como `completed`.
+
 ### 2.5 Pesquisador
 
 Marcar task "Configurar Pesquisador" como `in_progress`.
@@ -129,6 +193,9 @@ Explicar:
 **Se sim:**
 - Pedir a key
 - Salvar em `user/config.md` no campo `openrouter-api-key`
+- Perguntar: "Quer que eu faça um teste rápido pra validar se a chave funciona? É uma chamada simples ao Sonar (custo ~$0.01)."
+  - **Se sim:** executar teste conforme seção 2.5.1
+  - **Se não:** pular o teste e continuar
 - Perguntar: "Qual ferramenta usar como padrão? `sonar` (rápido, bom pra maioria) ou `sonar-deep-research` (mais profundo, mais lento)?"
 - Salvar a escolha no campo `ferramenta-default`
 
@@ -136,6 +203,62 @@ Explicar:
 - Informar: "Tudo bem! O WebSearch já dá conta do recado. Se mudar de ideia, rode `/maestro:onboarding` pra configurar depois."
 
 Marcar task "Configurar Pesquisador" como `completed`.
+
+### 2.5.1 Teste da API Key do OpenRouter
+
+Executar uma pesquisa real simples via `curl` ao endpoint do OpenRouter com o modelo mais barato (`perplexity/sonar`):
+
+```bash
+curl -s -w "\n%{http_code}" https://openrouter.ai/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {API_KEY}" \
+  -d '{"model":"perplexity/sonar","messages":[{"role":"user","content":"Qual é a capital do Brasil? Responda em uma frase."}],"max_tokens":30}'
+```
+
+**Interpretar o resultado:**
+
+- **HTTP 200 + resposta válida:** informar "Chave validada! Conexão com o OpenRouter funcionando." → salvar pesquisa de teste (ver abaixo)
+- **HTTP 401 ou 403:** informar "A chave não foi aceita pelo OpenRouter. Verifique se está correta e tente novamente com `/maestro:onboarding`."
+- **HTTP 402 ou erro de crédito:** informar "A chave é válida, mas sua conta no OpenRouter não tem créditos. Adicione saldo em openrouter.ai e a pesquisa paga vai funcionar."
+- **Outro erro (timeout, rede):** informar "Não consegui conectar ao OpenRouter agora. A chave foi salva — você pode testar depois pedindo: 'testa minha conexão com o OpenRouter'."
+
+Se a chave falhou (401/403), **remover** o valor salvo em `user/config.md` e setar `ferramenta-default: websearch`.
+
+**Salvar pesquisa de teste (apenas quando HTTP 200):**
+
+1. Ler `pasta-pesquisas` de `user/config.md` (padrão: `pesquisas/`)
+2. Criar o arquivo `{pasta-pesquisas}/AAAA-MM-DD-teste-conexao-openrouter.md` com:
+
+```
+---
+titulo: Teste de conexão — OpenRouter
+tipo: livre
+projeto: {nome da empresa}
+ferramenta: sonar
+data: AAAA-MM-DD
+status: atual
+tags: [teste, openrouter, configuração]
+---
+
+# Teste de conexão — OpenRouter
+
+## Objetivo
+Validar que a API key do OpenRouter está funcionando corretamente.
+
+## Resultado
+- **Status:** Conexão bem-sucedida
+- **Modelo:** perplexity/sonar
+- **Resposta recebida:** {resposta do modelo}
+
+> [!sources]
+> - Teste executado via onboarding do Sistema Maestro — {data}
+```
+
+3. Atualizar (ou criar) `{pasta-pesquisas}/_pesquisas.md` com nova entrada no topo:
+
+```
+| AAAA-MM-DD | Teste de conexão — OpenRouter | livre | sonar | [[AAAA-MM-DD-teste-conexao-openrouter]] |
+```
 
 ### 2.6 Finalização
 
@@ -167,7 +290,9 @@ Configuração atual do Maestro:
 
 1. Empresa: "{nome}" [alterar]
 2. Biblioteca: {criada ✓ | não criada} [criar/recriar]
-3. Pesquisador: {WebSearch (grátis) | Perplexity Sonar via OpenRouter ✓} [configurar/alterar]
+3. Importar referências: {N arquivos importados | nenhum} [importar]
+4. Obsidian: {guia de configuração} [configurar]
+5. Pesquisador: {WebSearch (grátis) | Perplexity Sonar via OpenRouter ✓} [configurar/alterar]
 
 O que você quer alterar? (número ou "nada")
 ```
@@ -183,8 +308,15 @@ O que você quer alterar? (número ou "nada")
 - Informar: "Isso não apaga conteúdo existente — apenas recria arquivos faltantes."
 - Chamar o Bibliotecário para scaffold
 
-**Opção 3 — Configurar/alterar Pesquisador:**
-- Mesmo fluxo do passo 2.5 (perguntar API key e ferramenta padrão)
+**Opção 3 — Importar referências:**
+- Mesmo fluxo do passo 2.4.1 (verificar pasta, ler arquivos, catalogar, preencher)
+- Se já tem arquivos importados, informar quais são e oferecer: "Quer importar novos arquivos ou reimportar os existentes?"
+
+**Opção 4 — Configurar Obsidian:**
+- Mesmo fluxo do passo 2.4.2 (verificar instalação, guiar criação do vault)
+
+**Opção 5 — Configurar/alterar Pesquisador:**
+- Mesmo fluxo do passo 2.5 (perguntar API key e ferramenta padrão), incluindo o teste da seção 2.5.1 ao informar uma nova key
 - Se já tem key configurada, oferecer: "Quer alterar a ferramenta padrão, trocar a key, ou remover a configuração?"
 
 ---

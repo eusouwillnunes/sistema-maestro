@@ -33,7 +33,7 @@ Além dos documentos da Biblioteca de Marketing, o sistema carrega memórias rel
 | `maestro/memorias/sessoes.md` | Só quando o usuário perguntar sobre histórico | Projeto |
 | `maestro/memorias/decisoes.md` | Quando a tarefa envolve decisões já tomadas | Projeto |
 
-> **Regra:** indexes (`_index.md`) são SEMPRE lidos primeiro. Só depois carregar os arquivos relevantes.
+> **Regra:** indexes (`_index.md` para memórias, ou `.md` com `tipo: index` para bibliotecas) são SEMPRE lidos primeiro. Só depois carregar os arquivos relevantes.
 
 ---
 
@@ -77,4 +77,4 @@ Além dos documentos da Biblioteca de Marketing, o sistema carrega memórias rel
 | Pesquisa livre | Pesquisador | (objetivo definido pelo usuário) | — |
 | Criar biblioteca de marketing | Bibliotecário | (nome do projeto) | — |
 | Status da biblioteca | Bibliotecário | (biblioteca existente) | — |
-| Importar material existente | Bibliotecário | (material do usuário) | — |
+| Importar material de referência | Maestro Biblioteca | (arquivos na pasta referencias/) | Mapeamento template→agente |

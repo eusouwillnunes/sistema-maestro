@@ -19,11 +19,11 @@ tags: [meta, scaffold, biblioteca]
 ```
 [raiz]/
 ├── [nome-da-empresa]/                    ← Pasta do projeto (lowercase, hifens, sem acentos)
-│   ├── index.md                          ← Index geral (usar _index-biblioteca.md)
+│   ├── [nome-da-empresa].md              ← Index geral (usar _index-biblioteca.md)
 │   ├── maestro/
 │   │   └── config.md
 │   ├── identidade/
-│   │   ├── index.md
+│   │   ├── _identidade.md
 │   │   ├── circulo-dourado.md            ← Camada 1
 │   │   ├── posicionamento.md             ← Camada 1
 │   │   ├── perfil-publico.md             ← Camada 1
@@ -33,30 +33,32 @@ tags: [meta, scaffold, biblioteca]
 │   │   ├── manifesto.md                  ← Camada 3
 │   │   └── historia-fundadores.md        ← Camada 3
 │   ├── escada-de-valor/
-│   │   └── index.md
+│   │   └── _escada-de-valor.md
 │   ├── lead-magnets/
-│   │   └── index.md
+│   │   └── _lead-magnets.md
 │   ├── produtos/
-│   │   └── index.md
+│   │   └── _produtos.md
 │   ├── funis/
-│   │   └── index.md
+│   │   └── _funis.md
 │   ├── lancamentos/
-│   │   └── index.md
+│   │   └── _lancamentos.md
 │   ├── campanhas/
-│   │   └── index.md
+│   │   └── _campanhas.md
 │   ├── social/
-│   │   └── index.md
+│   │   └── _social.md
 │   ├── pesquisas/
-│   │   └── index.md
+│   │   └── _pesquisas.md
 │   ├── entregas/
-│   │   └── index.md
+│   │   └── _entregas.md
+│   ├── referencias/
+│   │   └── _referencias.md
 │   └── memorias/
-│       └── index.md
+│       └── _memorias.md
 ```
 
 ## Indexes Vazios por Área
 
-### identidade/index.md
+### identidade/_identidade.md
 
 ```
 ---
@@ -83,7 +85,7 @@ area: identidade
 | História dos Fundadores | 3 (enriquecimento) | vazio | [[historia-fundadores]] |
 ```
 
-### escada-de-valor/index.md
+### escada-de-valor/_escada-de-valor.md
 
 ```
 ---
@@ -96,14 +98,14 @@ area: escada-de-valor
 
 Nenhuma escada de valor criada ainda. Peça ao Maestro: "Quero montar minha escada de valor"
 
-A Escada de Valor conecta seus [[lead-magnets/index|Lead Magnets]] e [[produtos/index|Produtos]] em uma sequência lógica de ascensão.
+A Escada de Valor conecta seus [[_lead-magnets|Lead Magnets]] e [[_produtos|Produtos]] em uma sequência lógica de ascensão.
 
 | Escada | Níveis | Status | Link |
 |--------|--------|--------|------|
 | (vazio) | — | — | — |
 ```
 
-### lead-magnets/index.md
+### lead-magnets/_lead-magnets.md
 
 ```
 ---
@@ -121,7 +123,7 @@ Nenhum lead magnet criado ainda. Peça ao Maestro: "Quero criar um lead magnet"
 | (vazio) | — | — | — | — |
 ```
 
-### produtos/index.md
+### produtos/_produtos.md
 
 ```
 ---
@@ -139,7 +141,7 @@ Nenhum produto criado ainda. Peça ao Maestro: "Quero criar um novo produto"
 | (vazio) | — | — | — |
 ```
 
-### funis/index.md
+### funis/_funis.md
 
 ```
 ---
@@ -157,7 +159,7 @@ Nenhum funil criado ainda. Peça ao Maestro: "Quero criar um funil de vendas"
 | (vazio) | — | — | — | — |
 ```
 
-### lancamentos/index.md
+### lancamentos/_lancamentos.md
 
 ```
 ---
@@ -177,7 +179,7 @@ Tipos disponíveis: Semente, Rápido (com Live), Meteórico.
 | (vazio) | — | — | — | — | — |
 ```
 
-### campanhas/index.md
+### campanhas/_campanhas.md
 
 ```
 ---
@@ -197,7 +199,7 @@ Tipos: flash sale, data comemorativa, remarketing, reativação, indicação, te
 | (vazio) | — | — | — | — | — |
 ```
 
-### social/index.md
+### social/_social.md
 
 ```
 ---
@@ -217,7 +219,7 @@ Organização: plataforma → mês → semana → pasta por post.
 | (nenhuma) | — |
 ```
 
-### pesquisas/index.md
+### pesquisas/_pesquisas.md
 
 ```
 ---
@@ -234,7 +236,7 @@ Nenhuma pesquisa realizada ainda. Use /pesquisar ou peça ao Maestro.
 |------|--------|------|------------|------|
 ```
 
-### entregas/index.md
+### entregas/_entregas.md
 
 ```
 ---
@@ -251,7 +253,24 @@ Entregas avulsas dos agentes que não se encaixam em outra categoria.
 |------|---------|--------|------|
 ```
 
-### memorias/index.md
+### referencias/_referencias.md
+
+```
+---
+tipo: index
+area: referencias
+atualizado: [data de criação]
+---
+
+# Material de Referência
+
+Nenhum material importado ainda. Para importar, coloque seus arquivos nesta pasta e peça ao Maestro: "lê meus arquivos de referência"
+
+| Arquivo | Formato | Descrição | Templates relacionados |
+|---------|---------|-----------|----------------------|
+```
+
+### memorias/_memorias.md
 
 ```
 ---
@@ -272,22 +291,23 @@ Memórias dos agentes — feedbacks, preferências e padrões identificados.
 
 | Área | Na criação | Sob demanda |
 |------|-----------|-------------|
-| identidade/ | Pasta + index + 8 templates | — |
-| escada-de-valor/ | Pasta + index | Cada escada quando solicitada |
-| lead-magnets/ | Pasta + index | Cada lead magnet quando solicitado |
-| produtos/ | Pasta + index | Pasta do produto + 8 templates quando solicitado |
-| funis/ | Pasta + index | Cada funil quando solicitado |
-| lancamentos/ | Pasta + index | Cada lançamento quando solicitado |
-| campanhas/ | Pasta + index | Cada campanha quando solicitada |
-| social/ | Pasta + index | Plataforma + mês + semana quando solicitado |
-| pesquisas/ | Pasta + index | Cada pesquisa pelo Pesquisador |
-| entregas/ | Pasta + index | Cada entrega avulsa |
-| memorias/ | Pasta + index | Cada arquivo de memória por agente |
+| identidade/ | Pasta + _identidade.md + 8 templates | — |
+| escada-de-valor/ | Pasta + _escada-de-valor.md | Cada escada quando solicitada |
+| lead-magnets/ | Pasta + _lead-magnets.md | Cada lead magnet quando solicitado |
+| produtos/ | Pasta + _produtos.md | Pasta do produto + 8 templates quando solicitado |
+| funis/ | Pasta + _funis.md | Cada funil quando solicitado |
+| lancamentos/ | Pasta + _lancamentos.md | Cada lançamento quando solicitado |
+| campanhas/ | Pasta + _campanhas.md | Cada campanha quando solicitada |
+| social/ | Pasta + _social.md | Plataforma + mês + semana quando solicitado |
+| pesquisas/ | Pasta + _pesquisas.md | Cada pesquisa pelo Pesquisador |
+| entregas/ | Pasta + _entregas.md | Cada entrega avulsa |
+| referencias/ | Pasta + _referencias.md | Cada arquivo pelo usuário |
+| memorias/ | Pasta + _memorias.md | Cada arquivo de memória por agente |
 
 ## Ordem de Criação
 
 1. Criar pasta do projeto (`[nome-da-empresa]/`)
-2. index.md (dentro da pasta) — usar template _index-biblioteca.md, preenchendo `empresa:` e `criado:`
+2. `[nome-da-empresa].md` (dentro da pasta) — usar template _index-biblioteca.md, preenchendo `empresa:` e `criado:`
 3. maestro/config.md
-4. identidade/ — pasta + index + 8 templates vazios
-5. Demais pastas com indexes vazios
+4. identidade/ — pasta + _identidade.md + 8 templates vazios
+5. Demais pastas com indexes vazios (nomeados `_[area].md`)

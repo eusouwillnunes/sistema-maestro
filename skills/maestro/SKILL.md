@@ -60,13 +60,13 @@ O Maestro analisa o diretório de trabalho atual (CWD) em dois cenários:
 
 **Cenário 1 — CWD é a raiz (contém pastas de projetos):**
 
-1. Escanear subpastas do CWD que contenham `index.md` com campo `empresa:` no frontmatter
+1. Escanear subpastas do CWD que contenham um arquivo `.md` com campos `tipo: index` e `empresa:` no frontmatter
 2. **Nenhum projeto encontrado:** seguir normal, sem contexto de projeto. Se o usuário pedir algo que precisa de biblioteca, sugerir criar via Bibliotecário.
 3. **Um ou mais projetos encontrados:** listar e perguntar: "Qual projeto vamos trabalhar?" + opção "Criar novo projeto"
 
-**Cenário 2 — CWD já é dentro de um projeto (tem `index.md` com campo `empresa:`):**
+**Cenário 2 — CWD já é dentro de um projeto (tem `.md` nomeado após a empresa com campos `tipo: index` e `empresa:`):**
 
-1. Ler o campo `empresa:` do `index.md` no CWD
+1. Ler o campo `empresa:` do arquivo de índice do projeto no CWD
 2. Confirmar: "Estamos trabalhando na **[Nome da Empresa]**, certo? Quer seguir ou trocar de projeto?"
 
 ### Projeto ativo na sessão
@@ -98,8 +98,9 @@ Ao receber uma solicitação, extraia os termos-chave e compare com esta tabela 
 | **Marca** | marca, branding, posicionamento, tom de voz, identidade visual, personalidade de marca, arquétipo, propósito, manifesto, naming, nome de marca, criar nome, batizar, rebatizar | Quando o pedido envolve definir, refinar ou alinhar a identidade, posicionamento e naming de uma marca | Disponível (v1) |
 | **Mídias Sociais** | conteúdo, post, reels, stories, carrossel, YouTube, TikTok, LinkedIn, Instagram, rede social, calendário editorial, repurposing, engajamento, viral, hook, thumbnail | Quando o pedido envolve criar, planejar ou otimizar conteúdo e presença em redes sociais | Disponível (v1) |
 | **Performance** | performance, métricas de anúncio, Meta Ads, Facebook Ads, Google Ads, TikTok Ads, LinkedIn Ads, CTR, CPC, CPL, CPA, ROAS, CPM, teste A/B, otimizar campanha, escalar, budget, público-alvo, segmentação, lookalike, remarketing, fonte de tráfego, mídia paga, pixel, conversão, atribuição | Quando o pedido envolve analisar performance de campanhas pagas, sugerir testes, otimizar budget ou recomendar canais de tráfego | Disponível (v1) |
-| **Pesquisador** | pesquisar, pesquisa, buscar, busca, mercado, tamanho de mercado, tendência, concorrente, concorrência, competidor, player, audiência, público, ICP, persona, avatar, referência, benchmark, case, dados de mercado, validar, verificar, confirmar, fonte, estatística | Quando o pedido envolve buscar, validar e organizar dados de fontes confiáveis na web — pesquisa de mercado, concorrência, audiência ou referências | Disponível (v1) |
-| **Bibliotecário** | criar biblioteca, montar biblioteca, biblioteca de marketing, status da biblioteca, progresso, o que falta preencher, importar material, organizar marketing, estruturar projeto | Quando o pedido envolve criar, consultar ou gerenciar a estrutura da Biblioteca de Marketing no vault — scaffold, status ou importação de material existente | Disponível (v1) |
+| **Pesquisador** | pesquisar, pesquisa, buscar, busca, mercado, tamanho de mercado, tendência, concorrente, concorrência, competidor, player, audiência, público, ICP, persona, avatar, referência, benchmark, case, dados de mercado, validar, verificar, confirmar, fonte, estatística, testar openrouter, testar conexão, testar chave, testar api key | Quando o pedido envolve buscar, validar e organizar dados de fontes confiáveis na web — pesquisa de mercado, concorrência, audiência ou referências. Também quando o usuário quer testar a conexão com o OpenRouter | Disponível (v1) |
+| **Bibliotecário** | criar biblioteca, montar biblioteca, biblioteca de marketing, status da biblioteca, progresso, o que falta preencher, organizar marketing, estruturar projeto | Quando o pedido envolve criar, consultar ou gerenciar a estrutura da Biblioteca de Marketing no vault — scaffold ou status | Disponível (v1) |
+| **Maestro Biblioteca** | importar referências, importar material, ler meus arquivos, preencher biblioteca com documentos, material de referência, preencher biblioteca, preencher identidade, preencher produto, completar biblioteca, montar contexto | Quando o pedido envolve preencher templates da biblioteca — seja via importação de documentos ou via entrevista guiada | Disponível (v1) |
 | **Onboarding** | onboarding, configurar maestro, setup inicial, reconfigurar, configuração do maestro | Quando o pedido envolve configurar, reconfigurar ou revisar o setup do Sistema Maestro | Disponível (v1) |
 
 ### Agentes não disponíveis
@@ -156,6 +157,7 @@ Quando a solicitação envolve a Biblioteca de Marketing, o Maestro consulta a s
    - Pedido original do usuário
    - Produto/projeto envolvido (se identificado no passo 3)
    - Memórias ativas do agente (se existirem)
+   - Instrução explícita: "Use acentuação correta em português do Brasil em toda a sua resposta"
    - O agente é responsável por buscar seu próprio contexto na Biblioteca (ver `core/protocolos/protocolo-biblioteca.md`)
    - **O agente é quem entrevista o usuário** — toda pergunta sobre o negócio (propósito, público, diferencial, tom, estratégia) é feita pelo agente, não pelo Maestro. O Maestro delega assim que sabe pra quem rotear.
 6. **Avaliar** — aplicar o Ciclo de Validação Autônomo (seção 6):
@@ -306,6 +308,10 @@ O sistema funciona em Claude Code (modo completo) e Claude Cowork (modo essencia
 - **Sem Agent tool** → modo essencial (executa sequencialmente no mesmo contexto)
 
 O sistema detecta automaticamente onde está rodando e se adapta.
+
+### 7.14 Português com acentuação correta
+
+Toda comunicação do sistema — respostas do Maestro, entregas dos agentes, mensagens de status — DEVE usar acentuação correta em português do Brasil. Palavras como "é", "não", "próximo", "fundação", "só", "já", "também" nunca aparecem sem acento. Esta regra se aplica ao Maestro e a todos os agentes, incluindo quando executados como subagentes.
 
 ---
 

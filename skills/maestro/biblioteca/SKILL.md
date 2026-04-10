@@ -123,7 +123,7 @@ Quando o usuário pede para preencher um template da biblioteca:
 1. **Verificar dependências** — consultar a cadeia (seção 3). Se falta pré-requisito, avisar e oferecer opções.
 2. **Identificar o agente** — consultar mapeamento (seção 4).
 3. **Avaliar necessidade de pesquisa** — verificar o que já existe no projeto:
-   - Pesquisas anteriores no `pesquisas/index.md`
+   - Pesquisas anteriores no `pesquisas/_pesquisas.md`
    - Material já fornecido pelo usuário
    - Contexto já preenchido em outros templates
    - Se falta dados e o template geralmente precisa de pesquisa → sugerir
@@ -135,7 +135,7 @@ Quando o usuário pede para preencher um template da biblioteca:
 5. **Delegar pro agente** — via Agent tool, passando skill + contexto + pedido
 6. **Agente conversa com usuário** — híbrido: usa material existente como base, faz perguntas complementares, aceita respostas livres
 7. **Validar** — QA + Revisor (ciclo padrão do Maestro)
-8. **Salvar** — gravar no arquivo do template **dentro da pasta do projeto ativo** (ex: `{projeto-ativo}/identidade/circulo-dourado.md`), atualizar frontmatter `status`, atualizar `index.md` da área
+8. **Salvar** — gravar no arquivo do template **dentro da pasta do projeto ativo** (ex: `{projeto-ativo}/identidade/circulo-dourado.md`), atualizar frontmatter `status`, atualizar o index de área (ex: `identidade/_identidade.md`)
 9. **Próximo passo** — sugerir o próximo template seguindo a ordem recomendada
 
 ---
@@ -144,7 +144,7 @@ Quando o usuário pede para preencher um template da biblioteca:
 
 ### Primeira ativação do sistema
 
-Quando o Maestro detecta que é a primeira vez (nenhuma pasta de projeto com `index.md` contendo campo `empresa:` no CWD):
+Quando o Maestro detecta que é a primeira vez (nenhuma pasta de projeto com arquivo `.md` contendo campo `empresa:` no frontmatter no CWD):
 
 > "Bem-vindo ao Sistema Maestro! Sou o orquestrador do seu marketing.
 >
@@ -207,7 +207,102 @@ Quando o Bibliotecário identifica material existente e delega pro Maestro, ou q
 
 ---
 
-## 9. Exemplos
+## 9. Importação de Material de Referência
+
+### 9.1 Leitura de Formatos
+
+O Maestro Biblioteca suporta três camadas de formatos:
+
+**Camada 1 — Nativos (funciona sem instalar nada):**
+
+| Formato | Método |
+|---------|--------|
+| TXT, MD | Leitura direta via Read |
+| PDF | Leitura direta via Read (suporte nativo do Claude Code) |
+| CSV | Leitura direta via Read (texto puro) |
+| PNG, JPG, WEBP | Leitura direta via Read (Claude é multimodal) |
+
+**Camada 2 — Com ferramentas (precisa instalar):**
+
+| Formato | Ferramenta | Comando Windows | Comando Mac |
+|---------|-----------|-----------------|-------------|
+| DOCX | pandoc | `winget install pandoc` | `brew install pandoc` |
+| PPTX | pandoc | `winget install pandoc` | `brew install pandoc` |
+| XLSX | xlsx2csv (Python) | `pip install xlsx2csv` | `pip install xlsx2csv` |
+
+**Fluxo de detecção e instalação:**
+
+1. Verificar se a ferramenta está instalada (`which pandoc` ou `which xlsx2csv`)
+2. Se não estiver, oferecer ao usuário: "Encontrei `{arquivo}` mas preciso do **{ferramenta}** pra ler esse formato. Posso instalar agora?" + mostrar o comando
+3. Se o usuário aprovar → executar o comando, confirmar instalação, continuar
+4. Se recusar → pular o arquivo, informar
+5. Após instalar, converter para texto/Markdown. Arquivo original não é alterado.
+
+**Comandos de conversão:**
+
+- DOCX → Markdown: `pandoc "{arquivo}" -t markdown -o "{saida}.md"`
+- PPTX → texto: `pandoc "{arquivo}" -t plain -o "{saida}.txt"`
+- XLSX → CSV: `xlsx2csv "{arquivo}" > "{saida}.csv"`
+
+**Camada 3 — Não suportado:** arquivos binários (vídeo, áudio, executáveis). Informar e pular.
+
+---
+
+### 9.2 Fluxo de Importação
+
+O fluxo de importação tem quatro fases: **Entrada → Preparação → Catalogação → Preenchimento → Pós-preenchimento**.
+
+#### Entrada
+
+Acionado via onboarding (etapa opcional) ou a qualquer momento quando o usuário usar gatilhos como: "importar referências", "ler meus arquivos", "tenho material aqui", "quero usar meus documentos".
+
+#### Preparação
+
+1. Verificar se a pasta `{projeto-ativo}/referencias/` existe — criar se não existir
+2. Pedir ao usuário que coloque os arquivos na pasta e confirme
+3. Listar os arquivos encontrados e classificar por camada (1 / 2 / 3)
+4. Oferecer instalação de ferramentas para arquivos da Camada 2
+5. Informar sobre arquivos da Camada 3 (não suportados) e pular
+
+#### Catalogação
+
+1. Ler cada arquivo suportado
+2. Identificar: descrição curta + quais templates pode ajudar a preencher (cruzar com a tabela de mapeamento da seção 4)
+3. Construir `referencias/_referencias.md` com a tabela: Arquivo | Formato | Descrição | Templates relacionados
+4. Apresentar resumo ao usuário
+
+#### Preenchimento
+
+Perguntar ao usuário: "Quer que eu preencha tudo que der de uma vez, ou prefere ir um por um?"
+
+**Modo "tudo de uma vez":**
+
+1. Delegar cada template ao agente especialista correto (mapeamento da seção 4)
+2. Cada agente recebe: conteúdo relevante dos arquivos + instrução para preencher o template
+3. Execução paralela quando possível (templates independentes na mesma camada de dependência)
+4. Respeitar a ordem de dependências (seção 3): Camada 1 — Identidade primeiro, depois Camada 2
+5. Ciclo de validação padrão: QA + Revisor após cada agente especialista
+6. Apresentar resumo e pedir revisão
+
+**Modo "um por um":**
+
+1. Sugerir ordem respeitando as dependências
+2. Para cada template: mostrar quais arquivos serão usados + qual agente será chamado, aguardar confirmação do usuário
+3. Agente preenche e apresenta resultado
+4. Usuário aprova ou pede ajustes
+5. Avançar para o próximo template
+
+**Ambos os modos:** recomendar o Obsidian no início para visualização e edição das entregas.
+
+#### Pós-preenchimento
+
+1. Atualizar o arquivo principal da biblioteca (`[nome-da-empresa].md`) com status de preenchimento
+2. Informar o que ainda está vazio, oferecer entrevista para completar
+3. Registrar na memória da sessão
+
+---
+
+## 10. Exemplos
 
 ### Cenário 1: Usuário pede pra preencher identidade
 
@@ -245,32 +340,66 @@ Quando o Bibliotecário identifica material existente e delega pro Maestro, ou q
 >
 > A opção 1 é o ideal porque o contexto fica reutilizável. Mas se precisa de algo rápido agora, a opção 2 resolve. O que prefere?"
 
-### Cenário 3: Importação de material
+### Cenário 3: Importação de arquivos de referência
 
-**Usuário:** "Tenho todo o material da empresa aqui, quero preencher a biblioteca"
+**Usuário:** "Tenho vários documentos da empresa. Quero usar pra preencher a biblioteca."
 
 **Resposta ruim:**
-> [Preenche tudo automaticamente sem perguntar]
+> [Preenche os templates automaticamente sem catalogar nem perguntar]
 
 **Resposta ideal:**
-> "Me passa o material — pode colar aqui ou me indicar os arquivos.
+> "Ótimo! Vou criar a pasta `referencias/` no seu projeto para organizar esses arquivos.
 >
-> [Após receber:]
+> [Cria `{projeto-ativo}/referencias/` se não existir]
 >
-> Analisei seu material. Encontrei informações para:
-> - Círculo Dourado — propósito e valores identificados
-> - Posicionamento — diferencial claro
-> - Dossiê do Produto — descrição e benefícios
+> Por favor, coloque seus arquivos nessa pasta e me avise quando estiver pronto."
 >
-> Falta: Personalidade, Tom de Voz, Perfil do Prospect, Oferta.
+> [Usuário confirma]
 >
-> Minha recomendação: começar pelo Círculo Dourado porque é a fundação. Já tenho dados do seu material, mas preciso da sua visão sobre o propósito da marca. Depois seguimos pra Posicionamento, que depende do Círculo Dourado. Cada etapa alimenta a próxima.
+> "Encontrei 4 arquivos:
+> - `apresentacao-empresa.pdf` — Camada 1 (leitura direta)
+> - `pesquisa-publico.xlsx` — Camada 2 (precisa de xlsx2csv)
+> - `fotos-produto.jpg` — Camada 1 (leitura direta)
+> - `deck-vendas.pptx` — Camada 2 (precisa de pandoc)
 >
-> Quer seguir essa ordem ou prefere começar por outro ponto?"
+> Encontrei `pesquisa-publico.xlsx` mas preciso do **xlsx2csv** pra ler esse formato. Posso instalar agora?
+> Comando: `pip install xlsx2csv`"
+>
+> [Usuário aprova — instala, converte, continua]
+>
+> "Cataloguei todos os arquivos. Aqui o resumo:
+>
+> | Arquivo | Formato | Descrição | Templates relacionados |
+> |---------|---------|-----------|------------------------|
+> | apresentacao-empresa.pdf | PDF | Histórico, propósito e valores da empresa | Círculo Dourado, Posicionamento |
+> | pesquisa-publico.xlsx | XLSX | Dados demográficos e comportamentais do público | Perfil do Público |
+> | fotos-produto.jpg | JPG | Imagens do produto principal | Dossiê, Identidade Visual |
+> | deck-vendas.pptx | PPTX | Proposta de valor e argumentos de venda | Dossiê, Oferta Irresistível |
+>
+> Índice salvo em `referencias/_referencias.md`.
+>
+> Quer que eu preencha tudo que der de uma vez, ou prefere ir um por um?"
+>
+> [Usuário escolhe "tudo de uma vez"]
+>
+> "Vou começar pela Identidade (Camada 1 das dependências). Recomendo abrir o Obsidian pra acompanhar as entregas em tempo real.
+>
+> Delegando: Círculo Dourado e Posicionamento pro agente de Marca, Perfil do Público em paralelo. Dossiê e Oferta ficam para depois (dependem da identidade)."
+>
+> [Após agentes concluírem:]
+>
+> "Preenchimento concluído! Resumo:
+> - ✓ Círculo Dourado — preenchido
+> - ✓ Posicionamento — preenchido
+> - ✓ Perfil do Público — preenchido
+> - ✓ Dossiê — preenchido
+> - ✓ Oferta Irresistível — preenchido
+>
+> Ainda vazios: Personalidade da Marca, Tom de Voz, Identidade Visual. Quer preencher agora via entrevista?"
 
 ---
 
-## 10. Memórias e Histórico
+## 11. Memórias e Histórico
 
 ## Memórias
 
@@ -289,3 +418,4 @@ Quando o Bibliotecário identifica material existente e delega pro Maestro, ou q
 | Data | Versão | Alteração |
 |------|--------|-----------|
 | 2026-04-09 | v1.0 | Criação da sub-skill de orquestração da Biblioteca de Marketing |
+| 2026-04-10 | v1.1 | Seção 9 — Importação de Material de Referência (leitura de formatos, fluxo, catalogação, preenchimento) |

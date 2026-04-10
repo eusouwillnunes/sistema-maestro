@@ -31,17 +31,17 @@ tags: [meta, index, biblioteca]
 
 ## Navegação
 
-- [[identidade/index|Identidade da Marca]] — fundação, preencha primeiro
-- [[escada-de-valor/index|Escada de Valor]] — mapa de conexão entre produtos
-- [[lead-magnets/index|Lead Magnets]] — iscas digitais
-- [[produtos/index|Produtos]] — ofertas e produtos
-- [[funis/index|Funis de Vendas]] — estruturas de conversão
-- [[lancamentos/index|Lançamentos]] — lançamentos ativos e passados
-- [[campanhas/index|Campanhas]] — campanhas avulsas
-- [[social/index|Social]] — conteúdo de redes sociais
-- [[pesquisas/index|Pesquisas]] — pesquisas realizadas
-- [[entregas/index|Entregas]] — entregas avulsas dos agentes
-- [[memorias/index|Memórias]] — memórias dos agentes
+- [[identidade/_identidade|Identidade da Marca]] — fundação, preencha primeiro
+- [[escada-de-valor/_escada-de-valor|Escada de Valor]] — mapa de conexão entre produtos
+- [[lead-magnets/_lead-magnets|Lead Magnets]] — iscas digitais
+- [[produtos/_produtos|Produtos]] — ofertas e produtos
+- [[funis/_funis|Funis de Vendas]] — estruturas de conversão
+- [[lancamentos/_lancamentos|Lançamentos]] — lançamentos ativos e passados
+- [[campanhas/_campanhas|Campanhas]] — campanhas avulsas
+- [[social/_social|Social]] — conteúdo de redes sociais
+- [[pesquisas/_pesquisas|Pesquisas]] — pesquisas realizadas
+- [[entregas/_entregas|Entregas]] — entregas avulsas dos agentes
+- [[memorias/_memorias|Memórias]] — memórias dos agentes
 
 ## Próximos Passos
 
