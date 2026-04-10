@@ -44,24 +44,9 @@ Antes de qualquer ação, verifique o estado do sistema:
 - Prossiga com a orquestração completa
 - Aplique todas as regras, roteamento e validação descritos neste documento
 - **Primeira ativação no projeto:**
-  1. **Biblioteca:** se não existe nenhuma pasta de projeto (nenhuma subpasta com `index.md` contendo campo `empresa:`), ofereça criar: "Quer criar sua Biblioteca de Marketing agora? É uma estrutura organizada no Obsidian onde guardamos todo o contexto do seu negócio." Consultar `[[maestro:biblioteca]]` para o fluxo completo de onboarding.
-  2. **Memórias de projeto:** se não existe `maestro/memorias/` no vault do projeto, criar a estrutura usando os templates de `core/templates/_memorias-projeto-template.md`:
-     - `maestro/memorias/_index.md`
-     - `maestro/memorias/contexto.md`
-     - `maestro/memorias/sessoes.md`
-     - `maestro/memorias/decisoes.md`
-     - `maestro/memorias/agentes/` (pasta vazia)
-  3. **Config do projeto:** criar `maestro/config.md` no vault usando o template `core/templates/_maestro-config-template.md`, preenchendo os caminhos do vault e do plugin.
-  4. **CLAUDE.md do projeto:** verificar se o CLAUDE.md do projeto do usuário existe e tem seção `## Maestro`:
-     - Se não existe CLAUDE.md: criar com a seção Maestro
-     - Se existe mas sem seção Maestro: adicionar ao final
-     - Conteúdo da seção:
-       ```
-       ## Maestro
-       > Sistema Maestro ativo. Configuração e memórias: maestro/config.md
-       > Memórias de usuário: [caminho do plugin]/user/memorias/
-       ```
-  5. **Memórias de usuário:** verificar se `user/memorias/_index.md` existe no plugin. Se não, a estrutura já foi criada na instalação.
+  Se `maestro/config.md` não existe no vault, ou se o campo `onboarding-completo` não existe ou é `false`:
+  → Executar o fluxo de onboarding guiado (ver skill `[[maestro:onboarding]]`).
+  Não fazer setup silencioso — o onboarding cuida de tudo (memórias, config, biblioteca, pesquisador).
 
 ---
 
@@ -115,6 +100,7 @@ Ao receber uma solicitação, extraia os termos-chave e compare com esta tabela 
 | **Performance** | performance, métricas de anúncio, Meta Ads, Facebook Ads, Google Ads, TikTok Ads, LinkedIn Ads, CTR, CPC, CPL, CPA, ROAS, CPM, teste A/B, otimizar campanha, escalar, budget, público-alvo, segmentação, lookalike, remarketing, fonte de tráfego, mídia paga, pixel, conversão, atribuição | Quando o pedido envolve analisar performance de campanhas pagas, sugerir testes, otimizar budget ou recomendar canais de tráfego | Disponível (v1) |
 | **Pesquisador** | pesquisar, pesquisa, buscar, busca, mercado, tamanho de mercado, tendência, concorrente, concorrência, competidor, player, audiência, público, ICP, persona, avatar, referência, benchmark, case, dados de mercado, validar, verificar, confirmar, fonte, estatística | Quando o pedido envolve buscar, validar e organizar dados de fontes confiáveis na web — pesquisa de mercado, concorrência, audiência ou referências | Disponível (v1) |
 | **Bibliotecário** | criar biblioteca, montar biblioteca, biblioteca de marketing, status da biblioteca, progresso, o que falta preencher, importar material, organizar marketing, estruturar projeto | Quando o pedido envolve criar, consultar ou gerenciar a estrutura da Biblioteca de Marketing no vault — scaffold, status ou importação de material existente | Disponível (v1) |
+| **Onboarding** | onboarding, configurar maestro, setup inicial, reconfigurar, configuração do maestro | Quando o pedido envolve configurar, reconfigurar ou revisar o setup do Sistema Maestro | Disponível (v1) |
 
 ### Agentes não disponíveis
 

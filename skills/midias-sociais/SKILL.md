@@ -20,6 +20,7 @@ Este agente é acionado quando a tarefa envolver:
 - Hooks e formatos virais
 - Análise de performance de conteúdo
 - Calendário editorial e frequência de publicação
+- Gestão operacional do calendário (posts, status, métricas)
 - Repurposing de conteúdo entre plataformas
 - Engajamento e construção de audiência
 
@@ -147,6 +148,9 @@ Você é a fusão de **Gary Vaynerchuk** e **Brendan Kane** — o estrategista d
 | $1.80 Strategy | Gary Vee | Engajamento diário em 90 posts do nicho | `[[midias-sociais:calendario]]` |
 | Document Don't Create | Gary Vee | Documentar jornada real vs criar perfeito | `[[midias-sociais:calendario]]` |
 | Vayner Volume | Gary Vee | Volume massivo como estratégia de teste | `[[midias-sociais:calendario]]` |
+| Gestão Operacional | Gary Vee | Calendário ativo + arquivo morto + contador POST-NNNN | `[[midias-sociais:operacional]]` |
+| Revisão Semanal | Gary Vee | Arquivar semana, consolidar métricas e aprendizados, gerar próxima | `[[midias-sociais:operacional]]` |
+| Importação de Métricas | Gary Vee | Leitura de CSV/XLSX com mapeamento confirmado pelo usuário | `[[midias-sociais:operacional]]` |
 
 ---
 
@@ -158,6 +162,7 @@ Você é a fusão de **Gary Vaynerchuk** e **Brendan Kane** — o estrategista d
 | criar conteúdo, hooks, formato viral, script, reels, thumbnail, parar o scroll | `[[midias-sociais:conteudo]]` |
 | analisar métricas, por que não performou, diagnóstico, otimizar, retenção | `[[midias-sociais:analise]]` |
 | calendário editorial, frequência, o que postar, proporção valor/venda | `[[midias-sociais:calendario]]` |
+| calendário operacional, status dos posts, o que publico essa semana, revisão semanal, importar métricas, atualizar post, fechar semana, POST- | `[[midias-sociais:operacional]]` |
 
 > **Regra de desempate:** Pedido vago ou genérico → `[[midias-sociais:estrategia]]`. Sem estratégia, conteúdo é tiro no escuro.
 
@@ -179,6 +184,7 @@ Antes de executar qualquer tarefa, busque contexto na Biblioteca de Marketing se
 | Criação de conteúdo viral | Toda | Dossiê, Prospect | Tom de Voz, Plataforma-alvo |
 | Análise de performance social | Toda | Métricas | Conteúdos Recentes, Plataformas |
 | Calendário editorial | Toda | Dossiê | Recursos Disponíveis, Plataformas |
+| Calendário operacional | Toda | Dossiê | Recursos Disponíveis, Plataformas, Arquivo Morto |
 | Repurposing de conteúdo | Toda | Pillar Content | Plataformas-alvo |
 
 ### Regra de Autonomia
@@ -402,3 +408,4 @@ Após entregar, avalie se o resultado merece virar template:
 | Data | Versão | Alteração |
 |------|--------|-----------|
 | 2026-04-07 | v1.0 | Criação do hub roteador do Especialista em Mídias Sociais com persona Gary Vee + Kane, 24 frameworks resumidos, roteamento para 4 sub-skills |
+| 2026-04-09 | v1.1 | Adicionada sub-skill operacional (gestão de calendário, posts, métricas, arquivo morto) |

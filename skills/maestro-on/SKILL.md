@@ -52,3 +52,17 @@ Informar ao usuário o que foi configurado:
 - Quais estruturas foram criadas (se primeira vez)
 - Quantas memórias existem (se já configurado antes)
 - Status da Biblioteca de Marketing (existe/não existe)
+
+### 5. Verificar onboarding
+
+Após o setup, verificar se o onboarding foi concluído:
+
+1. Ler `maestro/config.md` no vault do projeto
+2. Verificar o campo `onboarding-completo`
+
+**Se `onboarding-completo` não existe ou é `false`:**
+- Informar: "Parece que o onboarding ainda não foi feito. Vou iniciar agora."
+- Executar o fluxo de onboarding guiado (skill `[[maestro:onboarding]]`)
+
+**Se `onboarding-completo: true`:**
+- Não fazer nada — o setup já está completo

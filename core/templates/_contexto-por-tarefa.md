@@ -63,6 +63,7 @@ Além dos documentos da Biblioteca de Marketing, o sistema carrega memórias rel
 | Criação de conteúdo viral | Mídias Sociais | Identidade, Dossiê, Prospect | Tom de Voz, Plataforma-alvo |
 | Análise de performance social | Mídias Sociais | Identidade, Métricas | Conteúdos Recentes, Plataformas |
 | Calendário editorial | Mídias Sociais | Identidade, Dossiê | Recursos Disponíveis, Plataformas |
+| Calendário operacional | Mídias Sociais | Identidade, Dossiê | Recursos Disponíveis, Plataformas, Arquivo Morto |
 | Repurposing de conteúdo | Mídias Sociais | Identidade, Pillar Content | Plataformas-alvo |
 | Diagnóstico de campanha paga | Performance | Identidade, Métricas | Plataforma, Período, Metas |
 | Planejamento de testes A/B | Performance | Identidade, Métricas | Campanhas Ativas, Budget |

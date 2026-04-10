@@ -12,5 +12,7 @@
 
 ## Contexto do projeto
 - Vault: (preenchido no setup)
+- Empresa: (preenchido no onboarding)
 - Projeto iniciado em: (preenchido no setup)
 - Última revisão de memórias: (nunca)
+- onboarding-completo: false
