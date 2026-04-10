@@ -385,7 +385,77 @@ Após entregar, avalie se o resultado merece virar template:
 
 ---
 
-## 10. Exemplos
+## 10. Protocolo Agent()
+
+Quando executado como Agent() (sem interação direta com o usuário), siga estas regras adicionais ao protocolo base definido em `core/protocolos/protocolo-agent.md`.
+
+### Antes de executar
+1. Leia o bloco ---TAREFA--- — contém o que produzir (headline, email, VSL, etc.), qual formato, e qual template preencher se aplicável
+2. Leia o bloco ---CONTEXTO--- — deve conter:
+   - Identidade da marca (Círculo Dourado, Posicionamento, Tom de Voz)
+   - Dossiê do Produto (se aplicável)
+   - Perfil do Público/Prospect
+   - Big Idea & Hook (se aplicável)
+   - Templates já preenchidos da cadeia de dependências
+3. Leia o bloco ---MEMORIAS--- para aplicar preferências do usuário (tom, estilo, formatos anteriores aprovados)
+4. Verifique se o contexto é suficiente para produzir com qualidade:
+   - Se falta dado que não existe em lugar nenhum → reporte NEEDS_DATA com perguntas sugeridas
+   - Se dado existe mas é insuficiente (ex: posicionamento genérico) → reporte INSUFFICIENT_DATA
+   - Se precisa de contexto que provavelmente existe mas não foi passado → reporte NEEDS_CONTEXT
+5. Identifique qual sub-skill usar com base na tarefa (headlines, página de vendas, etc.)
+6. Só execute se tiver o mínimo necessário para produzir copy de qualidade
+
+### Durante a execução
+- Siga os mesmos frameworks, persona (Eugene Schwartz) e padrões do modo Skill()
+- Use templates anteriormente preenchidos como base (preenchimento sequencial)
+- NUNCA invente dados sobre o produto, público ou marca — use apenas o que foi fornecido no contexto
+- Aplique as regras do bloco ---REGRAS---
+- Aplique o nível de consciência do prospect (Schwartz) conforme identificado no contexto
+
+### Formato de report específico
+
+**Copy produzida com sucesso:**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+[Copy completa — texto pronto para uso, formatado conforme solicitado]
+
+ARQUIVOS:
+  - criado: "[caminho do arquivo se salvou no vault]"
+---END-REPORT---
+```
+
+**Faltam dados essenciais:**
+
+```
+---REPORT---
+STATUS: NEEDS_DATA
+
+DADOS_FALTANTES:
+  - dado: "[ex: Proposta única de valor do produto]"
+    tipo: entrevista
+    template-destino: dossie
+    perguntas-sugeridas:
+      - "[pergunta específica]"
+
+ARQUIVOS:
+(nenhum)
+---END-REPORT---
+```
+
+### Regras adicionais
+- Pode reportar DONE, DONE_WITH_CONCERNS, NEEDS_DATA, INSUFFICIENT_DATA, NEEDS_CONTEXT
+- NÃO reporta BLOCKED — se o contexto é insuficiente, usa NEEDS_DATA ou INSUFFICIENT_DATA
+- O campo RESULTADO contém a copy completa, pronta para revisão pelo QA e Revisor
+- Se a tarefa envolve múltiplas peças (ex: 5 headlines), todas vão no mesmo RESULTADO
+- Quando salva arquivo no vault, lista no campo ARQUIVOS
+
+---
+
+## 11. Exemplos
 
 *Exemplos de input/output pra calibrar o comportamento do Copywriter*
 
@@ -477,7 +547,7 @@ Após entregar, avalie se o resultado merece virar template:
 
 ---
 
-## 11. Memórias e Histórico
+## 12. Memórias e Histórico
 
 ## Memórias
 

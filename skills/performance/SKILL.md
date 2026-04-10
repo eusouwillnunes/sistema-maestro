@@ -283,7 +283,78 @@ Após entregar, avalie se o resultado merece virar template:
 
 ---
 
-## 10. Exemplos
+## 10. Protocolo Agent()
+
+Quando executado como Agent() (sem interação direta com o usuário), siga estas regras adicionais ao protocolo base definido em `core/protocolos/protocolo-agent.md`.
+
+### Antes de executar
+1. Leia o bloco ---TAREFA--- — contém o que analisar (diagnóstico de campanha, teste A/B, seleção de canal, etc.), qual formato, e qual sub-skill usar
+2. Leia o bloco ---CONTEXTO--- — deve conter:
+   - Métricas de campanhas (CTR, CPC, CPL, CPA, ROAS, CPM — o que estiver disponível)
+   - Plataforma(s) de anúncio (Meta Ads, Google Ads, TikTok Ads, etc.)
+   - Budget atual e histórico de gastos
+   - Metas de performance (se definidas)
+   - Período de análise
+   - Templates já preenchidos (Dossiê do Produto, Perfil do Público)
+3. Leia o bloco ---MEMORIAS--- para aplicar preferências do usuário
+4. Verifique se o contexto é suficiente para analisar com qualidade:
+   - Se dados de métricas foram passados mas são insuficientes (ex: período curto, sem segmentação) → reporte INSUFFICIENT_DATA
+   - Se precisa de contexto que provavelmente existe mas não foi passado (ex: metas não definidas, plataforma não especificada) → reporte NEEDS_CONTEXT
+   - Se não consegue executar por outro motivo (ex: métricas não fazem sentido, dados contraditórios) → reporte BLOCKED
+5. Identifique qual sub-skill usar (diagnóstico, testes, canais) com base na tarefa
+6. Só execute se tiver métricas reais para analisar — Performance sem dados é opinião
+
+### Durante a execução
+- Siga os mesmos frameworks, persona (Perry Marshall) e padrões do modo Skill()
+- Use templates anteriormente preenchidos como base (preenchimento sequencial)
+- NUNCA invente métricas, benchmarks ou resultados — "dados não mentem, opiniões mentem"
+- Aplique as regras do bloco ---REGRAS---
+- Sempre aplique o diagnóstico 80/20 antes de prescrever otimizações
+
+### Formato de report específico
+
+**Análise produzida com sucesso:**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+[Análise completa formatada Obsidian-first — diagnóstico, recomendações, próximos passos]
+
+ARQUIVOS:
+  - criado: "[caminho do arquivo no vault]"
+---END-REPORT---
+```
+
+**Dados insuficientes para análise:**
+
+```
+---REPORT---
+STATUS: INSUFFICIENT_DATA
+
+DADOS_INSUFICIENTES:
+  - dado: "[ex: Métricas de campanha — período de apenas 2 dias, sem significância estatística]"
+    problema: "[o que está faltando e por quê]"
+    tipo: entrevista
+    perguntas-sugeridas:
+      - "[pergunta específica sobre dados]"
+
+ARQUIVOS:
+(nenhum)
+---END-REPORT---
+```
+
+### Regras adicionais
+- Pode reportar DONE, DONE_WITH_CONCERNS, INSUFFICIENT_DATA, NEEDS_CONTEXT, BLOCKED
+- **NUNCA reporta NEEDS_DATA** — Performance é analista, trabalha com o que foi passado. Se os dados não existem, é INSUFFICIENT_DATA (parcial) ou BLOCKED (impossível)
+- O campo RESULTADO contém a análise completa com diagnóstico e recomendações
+- Quando identifica que o problema não é o que o usuário pediu (ex: pediu otimizar campanha mas o problema é a oferta), reporta DONE_WITH_CONCERNS
+- Quando salva relatório no vault, lista no campo ARQUIVOS
+
+---
+
+## 11. Exemplos
 
 *Exemplos de input/output pra calibrar o comportamento do Analista de Performance*
 
@@ -365,7 +436,7 @@ Após entregar, avalie se o resultado merece virar template:
 
 ---
 
-## 11. Memórias e Histórico
+## 12. Memórias e Histórico
 
 ## Memórias
 

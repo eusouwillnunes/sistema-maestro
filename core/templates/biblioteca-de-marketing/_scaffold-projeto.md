@@ -52,8 +52,12 @@ tags: [meta, scaffold, biblioteca]
 │   │   └── _entregas.md
 │   ├── referencias/
 │   │   └── _referencias.md
-│   └── memorias/
-│       └── _memorias.md
+│   ├── memorias/
+│   │   └── _memorias.md
+│   ├── tarefas/
+│   │   └── _tarefas.md
+│   └── entrevistas/
+│       └── _entrevistas.md
 ```
 
 ## Indexes Vazios por Área
@@ -303,6 +307,8 @@ Memórias dos agentes — feedbacks, preferências e padrões identificados.
 | entregas/ | Pasta + _entregas.md | Cada entrega avulsa |
 | referencias/ | Pasta + _referencias.md | Cada arquivo pelo usuário |
 | memorias/ | Pasta + _memorias.md | Cada arquivo de memória por agente |
+| tarefas/ | Pasta + _tarefas.md | Cada tarefa pelo Gestor de Tarefas |
+| entrevistas/ | Pasta + _entrevistas.md | Cada entrevista pelo Gestor de Tarefas |
 
 ## Ordem de Criação
 
@@ -311,3 +317,4 @@ Memórias dos agentes — feedbacks, preferências e padrões identificados.
 3. maestro/config.md
 4. identidade/ — pasta + _identidade.md + 8 templates vazios
 5. Demais pastas com indexes vazios (nomeados `_[area].md`)
+6. tarefas/ e entrevistas/ — pastas + indexes vazios (usando templates _tarefas-index.md e _entrevistas-index.md)

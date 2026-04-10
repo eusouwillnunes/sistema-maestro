@@ -129,14 +129,27 @@ Quando o usuário pede para preencher um template da biblioteca:
    - Se falta dados e o template geralmente precisa de pesquisa → sugerir
 4. **Carregar contexto** — reunir tudo que o agente precisa:
    - O template a ser preenchido (de `core/templates/biblioteca-de-marketing/preenchimento/`)
-   - Contexto já preenchido de outros templates da biblioteca **do projeto ativo** (ex: `{projeto-ativo}/identidade/circulo-dourado.md`)
+   - Contexto já preenchido de outros templates da biblioteca **do projeto ativo** (preenchimento sequencial)
    - Material do usuário (se disponível)
-   - Pesquisas relevantes do projeto ativo (ex: `{projeto-ativo}/pesquisas/`)
-5. **Delegar pro agente** — via Agent tool, passando skill + contexto + pedido
-6. **Agente conversa com usuário** — híbrido: usa material existente como base, faz perguntas complementares, aceita respostas livres
-7. **Validar** — QA + Revisor (ciclo padrão do Maestro)
-8. **Salvar** — gravar no arquivo do template **dentro da pasta do projeto ativo** (ex: `{projeto-ativo}/identidade/circulo-dourado.md`), atualizar frontmatter `status`, atualizar o index de área (ex: `identidade/_identidade.md`)
-9. **Próximo passo** — sugerir o próximo template seguindo a ordem recomendada
+   - Pesquisas relevantes do projeto ativo
+5. **Decidir modo de despacho:**
+   - O agente tem contexto suficiente para preencher sem perguntar? → Agent()
+   - Faltam informações que precisam ser coletadas do usuário? → Skill()
+   - Na dúvida → Skill() (mais seguro)
+6. **Se Agent():**
+   - Empacotar contexto nos 5 blocos do protocolo
+   - Despachar via Agent tool com modelo resolvido
+   - Ao receber report:
+     - `DONE` → seguir pra Validação (passo 8)
+     - `NEEDS_DATA` → acionar maestro:tarefas para criar entrevistas e/ou pesquisas via Gestor. Oferecer ao usuário: resolver agora (Entrevistador Skill() + Pesquisador Agent() em paralelo) ou depois. Após resolução, re-despachar o especialista
+     - `INSUFFICIENT_DATA` → acionar maestro:tarefas para criar entrevista de aprofundamento. Oferecer resolver agora (Entrevistador) ou depois
+     - `NEEDS_CONTEXT` → re-despachar com contexto adicional
+7. **Se Skill():**
+   - Delegar normalmente — o agente conversa com o usuário, faz perguntas e preenche
+8. **Validar** — QA + Revisor (ciclo padrão do Maestro)
+9. **Salvar** — gravar no arquivo do template **dentro da pasta do projeto ativo**, atualizar frontmatter `status`, atualizar o index de área
+10. **Atualizar tarefa** — se havia tarefa formal no vault para este preenchimento, marcar como `concluida` via Gestor de Tarefas. Verificar desbloqueios.
+11. **Próximo passo** — sugerir o próximo template seguindo a ordem recomendada
 
 ---
 

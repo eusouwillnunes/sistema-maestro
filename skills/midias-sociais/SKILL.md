@@ -309,7 +309,79 @@ Após entregar, avalie se o resultado merece virar template:
 
 ---
 
-## 10. Exemplos
+## 10. Protocolo Agent()
+
+Quando executado como Agent() (sem interação direta com o usuário), siga estas regras adicionais ao protocolo base definido em `core/protocolos/protocolo-agent.md`.
+
+### Antes de executar
+1. Leia o bloco ---TAREFA--- — contém o que produzir (estratégia social, conteúdo, análise, calendário, operacional), qual formato, e qual sub-skill usar
+2. Leia o bloco ---CONTEXTO--- — deve conter:
+   - Identidade da marca (Círculo Dourado, Posicionamento, Tom de Voz, Personalidade)
+   - Dossiê do Produto (se conteúdo é sobre produto específico)
+   - Perfil do Público (plataformas onde está, comportamento digital)
+   - Métricas de redes sociais (se análise ou otimização)
+   - Calendário editorial existente (se operacional)
+   - Templates já preenchidos da cadeia de dependências
+3. Leia o bloco ---MEMORIAS--- para aplicar preferências do usuário (plataformas prioritárias, frequência, formatos)
+4. Verifique se o contexto é suficiente para produzir com qualidade:
+   - Se falta dado que não existe (ex: público-alvo não definido, plataformas não escolhidas) → reporte NEEDS_DATA
+   - Se dado existe mas é insuficiente (ex: estratégia vaga, sem métricas para análise) → reporte INSUFFICIENT_DATA
+   - Se precisa de contexto que provavelmente existe mas não foi passado (ex: Tom de Voz já definido) → reporte NEEDS_CONTEXT
+5. Identifique qual sub-skill usar (estratégia, conteúdo, análise, calendário, operacional)
+6. Só execute se tiver o mínimo necessário — mas lembre: "volume + teste > perfeição"
+
+### Durante a execução
+- Siga os mesmos frameworks, personas (Gary Vee/Brendan Kane conforme sub-skill) e padrões do modo Skill()
+- Use templates anteriormente preenchidos como base (preenchimento sequencial)
+- NUNCA invente métricas, dados de engajamento ou resultados — use apenas dados fornecidos
+- Aplique as regras do bloco ---REGRAS---
+- Para criação de conteúdo em lote: produza todas as peças solicitadas no mesmo RESULTADO
+
+### Formato de report específico
+
+**Conteúdo/estratégia produzido com sucesso:**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+[Conteúdo ou estratégia completa, formatado Obsidian-first]
+
+ARQUIVOS:
+  - criado: "[caminho do arquivo no vault]"
+  - modificado: "[caminho do index atualizado, se aplicável]"
+---END-REPORT---
+```
+
+**Faltam dados essenciais:**
+
+```
+---REPORT---
+STATUS: NEEDS_DATA
+
+DADOS_FALTANTES:
+  - dado: "[ex: Plataformas prioritárias e frequência de publicação]"
+    tipo: entrevista
+    template-destino: perfil-publico
+    perguntas-sugeridas:
+      - "[pergunta específica]"
+
+ARQUIVOS:
+(nenhum)
+---END-REPORT---
+```
+
+### Regras adicionais
+- Pode reportar DONE, DONE_WITH_CONCERNS, NEEDS_DATA, INSUFFICIENT_DATA, NEEDS_CONTEXT
+- NÃO reporta BLOCKED — se o contexto é insuficiente, usa NEEDS_DATA ou INSUFFICIENT_DATA
+- O campo RESULTADO contém todo o conteúdo produzido (mesmo em lote)
+- Para lotes de posts: numerar e separar claramente cada peça no RESULTADO
+- Para operacional (calendário): atualizar posts com frontmatter e IDs conforme protocolo existente
+
+---
+
+## 11. Exemplos
 
 *Exemplos de input/output pra calibrar o comportamento do Especialista em Mídias Sociais*
 
@@ -381,7 +453,7 @@ Após entregar, avalie se o resultado merece virar template:
 
 ---
 
-## 11. Memórias e Histórico
+## 12. Memórias e Histórico
 
 ## Memórias
 

@@ -115,3 +115,62 @@ Aplicar antes de entregar qualquer texto:
 - [ ] Usei metáforas gastas (jornada, mergulhar, desvendar)?
 - [ ] O texto passa no Teste do WhatsApp?
 - [ ] Preservei a identidade de marca e o tom de voz?
+
+---
+
+## Protocolo Agent()
+
+Quando executado como Agent() (sem interação direta com o usuário), siga estas regras adicionais ao protocolo base definido em `core/protocolos/protocolo-agent.md`.
+
+### Antes de executar
+1. Leia o bloco ---TAREFA--- — contém o texto a revisar
+2. Leia o bloco ---CONTEXTO--- — pode conter identidade de marca (tom de voz, vocabulário proprietário) que deve ser preservada
+3. Se houver identidade de marca no contexto, anote o que preservar antes de iniciar
+4. Execute o fluxo de trabalho padrão (seção Fluxo de Trabalho) sobre o texto recebido
+
+### Formato de report específico
+
+O Revisor reporta DONE quando o texto está natural. Reporta DONE com texto corrigido quando detecta e corrige padrões artificiais.
+
+**Quando APROVADO (texto já natural):**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+## Revisão Anti-IA: ✅ APROVADO
+Texto natural, sem padrões artificiais detectados.
+
+[Texto original inalterado]
+
+ARQUIVOS:
+(nenhum — Revisor não gera arquivos, entrega o texto revisado no RESULTADO)
+---END-REPORT---
+```
+
+**Quando CORRIGIDO:**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+## Revisão Anti-IA: Corrigido
+### Padrões detectados e corrigidos
+1. **[localização]:** "[padrão]" → "[correção]"
+2. **[localização]:** "[padrão]" → "[correção]"
+
+### Texto revisado
+[versão corrigida do texto completo]
+
+ARQUIVOS:
+(nenhum — Revisor não gera arquivos, entrega o texto revisado no RESULTADO)
+---END-REPORT---
+```
+
+### Regras adicionais
+- O Revisor sempre reporta DONE — mesmo quando corrige, ele entrega o texto pronto
+- Usa DONE_WITH_CONCERNS apenas se não conseguir corrigir sem alterar o significado (caso raro)
+- NUNCA reporta NEEDS_DATA, NEEDS_CONTEXT, INSUFFICIENT_DATA ou BLOCKED
+- Quando corrige, o RESULTADO contém o texto revisado completo (não apenas as correções)

@@ -275,7 +275,81 @@ Após entregar, avalie se o resultado merece virar template:
 
 ---
 
-## 10. Exemplos
+## 10. Protocolo Agent()
+
+Quando executado como Agent() (sem interação direta com o usuário), siga estas regras adicionais ao protocolo base definido em `core/protocolos/protocolo-agent.md`.
+
+### Antes de executar
+1. Leia o bloco ---TAREFA--- — contém o que produzir (diagnóstico, oferta, funil, etc.), qual template preencher, e qual sub-skill usar
+2. Leia o bloco ---CONTEXTO--- — deve conter:
+   - Identidade da marca (Círculo Dourado, Posicionamento)
+   - Dossiê do Produto (se aplicável)
+   - Perfil do Público/Prospect (se aplicável)
+   - Métricas do negócio (ticket, margem, CAC, LTV — se disponíveis)
+   - Templates já preenchidos da cadeia de dependências
+3. Leia o bloco ---MEMORIAS--- para aplicar preferências do usuário
+4. Verifique se o contexto é suficiente para produzir com qualidade:
+   - Se falta dado que não existe em lugar nenhum (ex: números do negócio) → reporte NEEDS_DATA com perguntas sugeridas
+   - Se dado existe mas é insuficiente (ex: oferta vaga, sem diferencial claro) → reporte INSUFFICIENT_DATA
+   - Se precisa de contexto que provavelmente existe mas não foi passado → reporte NEEDS_CONTEXT
+5. Identifique qual sub-skill usar (diagnóstico, oferta, funil, aquisição, webinário) com base na tarefa
+6. Só execute se tiver o mínimo necessário para produzir estratégia de qualidade
+
+### Durante a execução
+- Siga os mesmos frameworks, personas (Brunson/Hormozi conforme sub-skill) e padrões do modo Skill()
+- Use templates anteriormente preenchidos como base (preenchimento sequencial)
+- NUNCA invente dados sobre o negócio — números, métricas e resultados vêm do usuário ou de pesquisa
+- Aplique as regras do bloco ---REGRAS---
+- Sempre aplique o diagnóstico (Secret Formula / 80/20) antes de prescrever
+
+### Formato de report específico
+
+**Estratégia/template produzido com sucesso:**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+[Template preenchido ou estratégia completa, formatado Obsidian-first com frontmatter e wiki-links]
+
+ARQUIVOS:
+  - criado: "[caminho do arquivo no vault]"
+  - modificado: "[caminho do index atualizado, se aplicável]"
+---END-REPORT---
+```
+
+**Faltam dados essenciais:**
+
+```
+---REPORT---
+STATUS: NEEDS_DATA
+
+DADOS_FALTANTES:
+  - dado: "[ex: Ticket médio e margem do produto principal]"
+    tipo: entrevista
+    template-destino: dossie
+    perguntas-sugeridas:
+      - "[pergunta específica]"
+  - dado: "[ex: Tamanho do mercado e concorrentes diretos]"
+    tipo: pesquisa
+    template-destino: analise-de-mercado
+
+ARQUIVOS:
+(nenhum)
+---END-REPORT---
+```
+
+### Regras adicionais
+- Pode reportar DONE, DONE_WITH_CONCERNS, NEEDS_DATA, INSUFFICIENT_DATA, NEEDS_CONTEXT
+- NÃO reporta BLOCKED — se o contexto é insuficiente, usa NEEDS_DATA ou INSUFFICIENT_DATA
+- O campo RESULTADO contém o template preenchido completo ou a estratégia documentada
+- Quando preenche um template no vault, lista no campo ARQUIVOS
+- Se o diagnóstico revela que o problema não é o que o usuário pediu, reporta DONE_WITH_CONCERNS com a recomendação
+
+---
+
+## 11. Exemplos
 
 *Exemplos de input/output pra calibrar o comportamento do Estrategista*
 
@@ -341,7 +415,7 @@ Após entregar, avalie se o resultado merece virar template:
 
 ---
 
-## 11. Memórias e Histórico
+## 12. Memórias e Histórico
 
 ## Memórias
 

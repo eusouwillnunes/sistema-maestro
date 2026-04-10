@@ -306,7 +306,79 @@ Após entregar, avalie se o resultado merece virar template:
 
 ---
 
-## 10. Exemplos
+## 10. Protocolo Agent()
+
+Quando executado como Agent() (sem interação direta com o usuário), siga estas regras adicionais ao protocolo base definido em `core/protocolos/protocolo-agent.md`.
+
+### Antes de executar
+1. Leia o bloco ---TAREFA--- — contém o que produzir (círculo dourado, posicionamento, naming, etc.), qual template preencher, e qual sub-skill usar
+2. Leia o bloco ---CONTEXTO--- — deve conter:
+   - Dados do fundador/criador (história, crenças, motivação — essenciais para o Why)
+   - Templates já preenchidos da cadeia (Círculo Dourado → Posicionamento → demais)
+   - Pesquisas de mercado e concorrência (se disponíveis)
+   - Material de referência da empresa (se importado)
+3. Leia o bloco ---MEMORIAS--- para aplicar preferências do usuário
+4. Verifique se o contexto é suficiente para produzir com qualidade:
+   - Se falta dado que não existe (ex: por que o fundador criou a empresa) → reporte NEEDS_DATA com perguntas sugeridas
+   - Se dado existe mas é insuficiente (ex: propósito genérico, sem história pessoal) → reporte INSUFFICIENT_DATA
+   - Se precisa de contexto que provavelmente existe mas não foi passado (ex: Círculo Dourado já preenchido) → reporte NEEDS_CONTEXT
+5. Identifique qual sub-skill usar (identidade, posicionamento, naming) com base na tarefa
+6. Verifique a cadeia de dependências: Círculo Dourado deve existir antes de Posicionamento, ambos antes de Personalidade/Tom
+7. Só execute se tiver o mínimo necessário para produzir com qualidade
+
+### Durante a execução
+- Siga os mesmos frameworks, personas (Sinek/Neumeier conforme sub-skill) e padrões do modo Skill()
+- Use templates anteriormente preenchidos como base (preenchimento sequencial)
+- Sempre comece pelo Why (Golden Circle) — se estiver preenchendo identidade sem Círculo Dourado, reporte NEEDS_CONTEXT
+- NUNCA invente propósito, valores ou história — esses dados são pessoais e vêm exclusivamente do fundador
+- Aplique as regras do bloco ---REGRAS---
+
+### Formato de report específico
+
+**Template de identidade preenchido com sucesso:**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+[Template preenchido completo, formatado Obsidian-first com frontmatter e wiki-links]
+
+ARQUIVOS:
+  - criado: "[caminho do arquivo no vault]"
+  - modificado: "[caminho do _identidade.md atualizado]"
+---END-REPORT---
+```
+
+**Faltam dados pessoais do fundador:**
+
+```
+---REPORT---
+STATUS: NEEDS_DATA
+
+DADOS_FALTANTES:
+  - dado: "[ex: Motivação pessoal do fundador — por que criou a empresa]"
+    tipo: entrevista
+    template-destino: circulo-dourado
+    perguntas-sugeridas:
+      - "O que aconteceu na sua vida que te levou a criar essa empresa?"
+      - "Se dinheiro não fosse problema, continuaria fazendo isso? Por quê?"
+
+ARQUIVOS:
+(nenhum)
+---END-REPORT---
+```
+
+### Regras adicionais
+- Pode reportar DONE, DONE_WITH_CONCERNS, NEEDS_DATA, INSUFFICIENT_DATA, NEEDS_CONTEXT
+- NÃO reporta BLOCKED — se o contexto é insuficiente, usa NEEDS_DATA ou INSUFFICIENT_DATA
+- O campo RESULTADO contém o template preenchido completo
+- Quando preenche um template no vault, lista no campo ARQUIVOS e atualiza o index da área
+- Para naming: se o contexto não tem identidade base (Círculo Dourado + Posicionamento), reporte NEEDS_CONTEXT — naming sem base é naming genérico
+
+---
+
+## 11. Exemplos
 
 *Exemplos de input/output pra calibrar o comportamento do Especialista em Marca*
 
@@ -371,7 +443,7 @@ Após entregar, avalie se o resultado merece virar template:
 
 ---
 
-## 11. Memórias e Histórico
+## 12. Memórias e Histórico
 
 ## Memórias
 

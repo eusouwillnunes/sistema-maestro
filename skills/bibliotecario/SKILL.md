@@ -81,7 +81,7 @@ Acionado quando não existe biblioteca no projeto ou o usuário pede para criar.
    - Criar `maestro/config.md` com configuração padrão
    - Criar `identidade/_identidade.md` com tabela de status dos 8 templates
    - Copiar os 8 templates de identidade de `core/templates/biblioteca-de-marketing/preenchimento/identidade/` para `identidade/`
-   - Criar indexes de área em todas as demais pastas (escada-de-valor/_escada-de-valor.md, lead-magnets/_lead-magnets.md, produtos/_produtos.md, funis/_funis.md, lancamentos/_lancamentos.md, campanhas/_campanhas.md, social/_social.md, pesquisas/_pesquisas.md, entregas/_entregas.md, referencias/_referencias.md, memorias/_memorias.md) usando os modelos do scaffold
+   - Criar indexes de área em todas as demais pastas (escada-de-valor/_escada-de-valor.md, lead-magnets/_lead-magnets.md, produtos/_produtos.md, funis/_funis.md, lancamentos/_lancamentos.md, campanhas/_campanhas.md, social/_social.md, pesquisas/_pesquisas.md, entregas/_entregas.md, referencias/_referencias.md, memorias/_memorias.md, tarefas/_tarefas.md, entrevistas/_entrevistas.md) usando os modelos do scaffold
 5. **Apresentar resultado:**
    - Listar a estrutura criada (mostrando a pasta da empresa como raiz)
    - Indicar que o próximo passo é preencher a Identidade da Marca
@@ -124,7 +124,7 @@ Estrutura criada:
 - [nome-da-empresa]/identidade/ (8 templates prontos pra preencher)
 - [nome-da-empresa]/escada-de-valor/, lead-magnets/, produtos/ (sob demanda)
 - [nome-da-empresa]/funis/, lancamentos/, campanhas/, social/
-- [nome-da-empresa]/pesquisas/, entregas/, referencias/, memorias/
+- [nome-da-empresa]/pesquisas/, entregas/, referencias/, memorias/, tarefas/, entrevistas/
 - [nome-da-empresa]/referencias/ (coloque seus documentos aqui pra importar)
 
 O próximo passo é preencher a Identidade da Marca.
@@ -229,6 +229,7 @@ Peça ao Maestro: "[comando sugerido]"
 > - padaria-do-joao/escada-de-valor/, lead-magnets/, produtos/ (sob demanda)
 > - padaria-do-joao/funis/, lancamentos/, campanhas/, social/
 > - padaria-do-joao/pesquisas/, entregas/, memorias/
+> - padaria-do-joao/tarefas/, entrevistas/
 >
 > O próximo passo é preencher a Identidade da Marca.
 > Peça ao Maestro: 'Quero preencher a identidade da marca'"

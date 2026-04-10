@@ -399,7 +399,86 @@ Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protoc
 
 ---
 
-## 10. Memórias e Histórico
+## 10. Protocolo Agent()
+
+Quando executado como Agent() (sem interação direta com o usuário), siga estas regras adicionais ao protocolo base definido em `core/protocolos/protocolo-agent.md`.
+
+### Antes de executar
+1. Leia o bloco ---TAREFA--- — contém o objetivo da pesquisa e ferramenta sugerida
+2. Leia o bloco ---CONTEXTO--- — pode conter pesquisas anteriores, contexto do projeto, config do pesquisador
+3. Verifique se tem API key do OpenRouter no contexto (se a ferramenta sugerida for paga)
+4. Consulte o index de pesquisas (se passado no contexto) pra evitar duplicação
+5. Execute o fluxo "Via Maestro ou agente especialista" (seção 4)
+
+### Diferenças do modo Skill()
+- **Não pergunta ao usuário.** O Maestro já decidiu a ferramenta e passou no bloco TAREFA
+- **Não sugere alternativas.** Se a ferramenta indicada falhar, reporta BLOCKED
+- **Salva o documento normalmente** — pesquisa sempre gera arquivo, mesmo em Agent()
+- **Atualiza o index** — mesmo fluxo de salvamento do modo Skill()
+
+### Formato de report específico
+
+**Pesquisa concluída:**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+[Resumo executivo da pesquisa — achados principais, dados-chave]
+Documento completo salvo em: [caminho do arquivo]
+
+ARQUIVOS:
+  - criado: "[caminho da pesquisa salva]"
+  - modificado: "[caminho do _pesquisas.md atualizado]"
+---END-REPORT---
+```
+
+**Ferramenta paga sem API key:**
+
+```
+---REPORT---
+STATUS: BLOCKED
+
+BLOCKER:
+  - motivo: "Ferramenta [nome] requer API key do OpenRouter, não encontrada no contexto"
+  - tentativas: "Verificou user/config.md e bloco CONTEXTO"
+  - sugestao: "Re-despachar com ferramenta websearch (grátis) ou configurar API key"
+
+ARQUIVOS:
+(nenhum)
+---END-REPORT---
+```
+
+**Pesquisa não encontrou dados suficientes:**
+
+```
+---REPORT---
+STATUS: DONE_WITH_CONCERNS
+
+RESULTADO:
+[O que foi encontrado, mesmo que parcial]
+Documento salvo em: [caminho]
+
+CONCERNS:
+  - "Dados insuficientes para [subtópico]. Apenas [N] fontes encontradas, nenhuma com dados quantitativos"
+  - "Recomendação: pesquisa complementar com Deep Research ou coleta direta com o usuário"
+
+ARQUIVOS:
+  - criado: "[caminho]"
+  - modificado: "[caminho do _pesquisas.md]"
+---END-REPORT---
+```
+
+### Regras adicionais
+- NUNCA reporta NEEDS_DATA ou INSUFFICIENT_DATA — o Pesquisador é quem coleta dados, não quem consome
+- Pode reportar NEEDS_CONTEXT se faltou informação sobre o que pesquisar
+- Pode reportar BLOCKED se a ferramenta não funcionar (API key, erro de conexão)
+- Documento de pesquisa é salvo mesmo quando a pesquisa é parcial (DONE_WITH_CONCERNS)
+
+---
+
+## 11. Memórias e Histórico
 
 ## Memórias
 
@@ -421,4 +500,5 @@ Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protoc
 
 | Data | Versão | Alteração |
 |------|--------|-----------|
+| 2026-04-10 | v1.1 | Seção 10 — Protocolo Agent() (compatibilidade com despacho via Agent tool, formato de report) |
 | 2026-04-08 | v1.0 | Criação da skill Pesquisador — funcional, sem persona, 3 ferramentas (WebSearch, Sonar, Deep Research) |

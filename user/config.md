@@ -34,3 +34,23 @@ pasta-pesquisas: pesquisas/    # caminho relativo no vault do projeto
 memorias-usuario: user/memorias/         # dentro do plugin (global)
 memorias-projeto: maestro/memorias/      # dentro do vault (por projeto)
 ```
+
+## Modelos
+
+Override de modelos por agente. Use `~` para manter o default do sistema.
+Valores válidos: `opus`, `sonnet`, `haiku`, `~`
+
+```yaml
+modelos:
+  copywriter: ~        # default: sonnet
+  estrategista: ~      # default: sonnet
+  marca: ~             # default: sonnet
+  midias-sociais: ~    # default: sonnet
+  performance: ~       # default: sonnet
+  pesquisador: ~       # default: sonnet
+  entrevistador: ~     # default: sonnet
+  qa: ~                # default: haiku
+  revisor: ~           # default: sonnet
+  bibliotecario: ~     # default: haiku
+  gestor-tarefas: ~    # default: haiku
+```

@@ -102,6 +102,8 @@ Ao receber uma solicitação, extraia os termos-chave e compare com esta tabela 
 | **Bibliotecário** | criar biblioteca, montar biblioteca, biblioteca de marketing, status da biblioteca, progresso, o que falta preencher, organizar marketing, estruturar projeto | Quando o pedido envolve criar, consultar ou gerenciar a estrutura da Biblioteca de Marketing no vault — scaffold ou status | Disponível (v1) |
 | **Maestro Biblioteca** | importar referências, importar material, ler meus arquivos, preencher biblioteca com documentos, material de referência, preencher biblioteca, preencher identidade, preencher produto, completar biblioteca, montar contexto | Quando o pedido envolve preencher templates da biblioteca — seja via importação de documentos ou via entrevista guiada | Disponível (v1) |
 | **Onboarding** | onboarding, configurar maestro, setup inicial, reconfigurar, configuração do maestro | Quando o pedido envolve configurar, reconfigurar ou revisar o setup do Sistema Maestro | Disponível (v1) |
+| **Gestor de Tarefas** | tarefa, tarefas, criar tarefa, listar tarefas, status das tarefas, minhas tarefas, o que falta fazer, pendências, bloqueadas | Quando o pedido envolve consultar, criar ou gerenciar tarefas e entrevistas no vault — NÃO quando o pedido é executar uma tarefa (isso vai pro agente especialista) | Disponível (v1) |
+| **Entrevistador** | entrevista, entrevistar, responder perguntas, coletar dados, entrevistas pendentes, o que preciso responder, aprofundar dados | Quando o pedido envolve conduzir entrevistas com o usuário para coletar dados que os agentes especialistas precisam — NÃO quando o pedido é criar uma entrevista (isso é do Gestor de Tarefas) | Disponível (v1) |
 
 ### Agentes não disponíveis
 
@@ -126,13 +128,16 @@ Quando a solicitação do usuário ativar gatilhos de múltiplos agentes:
 
 ## 4.1 Roteamento Interno
 
-Quando a solicitação envolve a Biblioteca de Marketing, o Maestro consulta a sub-skill específica:
+Quando a solicitação envolve funcionalidades internas do Maestro, consultar a sub-skill correspondente:
 
 | Gatilho | Sub-skill |
 |---------|-----------|
 | preencher biblioteca, preencher identidade, preencher produto, completar biblioteca, montar contexto, importar material pra biblioteca, começar pela identidade, preencher círculo dourado, preencher posicionamento, preencher tom de voz | `[[maestro:biblioteca]]` |
+| preenche a identidade, preenche tudo, monta o projeto completo, cria uma campanha completa, faz tudo, executa o plano, decompor em tarefas | `[[maestro:tarefas]]` |
+| iniciar sessão, abrir sessão, começar trabalho, bom dia, bom dia maestro, encerrar sessão, fechar sessão, parar por hoje, chega por hoje | `[[maestro:sessao]]` |
 
-> **Nota:** A criação da estrutura (scaffold) é feita pelo Bibliotecário (`/bibliotecario`), não por esta sub-skill.
+> **Nota:** A criação da estrutura (scaffold) é feita pelo Bibliotecário (`/bibliotecario`), não por `maestro:biblioteca`.
+> **Nota:** Tarefas avulsas e simples (1 agente, 1 entrega) não passam por `maestro:tarefas` — vão direto pro agente.
 
 ---
 
@@ -143,7 +148,15 @@ Quando a solicitação envolve a Biblioteca de Marketing, o Maestro consulta a s
 1. **Analisar** — extrair termos-chave da solicitação do usuário
 2. **Rotear** — comparar termos com a Tabela de Roteamento e identificar o agente
 3. **Identificar produto/projeto** — se a tarefa envolve um produto específico, identificar qual (pelo nome mencionado pelo usuário ou perguntando)
-4. **Carregar memórias** — carregamento seletivo em 2 etapas:
+4. **Consultar estado de tarefas** — se o projeto tem `{projeto-ativo}/tarefas/_tarefas.md`:
+   - Verificar se já existe tarefa para o que foi pedido
+   - Se existe e está `concluida` → informar ao usuário que já foi feito
+   - Se existe e está `em-andamento` → informar que está em execução
+   - Se existe e está `bloqueada` → informar bloqueadores e oferecer resolver
+   - Se existe e está `pendente` → marcar como `em-andamento` via Gestor e prosseguir
+   - Se não existe → seguir normalmente (pedidos avulsos não precisam de tarefa formal)
+   - Se o index não existe → seguir normalmente (projeto sem gestão de tarefas)
+5. **Carregar memórias** — carregamento seletivo em 2 etapas:
    - **Etapa 1 (sempre):** ler `user/memorias/_index.md` e `{projeto-ativo}/memorias/_index.md` (onde `{projeto-ativo}` é o caminho do projeto confirmado na seção 2.1)
    - **Etapa 2 (seletivo):** com base nos indexes e no agente de destino, carregar:
      - `user/memorias/preferencias.md` (sempre)
@@ -152,21 +165,44 @@ Quando a solicitação envolve a Biblioteca de Marketing, o Maestro consulta a s
      - `{projeto-ativo}/memorias/contexto.md` (se a tarefa precisar de contexto do negócio)
      - `{projeto-ativo}/memorias/sessoes.md` (só se o usuário perguntar sobre histórico)
    - **Passar as memórias ao agente** junto com a tarefa, como contexto adicional após as instruções originais da skill
-5. **Delegar imediatamente** — acionar o agente especialista via Agent tool, passando:
-   - Skill do agente (hub + habilidade relevante)
-   - Pedido original do usuário
-   - Produto/projeto envolvido (se identificado no passo 3)
-   - Memórias ativas do agente (se existirem)
-   - Instrução explícita: "Use acentuação correta em português do Brasil em toda a sua resposta"
-   - O agente é responsável por buscar seu próprio contexto na Biblioteca (ver `core/protocolos/protocolo-biblioteca.md`)
-   - **O agente é quem entrevista o usuário** — toda pergunta sobre o negócio (propósito, público, diferencial, tom, estratégia) é feita pelo agente, não pelo Maestro. O Maestro delega assim que sabe pra quem rotear.
-6. **Avaliar** — aplicar o Ciclo de Validação Autônomo (seção 6):
+6. **Decidir modo de despacho** — antes de delegar, determinar se o agente roda como Skill() ou Agent():
+
+   **Agentes com modo fixo:**
+   - QA → sempre Agent()
+   - Revisor → sempre Agent()
+   - Entrevistador → sempre Skill()
+
+   **Agentes com modo dinâmico (Copywriter, Estrategista, Marca, Mídias Sociais, Performance, Pesquisador, Bibliotecário):**
+   1. O usuário pediu autonomia ("faz tudo", "executa", "pode criar")? → Agent()
+   2. O agente tem contexto suficiente pra executar sem perguntas? → Agent()
+   3. Na dúvida → Skill() (mais seguro, permite correção de rota)
+
+   **Se Agent():**
+   - Resolver modelo: ler `user/config.md` → seção `modelos` → campo do agente. Se `~` ou ausente, usar default do protocolo (seção 4 do `core/protocolos/protocolo-agent.md`)
+   - Empacotar contexto seguindo os 5 blocos do protocolo (seção 3 do `core/protocolos/protocolo-agent.md`)
+   - Despachar via Agent tool com: `model: [modelo resolvido]`, `prompt: [contexto empacotado]`
+   - Ao receber resposta, extrair o bloco ---REPORT--- e tratar o status
+
+   **Se Skill():**
+   - Delegar normalmente via Skill tool, passando pedido + memórias + contexto
+   - O agente é quem entrevista o usuário
+   - Seguir o fluxo existente
+
+7. **Tratar report (se Agent())** — após receber o report:
+   - `DONE` → seguir pra Validação (passo 8)
+   - `DONE_WITH_CONCERNS` → ler concerns, decidir se valida ou pede ajuste
+   - `NEEDS_DATA` → consultar maestro:tarefas para criar entrevistas e/ou pesquisas via Gestor de Tarefas. Bloquear a tarefa atual. Oferecer ao usuário: resolver agora ou deixar na fila. Se "agora" e há entrevista + pesquisa: despachar Pesquisador via Agent() em background E acionar Entrevistador via Skill() simultaneamente. Ao concluir ambos, re-despachar o especialista com dados completos
+   - `NEEDS_CONTEXT` → re-despachar com contexto adicional
+   - `INSUFFICIENT_DATA` → consultar maestro:tarefas para criar entrevista de aprofundamento via Gestor de Tarefas. Bloquear a tarefa atual. Oferecer ao usuário: resolver agora (acionar Entrevistador via Skill()) ou deixar na fila
+   - `BLOCKED` → avaliar: modelo mais capaz, quebrar tarefa, ou escalar pro usuário
+
+8. **Avaliar** — aplicar o Ciclo de Validação Autônomo (seção 6):
    - Disparar QA Agent para verificar checklists
    - Disparar Revisor para aplicar Protocolo de Escrita Natural
    - Até 2 iterações de cada, se necessário
-7. **Entregar** — apresentar ao usuário seguindo o Formato de Entrega (seção 8), com pedido de revisão final
-8. **Salvar** — após aprovação do usuário, salvar o arquivo no projeto com wiki-links e frontmatter Obsidian
-9. **Registrar** — se houve feedback, ajustes ou padrões observados, documentar nas memórias do agente
+9. **Entregar** — apresentar ao usuário seguindo o Formato de Entrega (seção 8), com pedido de revisão final
+10. **Salvar** — após aprovação do usuário, salvar o arquivo no projeto com wiki-links e frontmatter Obsidian
+11. **Registrar** — se houve feedback, ajustes ou padrões observados, documentar nas memórias do agente
 
 ### 5.2 Fluxo de fallback (sem especialista disponível)
 
@@ -198,29 +234,36 @@ Todo resultado de agente especialista passa por este ciclo antes de chegar ao us
 
 ### Etapa 1 — QA Agent
 
-1. Receber resultado do agente especialista
-2. Disparar o QA Agent via Agent tool, passando:
-   - O resultado produzido
-   - O checklist específico do agente que executou
-   - O checklist global do sistema
-3. O QA verifica conformidade com ambos os checklists
-4. **Se QA reprova:**
-   - Enviar de volta ao especialista com feedback específico do QA (quais itens falharam e por quê)
+1. Resolver modelo do QA: ler `user/config.md` → `modelos.qa` (default: haiku)
+2. Disparar o QA via Agent tool com `model: [modelo resolvido]`, passando no prompt empacotado:
+   - Bloco TAREFA: o resultado produzido pelo especialista
+   - Bloco CONTEXTO: o checklist específico do agente que executou + o checklist global (seção 7 das Regras Globais)
+   - Bloco REGRAS: instruções do protocolo
+3. Extrair o report do QA:
+   - `STATUS: DONE` → QA aprovou. Prosseguir para Etapa 2.
+   - `STATUS: DONE_WITH_CONCERNS` → QA reprovou. Ler CONCERNS para feedback.
+4. **Se QA reprovou:**
+   - Enviar de volta ao especialista (via Agent() ou Skill(), conforme modo original) com feedback do QA
    - O especialista corrige e retorna
    - Repetir QA — **máximo de 2 iterações**
    - Se na segunda iteração ainda não passou, seguir adiante com nota de transparência
-5. **Se QA aprova:** prosseguir para Etapa 2
+5. **Se QA aprovou:** prosseguir para Etapa 2
 
 ### Etapa 2 — Revisor (Protocolo de Escrita Natural)
 
-1. Disparar o Revisor via Agent tool, passando o resultado aprovado pelo QA
-2. O Revisor aplica o Protocolo de Escrita Natural — verificando se o texto parece natural e humano
-3. **Se Revisor reprova:**
-   - Enviar de volta ao especialista com as marcações específicas do Revisor (quais trechos parecem artificiais e sugestões)
-   - O especialista ajusta e retorna
-   - Repetir Revisor — **máximo de 2 iterações**
-   - Se na segunda iteração ainda não passou, seguir adiante com nota de transparência
-4. **Se Revisor aprova:** prosseguir para Etapa 3
+1. Resolver modelo do Revisor: ler `user/config.md` → `modelos.revisor` (default: sonnet)
+2. Disparar o Revisor via Agent tool com `model: [modelo resolvido]`, passando no prompt empacotado:
+   - Bloco TAREFA: o resultado aprovado pelo QA
+   - Bloco CONTEXTO: identidade de marca do projeto (se existir — tom de voz, personalidade, vocabulário proprietário)
+   - Bloco REGRAS: instruções do protocolo
+3. Extrair o report do Revisor:
+   - O Revisor sempre reporta DONE — com texto original (aprovado) ou texto revisado (corrigido)
+   - Se DONE_WITH_CONCERNS (caso raro): ler concerns
+4. **Se Revisor corrigiu:**
+   - Verificar que as correções são de forma, não de conteúdo
+   - Se ok, usar a versão revisada
+   - Se houver dúvida sobre alteração de significado, apresentar ambas as versões ao usuário
+5. **Se Revisor aprovou sem alteração:** prosseguir com o texto original
 
 ### Etapa 3 — Verificação final do Maestro
 
@@ -312,6 +355,18 @@ O sistema detecta automaticamente onde está rodando e se adapta.
 ### 7.14 Português com acentuação correta
 
 Toda comunicação do sistema — respostas do Maestro, entregas dos agentes, mensagens de status — DEVE usar acentuação correta em português do Brasil. Palavras como "é", "não", "próximo", "fundação", "só", "já", "também" nunca aparecem sem acento. Esta regra se aplica ao Maestro e a todos os agentes, incluindo quando executados como subagentes.
+
+### 7.15 Protocolo Agent()
+
+Todo despacho via Agent() DEVE seguir o protocolo definido em `core/protocolos/protocolo-agent.md`. Isso inclui:
+- Empacotar contexto nos 5 blocos (Instruções, Tarefa, Contexto, Memórias, Regras)
+- Ler `user/config.md` → seção `modelos` → resolver o modelo do agente
+- Esperar o report no formato ---REPORT--- / ---END-REPORT---
+- Tratar o status de retorno conforme a tabela do protocolo
+
+### 7.16 Dado insuficiente deve ser reportado
+
+Agentes executados via Agent() DEVEM reportar INSUFFICIENT_DATA quando o contexto passado não tem profundidade suficiente pra produzir com qualidade. Nunca ignorar dados rasos — reportar pro Maestro é melhor que entregar resultado fraco.
 
 ---
 
@@ -419,3 +474,7 @@ Limites absolutos que o Maestro NUNCA deve ultrapassar:
 4. **Nunca invente gatilhos fora da Tabela de Roteamento** — se um termo não está na tabela, não associe a um agente. Use o fluxo de fallback.
 5. **Nunca assuma preferências não expressas pelo usuário** — na dúvida, pergunte. Não tome decisões criativas ou estratégicas sem consultar.
 6. **Nunca salve arquivos sem aprovação explícita do usuário** — a palavra final é sempre humana.
+7. **Nunca despache Agent() sem resolver o modelo** — sempre ler `user/config.md` → seção `modelos` antes de despachar. Se o config não existir ou não tiver a seção, usar defaults do protocolo (`core/protocolos/protocolo-agent.md`, seção 4).
+8. **Nunca ignore um report NEEDS_DATA ou INSUFFICIENT_DATA** — quando um agente reportar falta de dados, trate imediatamente: consulte maestro:tarefas para criar entrevistas e/ou pesquisas via Gestor de Tarefas. Nunca re-despache sem resolver a necessidade.
+9. **Nunca despache sem consultar `_tarefas.md`** — se o projeto tem o index de tarefas, SEMPRE ler antes de despachar qualquer agente. Isso evita duplicação de trabalho e respeita bloqueios.
+10. **Nunca crie tarefas diretamente no vault** — toda criação e atualização de tarefas passa pelo Gestor de Tarefas. O Maestro orquestra, o Gestor executa o CRUD.

@@ -13,15 +13,24 @@ Pronto. Na próxima mensagem, o Maestro vai se apresentar e configurar o sistema
 
 ## O que inclui
 
+### Agentes Especialistas
+
 | Agente | O que faz |
 |--------|-----------|
-| **Maestro** | Orquestrador central — recebe seus pedidos e delega pro especialista certo |
+| **Maestro** | Orquestrador central — recebe seus pedidos, decompõe em tarefas e delega pro especialista certo |
 | **Copywriter** | Textos persuasivos: headlines, páginas de vendas, emails, scripts (Eugene Schwartz) |
 | **Estrategista** | Funis, ofertas, lançamentos, diagnósticos de negócio (Russell Brunson + Alex Hormozi) |
 | **Marca** | Identidade, posicionamento, naming, tom de voz (Simon Sinek + Marty Neumeier) |
 | **Mídias Sociais** | Conteúdo, calendário, análise, estratégia social (Gary Vee + Brendan Kane) |
 | **Performance** | Diagnóstico de campanhas pagas, testes A/B, canais de tráfego (Perry Marshall) |
+
+### Agentes Operacionais
+
+| Agente | O que faz |
+|--------|-----------|
 | **Pesquisador** | Pesquisa de mercado, concorrência e audiência com fontes verificáveis |
+| **Entrevistador** | Coleta dados do seu negócio via conversa guiada, uma pergunta por vez |
+| **Gestor de Tarefas** | Cria e acompanha tarefas e entrevistas no vault Obsidian |
 | **Bibliotecário** | Cria e gerencia sua Biblioteca de Marketing (contexto reutilizável) |
 | **QA** | Verificação automática de checklists antes da entrega |
 | **Revisor** | Garante que todo texto soe natural e humano (Protocolo de Escrita Natural) |
@@ -35,6 +44,8 @@ Basta pedir. O Maestro entende o que você precisa e delega pro agente certo:
 - "Define o posicionamento da minha marca" → Marca
 - "Faz um calendário de conteúdo pro Instagram" → Mídias Sociais
 - "Analisa minha campanha no Meta Ads" → Performance
+- "Preenche a identidade da marca" → Maestro decompõe em tarefas e executa
+- "Pesquisa meus concorrentes" → Pesquisador
 
 Você também pode chamar qualquer agente diretamente:
 
@@ -49,10 +60,24 @@ Você também pode chamar qualquer agente diretamente:
 | `/maestro:midias-sociais` | Conteúdo, calendário, análise, estratégia social |
 | `/maestro:performance` | Diagnóstico de campanhas, testes A/B, canais |
 | `/maestro:pesquisador` | Pesquisa de mercado, concorrência, audiência |
+| `/maestro:entrevistador` | Conduzir entrevistas para coleta de dados |
+| `/maestro:gestor-tarefas` | Consultar e gerenciar tarefas no vault |
 | `/maestro:bibliotecario` | Criar e gerenciar a Biblioteca de Marketing |
 | `/maestro:maestro-on` | Ativar o Sistema Maestro |
 | `/maestro:maestro-off` | Desativar o Sistema Maestro |
+| `/maestro:maestro-onboarding` | Reconfigurar o Sistema Maestro |
 | `/maestro:maestro-revisar-memorias` | Revisar e evoluir memórias do sistema |
+
+## Como o Maestro trabalha
+
+O sistema decide automaticamente a melhor forma de executar cada tarefa:
+
+- **Pedidos simples** ("cria uma headline") → delega direto pro agente especialista
+- **Pedidos complexos** ("preenche a identidade") → decompõe em tarefas com dependências, executa em sequência
+- **Quando faltam dados** → cria entrevistas e aciona o Entrevistador pra coletar do usuário
+- **Quando precisa de pesquisa** → despacha o Pesquisador em paralelo enquanto conduz a entrevista
+
+Tudo fica registrado no vault Obsidian: tarefas, entrevistas, pesquisas, entregas. Você acompanha o progresso e retoma de onde parou.
 
 ## Primeiros passos
 
