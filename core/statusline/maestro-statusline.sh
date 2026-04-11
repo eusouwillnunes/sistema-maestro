@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # maestro-statusline.sh — Status line do Sistema Maestro
 # Recebe JSON via stdin do Claude Code, renderiza barra de status formatada.
-# Gerado pelo Sistema Maestro. Não edite manualmente — use /maestro:statusline configurar.
+# Gerado pelo Sistema Maestro. Não edite manualmente — use /maestro-statusline configurar.
 
 set -euo pipefail
 

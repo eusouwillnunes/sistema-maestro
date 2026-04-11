@@ -82,7 +82,7 @@ Se a seção não existe, criá-la ao final do arquivo com todos os campos de pr
 
 Informar:
 
-> "Status line ativada! Ela aparece na próxima mensagem. Para desligar ou configurar, rode `/maestro:statusline`."
+> "Status line ativada! Ela aparece na próxima mensagem. Para desligar ou configurar, rode `/maestro-statusline`."
 
 ---
 
@@ -103,7 +103,7 @@ Atualizar `user/config.md` — setar `statusline-ativo: false`.
 
 Informar:
 
-> "Status line desativada. Suas preferências foram mantidas — quando quiser religar, rode `/maestro:statusline`."
+> "Status line desativada. Suas preferências foram mantidas — quando quiser religar, rode `/maestro-statusline`."
 
 ---
 

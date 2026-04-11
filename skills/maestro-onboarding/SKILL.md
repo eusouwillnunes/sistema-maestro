@@ -267,7 +267,7 @@ Marcar task "Configurar Status Line" como `in_progress`.
 
 Oferecer:
 
-> "Quer ativar uma barra de status no terminal? Ela mostra em tempo real o uso de contexto, limites da API e qual modelo está rodando. Você pode desligar a qualquer momento com `/maestro:statusline`."
+> "Quer ativar uma barra de status no terminal? Ela mostra em tempo real o uso de contexto, limites da API e qual modelo está rodando. Você pode desligar a qualquer momento com `/maestro-statusline`."
 
 **Se sim:**
 1. Ler o template do script em `core/statusline/maestro-statusline.sh`
@@ -283,10 +283,10 @@ Oferecer:
    }
    ```
 5. Atualizar `user/config.md` — setar `statusline-ativo: true` na seção `## Status Line`
-6. Informar: "Barra de status ativada! Ela mostra contexto, limites e modelo. Para configurar ou desligar: `/maestro:statusline`."
+6. Informar: "Barra de status ativada! Ela mostra contexto, limites e modelo. Para configurar ou desligar: `/maestro-statusline`."
 
 **Se não:**
-- Informar: "Sem problema! Quando quiser ativar, rode `/maestro:statusline`."
+- Informar: "Sem problema! Quando quiser ativar, rode `/maestro-statusline`."
 
 Marcar task "Configurar Status Line" como `completed`.
 
@@ -352,7 +352,7 @@ O que você quer alterar? (número ou "nada")
 
 **Opção 6 — Ativar/configurar status line:**
 - Se desativada: ler preferências de `user/config.md` (se existem usar, se não usar defaults). Gerar script, configurar settings.json, ativar. Mesmo fluxo da etapa 2.5.2.
-- Se ativa: mostrar o menu de configuração da status line (seção 4 da skill `[[maestro:statusline]]`).
+- Se ativa: mostrar o menu de configuração da status line (seção 4 da skill `[[maestro-statusline]]`).
 
 ---
 

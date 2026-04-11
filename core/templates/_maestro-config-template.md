@@ -20,4 +20,4 @@
 ## Status Line
 - Configuração em: user/config.md (seção Status Line)
 - Script em: ~/.claude/maestro-statusline.sh
-- Comando: /maestro:statusline
+- Comando: /maestro-statusline
