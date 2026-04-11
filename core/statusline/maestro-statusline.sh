@@ -29,11 +29,26 @@ JSON=$(cat)
 # --- Funções auxiliares ---
 extract() {
   local key="$1"
+  local result=""
   if command -v jq &>/dev/null; then
-    echo "$JSON" | jq -r "$key // empty" 2>/dev/null
+    result=$(echo "$JSON" | jq -r "$key // empty" 2>/dev/null) || true
+  elif command -v python &>/dev/null || command -v python3 &>/dev/null; then
+    local py_cmd; py_cmd=$(command -v python || command -v python3)
+    result=$(echo "$JSON" | "$py_cmd" -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    keys = '${key}'.lstrip('.').split('.')
+    v = d
+    for k in keys:
+        v = v[k]
+    print(v)
+except: pass
+" 2>/dev/null) || true
   else
-    echo "$JSON" | grep -o "\"${key##*.}\"[[:space:]]*:[[:space:]]*[^,}]*" | head -1 | sed 's/.*:[[:space:]]*//' | tr -d '"' | tr -d ' '
+    result=$(echo "$JSON" | grep -o "\"${key##*.}\"[[:space:]]*:[[:space:]]*[^,}]*" | head -1 | sed 's/.*:[[:space:]]*//' | tr -d '"' | tr -d ' ') || true
   fi
+  echo "$result"
 }
 
 color_context() {
