@@ -35,6 +35,7 @@ TaskCreate({ subject: "Criar Biblioteca de Marketing", description: "Oferecer sc
 TaskCreate({ subject: "Importar material de referência", description: "Oferecer importação de documentos existentes do negócio", activeForm: "Importando material de referência" })
 TaskCreate({ subject: "Configurar Obsidian", description: "Oferecer guia de instalação e configuração do Obsidian como editor visual", activeForm: "Configurando Obsidian" })
 TaskCreate({ subject: "Configurar Pesquisador", description: "Apresentar opções de pesquisa e configurar se necessário", activeForm: "Configurando Pesquisador" })
+TaskCreate({ subject: "Configurar Status Line", description: "Oferecer ativação da barra de status no terminal", activeForm: "Configurando Status Line" })
 TaskCreate({ subject: "Finalizar onboarding", description: "Encerrar com sugestão de primeira ação", activeForm: "Finalizando onboarding" })
 ```
 
@@ -260,6 +261,35 @@ Validar que a API key do OpenRouter está funcionando corretamente.
 | AAAA-MM-DD | Teste de conexão — OpenRouter | livre | sonar | [[AAAA-MM-DD-teste-conexao-openrouter]] |
 ```
 
+### 2.5.2 Status Line
+
+Marcar task "Configurar Status Line" como `in_progress`.
+
+Oferecer:
+
+> "Quer ativar uma barra de status no terminal? Ela mostra em tempo real o uso de contexto, limites da API e qual modelo está rodando. Você pode desligar a qualquer momento com `/maestro:statusline`."
+
+**Se sim:**
+1. Ler o template do script em `core/statusline/maestro-statusline.sh`
+2. Copiar para `~/.claude/maestro-statusline.sh` com os valores default das variáveis de configuração
+3. Tornar executável: `chmod +x ~/.claude/maestro-statusline.sh`
+4. Ler `~/.claude/settings.json` e adicionar a chave `statusLine`:
+   ```json
+   {
+     "statusLine": {
+       "type": "command",
+       "command": "~/.claude/maestro-statusline.sh"
+     }
+   }
+   ```
+5. Atualizar `user/config.md` — setar `statusline-ativo: true` na seção `## Status Line`
+6. Informar: "Barra de status ativada! Ela mostra contexto, limites e modelo. Para configurar ou desligar: `/maestro:statusline`."
+
+**Se não:**
+- Informar: "Sem problema! Quando quiser ativar, rode `/maestro:statusline`."
+
+Marcar task "Configurar Status Line" como `completed`.
+
 ### 2.6 Finalização
 
 Marcar task "Finalizar onboarding" como `in_progress`.
@@ -293,6 +323,7 @@ Configuração atual do Maestro:
 3. Importar referências: {N arquivos importados | nenhum} [importar]
 4. Obsidian: {guia de configuração} [configurar]
 5. Pesquisador: {WebSearch (grátis) | Perplexity Sonar via OpenRouter ✓} [configurar/alterar]
+6. Status Line: {ativa ✓ | desativada} [ativar/configurar]
 
 O que você quer alterar? (número ou "nada")
 ```
@@ -318,6 +349,10 @@ O que você quer alterar? (número ou "nada")
 **Opção 5 — Configurar/alterar Pesquisador:**
 - Mesmo fluxo do passo 2.5 (perguntar API key e ferramenta padrão), incluindo o teste da seção 2.5.1 ao informar uma nova key
 - Se já tem key configurada, oferecer: "Quer alterar a ferramenta padrão, trocar a key, ou remover a configuração?"
+
+**Opção 6 — Ativar/configurar status line:**
+- Se desativada: ler preferências de `user/config.md` (se existem usar, se não usar defaults). Gerar script, configurar settings.json, ativar. Mesmo fluxo da etapa 2.5.2.
+- Se ativa: mostrar o menu de configuração da status line (seção 4 da skill `[[maestro:statusline]]`).
 
 ---
 

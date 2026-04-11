@@ -16,3 +16,8 @@
 - Projeto iniciado em: (preenchido no setup)
 - Última revisão de memórias: (nunca)
 - onboarding-completo: false
+
+## Status Line
+- Configuração em: user/config.md (seção Status Line)
+- Script em: ~/.claude/maestro-statusline.sh
+- Comando: /maestro:statusline

@@ -54,3 +54,16 @@ modelos:
   bibliotecario: ~     # default: haiku
   gestor-tarefas: ~    # default: haiku
 ```
+
+## Status Line
+
+```yaml
+statusline-ativo: false
+statusline-itens: contexto, limite-5h, limite-7d, modelo
+statusline-estilo-contexto: barra
+statusline-estilo-limite-5h: numero
+statusline-estilo-limite-7d: numero
+statusline-estilo-modelo: texto
+statusline-estilo-custo: numero
+statusline-faixas-contexto: 40,60,70
+```
