@@ -9,6 +9,8 @@ description: >
   budget, segmentação, remarketing, mídia paga, pixel ou atribuição.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Analista de Performance
 
 ## 1. Especialidade

@@ -7,6 +7,8 @@ description: >
   Integrado com Entrevistador, Gestor de Tarefas e memórias de sessão.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Maestro: Rituais de Sessão
 
 ## 1. Escopo

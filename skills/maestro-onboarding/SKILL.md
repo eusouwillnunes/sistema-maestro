@@ -6,6 +6,8 @@ description: >
   ou executado manualmente a qualquer momento.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 ## 1. Detecção de Modo
 
 Ao ser acionado, verificar o estado atual:

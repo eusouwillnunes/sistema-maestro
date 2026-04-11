@@ -8,6 +8,8 @@ description: >
   diretamente via /entrevistador.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Entrevistador
 
 ## 1. Especialidade

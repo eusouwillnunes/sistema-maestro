@@ -8,6 +8,8 @@ description: >
   conteúdo ou entender por que não performou.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Análise e Otimização
 
 ## 1. Escopo

@@ -7,6 +7,8 @@ description: >
   o que testar, budget, alocação de verba ou experimento.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Planejamento de Testes
 
 ## 1. Escopo

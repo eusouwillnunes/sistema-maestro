@@ -6,6 +6,8 @@ description: >
   o pedido envolver funil, jornada do cliente, escada de valor ou tráfego.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Funil
 
 ## 1. Escopo

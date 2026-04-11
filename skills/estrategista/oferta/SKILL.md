@@ -6,6 +6,8 @@ description: >
   o pedido envolver criar oferta, precificação, empacotamento ou oferta irresistível.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Oferta
 
 ## 1. Escopo

@@ -7,6 +7,8 @@ description: >
   página de vendas, CTA, bullets, script de vídeo.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Copywriter
 
 ## 1. Especialidade

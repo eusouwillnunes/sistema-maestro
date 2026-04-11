@@ -7,6 +7,8 @@ description: >
 user-invocable: false
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # QA — Verificação de Checklists
 
 ## 1. Papel

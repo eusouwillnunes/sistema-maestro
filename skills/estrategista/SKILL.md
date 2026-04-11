@@ -8,6 +8,8 @@ description: >
   precificação, métricas ou script de vendas.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Estrategista de Marketing
 
 ## 1. Especialidade

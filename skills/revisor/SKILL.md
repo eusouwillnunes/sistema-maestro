@@ -6,6 +6,8 @@ description: >
   após toda execução, ou diretamente pelo usuário via /revisor.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Agente Revisor Anti-IA
 
 ## Identidade

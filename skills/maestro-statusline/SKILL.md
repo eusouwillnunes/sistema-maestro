@@ -5,6 +5,8 @@ description: >
   se desligada liga com defaults, se ligada oferece desligar ou configurar.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 ## 1. Detecção de Estado
 
 Ao ser acionado, verificar o estado atual:

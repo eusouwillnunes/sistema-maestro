@@ -7,6 +7,8 @@ description: >
   está bloqueado. Detecta tarefas desbloqueadas e propõe planos de execução.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Maestro: Gestão de Tarefas
 
 ## 1. Escopo

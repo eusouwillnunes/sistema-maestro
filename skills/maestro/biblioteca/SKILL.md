@@ -9,6 +9,8 @@ description: >
   produto, completar biblioteca, montar contexto ou importar material.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Maestro — Orquestração da Biblioteca
 
 ## 1. Escopo

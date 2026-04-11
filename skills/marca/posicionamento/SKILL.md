@@ -6,6 +6,8 @@ description: >
   Acionado quando o pedido envolver posicionamento, diferenciacao ou Only Test.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Posicionamento de Marca
 
 ## 1. Escopo

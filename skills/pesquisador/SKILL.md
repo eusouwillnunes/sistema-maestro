@@ -9,6 +9,8 @@ description: >
   referências, validar informações, fontes, dados de mercado ou benchmark.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Pesquisador
 
 ## 1. Especialidade

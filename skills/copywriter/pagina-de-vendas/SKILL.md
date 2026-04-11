@@ -7,6 +7,8 @@ description: >
   prova, oferta e CTA.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Página de Vendas
 
 ## 1. Escopo

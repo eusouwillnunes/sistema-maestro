@@ -6,6 +6,8 @@ description: >
   envolver webinário, VSL, lançamento ou apresentação de vendas.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Webinário
 
 ## 1. Escopo

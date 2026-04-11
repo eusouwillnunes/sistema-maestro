@@ -6,6 +6,8 @@ description: >
   envolver lead magnet, aquisição, script de vendas ou captação de leads.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Aquisição de Leads
 
 ## 1. Escopo

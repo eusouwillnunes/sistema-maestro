@@ -6,6 +6,8 @@ description: >
   calibrar a abordagem. Gera múltiplas opções com raciocínio.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Headlines
 
 ## 1. Escopo

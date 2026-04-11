@@ -8,6 +8,8 @@ description: >
   de marca, criar nome, batizar ou rebatizar.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Naming de Marca
 
 ## 1. Escopo

@@ -7,6 +7,8 @@ description: >
   de dados e arquivo morto pra melhoria contínua.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Calendário Editorial Operacional
 
 ## 1. Escopo

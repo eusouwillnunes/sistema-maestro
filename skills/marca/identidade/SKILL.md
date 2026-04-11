@@ -7,6 +7,8 @@ description: >
   envolver identidade de marca, propósito, Golden Circle, valores ou personalidade.
 ---
 
+> [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+
 # Identidade de Marca
 
 ## 1. Escopo

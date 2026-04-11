@@ -63,8 +63,8 @@ Você também pode chamar qualquer agente diretamente:
 | `/maestro:entrevistador` | Conduzir entrevistas para coleta de dados |
 | `/maestro:gestor-tarefas` | Consultar e gerenciar tarefas no vault |
 | `/maestro:bibliotecario` | Criar e gerenciar a Biblioteca de Marketing |
-| `/maestro:maestro-on` | Ativar o Sistema Maestro |
-| `/maestro:maestro-off` | Desativar o Sistema Maestro |
+| `/maestro` | Ativar o Sistema Maestro |
+| `/desligar-maestro` | Desativar o Sistema Maestro |
 | `/maestro:maestro-onboarding` | Reconfigurar o Sistema Maestro |
 | `/maestro:maestro-revisar-memorias` | Revisar e evoluir memórias do sistema |
 
