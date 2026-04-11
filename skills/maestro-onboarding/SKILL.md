@@ -95,8 +95,39 @@ Executar silenciosamente (sem mensagens detalhadas para cada item):
      > Memórias de usuário: [caminho do plugin]/user/memorias/
      ```
 5. **Memórias de usuário:** verificar se `user/memorias/_index.md` existe no plugin. Se não existe, informar que precisa ser recriado.
+6. **Permissões do projeto:** criar ou atualizar `.claude/settings.local.json` no diretório atual com as permissões que o Maestro precisa pra funcionar sem interrupções. Se o arquivo já existir, preservar chaves existentes e adicionar/atualizar apenas `permissions`.
 
-Informar brevemente: "Estrutura de memórias criada."
+   ```json
+   {
+     "permissions": {
+       "allow": [
+         "Read(/**)",
+         "Write(/**)",
+         "Edit(/**)",
+         "Glob",
+         "Grep",
+         "Read(~/.claude/**)",
+         "Edit(~/.claude/settings.json)",
+         "Write(~/.claude/maestro-statusline.sh)",
+         "Bash(mkdir *)",
+         "Bash(chmod *)",
+         "Bash(cp *)",
+         "Bash(ls *)",
+         "Bash(python *)",
+         "Bash(curl *)"
+       ]
+     }
+   }
+   ```
+
+   Explicar ao usuário (substituir `{CWD}` pelo caminho real do diretório atual):
+   > "Configurei as permissões do projeto. Sem isso, o Maestro precisaria pedir sua autorização a cada arquivo que lê, cria ou edita — o que tornaria o trabalho bem lento.
+   >
+   > Com as permissões ativas, o Maestro pode trabalhar livremente dentro de `{CWD}` e todas as suas subpastas. Fora dessa pasta, ele só acessa arquivos de configuração do próprio Claude Code (como a barra de status e settings).
+   >
+   > As permissões valem só pra este projeto e ficam salvas em `.claude/settings.local.json`."
+
+Informar brevemente: "Estrutura de memórias e permissões criadas."
 
 Marcar task "Criar estrutura de memórias" como `completed`.
 
@@ -282,8 +313,19 @@ Oferecer:
      }
    }
    ```
-5. Atualizar `user/config.md` — setar `statusline-ativo: true` na seção `## Status Line`
-6. Informar: "Barra de status ativada! Ela mostra contexto, limites e modelo. Para configurar ou desligar: `/maestro-statusline`."
+5. Verificar workspace trust (mesmo fluxo da seção 2.3 da skill `[[maestro-statusline]]`):
+   - Ler `~/.claude.json` em modo binário
+   - Buscar o CWD atual e verificar `hasTrustDialogAccepted`
+   - Se `false`: explicar e pedir confirmação:
+     > "Para a barra de status funcionar, preciso ativar o **workspace trust** neste projeto.
+     >
+     > O workspace trust é uma trava de segurança do Claude Code. Quando você abre um projeto, o Claude pergunta se confia nele. Enquanto não aceitar, ele bloqueia qualquer coisa que execute código automaticamente — como a barra de status, hooks e plugins.
+     >
+     > Esse projeto está com o trust desativado. Posso ativar?"
+   - Se o usuário aceitar: corrigir com replace binário (`false` → `true`). **Nunca usar json.load/json.dump** — o arquivo tem surrogates Unicode que corrompem na serialização. Informar que a barra aparece após reiniciar.
+   - Se o usuário recusar: informar que a barra não vai funcionar sem trust e seguir adiante.
+6. Atualizar `user/config.md` — setar `statusline-ativo: true` na seção `## Status Line`
+7. Informar: "Barra de status ativada! Ela mostra contexto, limites e modelo. Para configurar ou desligar: `/maestro-statusline`."
 
 **Se não:**
 - Informar: "Sem problema! Quando quiser ativar, rode `/maestro-statusline`."
