@@ -35,9 +35,16 @@ ANTES de criar tasks ou iniciar qualquer etapa, verificar o que já está config
 4. **Biblioteca:** verificar se a pasta da empresa já existe com scaffold
 5. **Pesquisador:** ler `user/config.md` e verificar se `openrouter-api-key` tem valor
 6. **Status Line:** ler `~/.claude/settings.json` e verificar se `statusLine` já está configurada
-7. **Obsidian:** tentar detectar se está instalado
+7. **Obsidian:** verificar se está instalado usando TODOS os métodos abaixo (em ordem):
+   - Windows: testar se existe `$LOCALAPPDATA/Obsidian/Obsidian.exe` ou `$APPDATA/../Local/Obsidian/Obsidian.exe`
+   - macOS: testar se existe `/Applications/Obsidian.app`
+   - Linux: testar `which obsidian`
+   - **NÃO usar `where obsidian`** — o Obsidian não registra no PATH do Windows
+   - Se encontrado em qualquer método, marcar como instalado
 
 Guardar o resultado em memória para uso nos passos seguintes. Etapas já concluídas serão puladas automaticamente com aviso ao usuário (ex: "Dependências já instaladas. Pulando.").
+
+**Exceção:** a etapa do Obsidian (2.7) NUNCA é pulada pelo checklist. Mesmo se detectado como instalado, sempre apresentar a etapa (o usuário pode precisar configurar o vault).
 
 ### 2.0.1 Tasks visuais
 
@@ -119,7 +126,7 @@ Enviar mensagem:
 
 Marcar task "Apresentar o Sistema Maestro" como `completed`.
 
-**Aguardar confirmação do usuário antes de prosseguir.**
+**Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
 ### 2.2 Nome da empresa
 
@@ -163,7 +170,7 @@ O Maestro precisa de ferramentas instaladas pra ler diferentes formatos de arqui
 
 Marcar task "Verificar dependências" como `completed`.
 
-**Aguardar confirmação do usuário antes de prosseguir.**
+**Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
 ### 2.4 Permissões do projeto
 
@@ -214,7 +221,7 @@ Informar: "Sem problema. O Maestro vai funcionar, mas vai pedir sua autorizaçã
 
 Marcar task "Configurar permissões" como `completed`.
 
-**Aguardar confirmação do usuário antes de prosseguir.**
+**Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
 ### 2.5 Setup técnico
 
@@ -268,7 +275,7 @@ Oferecer:
 
 Marcar task "Criar Biblioteca de Marketing" como `completed`.
 
-**Aguardar confirmação do usuário antes de prosseguir.**
+**Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
 ### 2.7 Obsidian
 
@@ -285,7 +292,10 @@ Explicar:
 **Se sim:**
 
 1. Verificar se o Obsidian já está instalado:
-   - Tentar detectar via `where obsidian 2>/dev/null` ou verificar se existe em caminhos comuns (`$LOCALAPPDATA/Obsidian`, `/Applications/Obsidian.app`, etc.)
+   - Windows: `test -f "$LOCALAPPDATA/Obsidian/Obsidian.exe"` (caminho padrão de instalação)
+   - macOS: `test -d "/Applications/Obsidian.app"`
+   - Linux: `which obsidian 2>/dev/null`
+   - **NÃO usar `where obsidian`** — o Obsidian não registra no PATH do Windows
    - **Se encontrado:** informar "Obsidian já está instalado!" e pular para o passo 3
 
 2. Guiar a instalação:
@@ -310,7 +320,7 @@ Explicar:
 
 Marcar task "Configurar Obsidian" como `completed`.
 
-**Aguardar confirmação do usuário antes de prosseguir.**
+**Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
 ### 2.8 Pesquisador
 
@@ -343,7 +353,7 @@ Explicar:
 
 Marcar task "Configurar Pesquisador" como `completed`.
 
-**Aguardar confirmação do usuário antes de prosseguir.**
+**Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
 ### 2.8.1 Teste da API Key do OpenRouter
 
@@ -390,7 +400,7 @@ Oferecer:
 
 Marcar task "Pesquisa inicial do negócio" como `completed`.
 
-**Aguardar confirmação do usuário antes de prosseguir.**
+**Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
 ### 2.10 Importar Material de Referência
 
@@ -415,7 +425,7 @@ Perguntar:
 
 Marcar task "Importar material de referência" como `completed`.
 
-**Aguardar confirmação do usuário antes de prosseguir.**
+**Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
 ### 2.11 Status Line
 
