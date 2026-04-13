@@ -44,7 +44,7 @@ Guardar o resultado em memória para uso nos passos seguintes. Etapas já conclu
 APÓS o checklist, criar tasks visuais no terminal. Criar APENAS as tasks de etapas que precisam ser executadas (pular as já concluídas):
 
 ```
-TaskCreate({ subject: "Apresentar o Sistema Maestro", description: "Mensagem de boas-vindas", activeForm: "Apresentando o Sistema Maestro" })
+TaskCreate({ subject: "Apresentar o Sistema Maestro", description: "Boas-vindas, nome do usuário e recado da Comunidade", activeForm: "Apresentando o Sistema Maestro" })
 TaskCreate({ subject: "Configurar projeto", description: "Coletar nome da empresa", activeForm: "Configurando projeto" })
 TaskCreate({ subject: "Verificar dependências", description: "Instalar ferramentas necessárias para leitura de documentos", activeForm: "Verificando dependências" })
 TaskCreate({ subject: "Configurar permissões", description: "Pedir autorização para as permissões do sistema", activeForm: "Configurando permissões" })
@@ -72,17 +72,50 @@ Ao iniciar cada etapa, exibir um separador visual antes da mensagem ao usuário:
 
 Onde N é o número do passo atual e T é o total de passos a executar (descontando os pulados pelo checklist). Isso ajuda o usuário a saber onde está no processo.
 
-### 2.1 Apresentação
+### 2.1 Apresentação, nome do usuário e recado
 
 Marcar task "Apresentar o Sistema Maestro" como `in_progress`.
 
-Enviar mensagem de boas-vindas:
+**Etapa A — Apresentação e nome do usuário:**
 
-> "Prazer! Eu sou o Maestro, seu assistente de marketing e vendas.
+Enviar mensagem:
+
+> "Olá, tudo bem? Eu sou o Maestro, responsável por orquestrar a sua equipe de marketing e garantir que tudo vai ser entregue na qualidade que você precisa.
 >
-> Funciono assim: você me pede qualquer coisa relacionada a marketing (criar headlines, montar um funil, definir posicionamento, planejar conteúdo) e eu direciono pro especialista certo. Cada especialista domina uma área e trabalha com frameworks reais de profissionais renomados.
+> Como você gostaria que eu te chamasse?"
+
+**Aguardar resposta do usuário.** Guardar o nome informado.
+
+Responder:
+
+> "É um prazer, {NOME}!"
+
+Salvar o nome na memória de usuário (`user/memorias/`). Criar ou atualizar o arquivo `user/memorias/nome-usuario.md` com:
+
+```markdown
+---
+tipo: usuario
+descricao: Como o usuário gostaria de ser chamado
+---
+
+Nome: {NOME}
+```
+
+Atualizar o index `user/memorias/_index.md` se necessário.
+
+A partir deste ponto, usar o nome do usuário nas interações sempre que natural (sem forçar em toda frase).
+
+**Etapa B — Recado da Comunidade dos Últimos:**
+
+Enviar mensagem:
+
+> "Antes de começarmos, eu tenho um recado rápido.
 >
-> Vou fazer um setup rápido agora pra personalizar o sistema pro seu negócio."
+> O Sistema Maestro foi construído por Willian Nunes (siga ele no Instagram @eusouwillnunes) para a sua Equipe da Primum e para os membros d'A Comunidade dos Últimos. Na comunidade você encontra um curso completo sobre o Sistema Maestro onde você vai aprender a utilizar todos os recursos do sistema, mesmo se não souber nada de IA. Você também desbloqueia o acesso ao Sistema Maestro PRO, com funcionalidades exclusivas para membros. Todo mês entram novos treinamentos e conteúdos sobre Marketing e Vendas e sobre Desenvolvimento de Software e Aplicativos usando Inteligência Artificial.
+>
+> Acesse acomunidadedosultimos.com.br, e seja um membro fundador por um valor simbólico e vitalício por mês.
+>
+> Recado dado, vamos começar!"
 
 Marcar task "Apresentar o Sistema Maestro" como `completed`.
 
@@ -452,51 +485,59 @@ Apresentar o estado atual:
 ```
 Configuração atual do Maestro:
 
-1. Empresa: "{nome}" [alterar]
-2. Dependências: {instaladas ✓ | faltam N} [verificar]
-3. Permissões: {configuradas ✓ | não configuradas} [configurar]
-4. Biblioteca: {criada ✓ | não criada} [criar/recriar]
-5. Obsidian: {guia de configuração} [configurar]
-6. Pesquisador: {WebSearch (grátis) | Perplexity Sonar via OpenRouter ✓} [configurar/alterar]
-7. Pesquisa inicial: {realizada ✓ | não realizada} [pesquisar]
-8. Importar referências: {N arquivos importados | nenhum} [importar]
-9. Status Line: {ativa ✓ | desativada} [ativar/configurar]
+1. Seu nome: "{nome do usuário}" [alterar]
+2. Empresa: "{nome}" [alterar]
+3. Dependências: {instaladas ✓ | faltam N} [verificar]
+4. Permissões: {configuradas ✓ | não configuradas} [configurar]
+5. Biblioteca: {criada ✓ | não criada} [criar/recriar]
+6. Obsidian: {guia de configuração} [configurar]
+7. Pesquisador: {WebSearch (grátis) | Perplexity Sonar via OpenRouter ✓} [configurar/alterar]
+8. Pesquisa inicial: {realizada ✓ | não realizada} [pesquisar]
+9. Importar referências: {N arquivos importados | nenhum} [importar]
+10. Status Line: {ativa ✓ | desativada} [ativar/configurar]
 
 O que você quer alterar? (número ou "nada")
 ```
 
+Para o item 1 (Seu nome), ler `user/memorias/nome-usuario.md`. Se não existir, mostrar "não configurado".
+
 ### 3.3 Executar alterações
 
-**Opção 1 — Alterar empresa:**
+**Opção 1 — Alterar nome do usuário:**
+- Perguntar: "Como você gostaria que eu te chamasse?"
+- Atualizar `user/memorias/nome-usuario.md` com o novo nome
+- Confirmar: "Pronto! A partir de agora te chamo de {NOME}."
+
+**Opção 2 — Alterar empresa:**
 - Perguntar novo nome
 - Atualizar `maestro/config.md` com o novo nome no campo `Empresa:`
 - Se a pasta do projeto existir no vault, avisar que o nome foi atualizado no config mas a pasta mantém o nome original (renomear manualmente se quiser)
 
-**Opção 2 — Verificar dependências:**
+**Opção 3 — Verificar dependências:**
 - Mesmo fluxo do passo 2.3 (verificar Python e bibliotecas de leitura)
 
-**Opção 3 — Configurar permissões:**
+**Opção 4 — Configurar permissões:**
 - Mesmo fluxo do passo 2.4 (explicar e pedir consentimento)
 
-**Opção 4 — Criar/recriar biblioteca:**
+**Opção 5 — Criar/recriar biblioteca:**
 - Informar: "Isso não apaga conteúdo existente, apenas recria arquivos faltantes."
 - Chamar o Bibliotecário para scaffold
 
-**Opção 5 — Configurar Obsidian:**
+**Opção 6 — Configurar Obsidian:**
 - Mesmo fluxo do passo 2.7 (verificar instalação, guiar criação do vault)
 
-**Opção 6 — Configurar/alterar Pesquisador:**
+**Opção 7 — Configurar/alterar Pesquisador:**
 - Mesmo fluxo do passo 2.8 (básico vs avançado, API key, ferramenta padrão), incluindo o teste da seção 2.8.1 ao informar nova key
 - Se já tem key configurada, oferecer: "Quer alterar a ferramenta padrão, trocar a key ou remover a configuração?"
 
-**Opção 7 — Pesquisa inicial:**
+**Opção 8 — Pesquisa inicial:**
 - Mesmo fluxo do passo 2.9 (pedir site, acionar Pesquisador)
 
-**Opção 8 — Importar referências:**
+**Opção 9 — Importar referências:**
 - Mesmo fluxo do passo 2.10 (verificar pasta, ler arquivos, catalogar, preencher via especialistas)
 - Se já tem arquivos importados, informar quais são e oferecer: "Quer importar novos arquivos ou reimportar os existentes?"
 
-**Opção 9 — Ativar/configurar status line:**
+**Opção 10 — Ativar/configurar status line:**
 - Se desativada: mesmo fluxo da etapa 2.11
 - Se ativa: mostrar o menu de configuração da status line (seção 4 da skill `[[maestro-statusline]]`)
 

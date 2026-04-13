@@ -176,6 +176,7 @@ Quando a solicitação envolve funcionalidades internas do Maestro, consultar a 
 5. **Carregar memórias** — carregamento seletivo em 2 etapas:
    - **Etapa 1 (sempre):** ler `user/memorias/_index.md` e `{projeto-ativo}/memorias/_index.md` (onde `{projeto-ativo}` é o caminho do projeto confirmado na seção 2.1)
    - **Etapa 2 (seletivo):** com base nos indexes e no agente de destino, carregar:
+     - `user/memorias/nome-usuario.md` (sempre — usar o nome nas interações)
      - `user/memorias/preferencias.md` (sempre)
      - `user/memorias/agentes/[agente].md` (se existir para o agente de destino)
      - `{projeto-ativo}/memorias/agentes/[agente].md` (se existir para o agente de destino)
