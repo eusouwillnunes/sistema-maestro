@@ -297,6 +297,10 @@ Explicar:
    - Linux: `which obsidian 2>/dev/null`
    - **NÃO usar `where obsidian`** — o Obsidian não registra no PATH do Windows
    - **Se encontrado:** informar "Obsidian já está instalado!" e pular para o passo 3
+   - **Se NÃO encontrado:** perguntar ao usuário antes de assumir que não tem:
+     > "Não consegui detectar o Obsidian instalado no seu computador. Você pode me confirmar se de fato ainda não instalou essa ferramenta?"
+     - **Se o usuário confirma que já tem:** informar "Entendido! Vamos direto pra configuração do vault." e pular para o passo 3
+     - **Se o usuário confirma que não tem:** seguir para o passo 2
 
 2. Guiar a instalação:
    > "Baixe o Obsidian em https://obsidian.md/ (é grátis). Instale normalmente e abra o app.
@@ -428,6 +432,10 @@ Marcar task "Importar material de referência" como `completed`.
 **Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
 ### 2.11 Status Line
+
+**Se o checklist pré-onboarding (item 6) detectou que `statusLine` já está configurada em `~/.claude/settings.json`:** pular esta etapa silenciosamente. Não perguntar nada. Marcar task como `completed` e seguir.
+
+**Se não está configurada:**
 
 Marcar task "Configurar Status Line" como `in_progress`.
 
