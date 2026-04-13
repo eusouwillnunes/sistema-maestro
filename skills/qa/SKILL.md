@@ -35,6 +35,8 @@ Aplicar sempre, independentemente do agente especialista:
 - [ ] A resposta é específica para o cenário do usuário (não genérica)?
 - [ ] As informações necessárias foram coletadas antes da execução?
 - [ ] Próximos passos concretos incluídos quando aplicável?
+- [ ] O texto usa acentuação correta em português do Brasil? (verificar palavras como "é", "não", "próximo", "já", "também", "você", "análise", "estratégia", "conteúdo" — se qualquer uma aparece sem acento, REPROVAR)
+- [ ] O documento contém wiki-links (`[[...]]`) conectando-o a pelo menos o index da sua área? (se não tem nenhum link, REPROVAR)
 
 ---
 

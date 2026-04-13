@@ -126,10 +126,19 @@ O problema não é "ter travessões demais". O problema é **usar travessão sem
 
 ---
 
+## Acentuação obrigatória em português do Brasil
+
+Todo texto produzido DEVE usar acentuação correta em português do Brasil. Palavras como "é", "não", "próximo", "fundação", "só", "já", "também", "você", "análise", "estratégia", "conteúdo" nunca aparecem sem acento. Se o texto contém palavras sem acento que deveriam ter, o texto está REPROVADO — corrija antes de entregar.
+
+Esta regra é inegociável e se aplica a todo conteúdo: entregas de especialistas, templates preenchidos, documentos de pesquisa, respostas ao usuário.
+
+---
+
 ## Checklist Rápido
 
 Aplique antes de entregar qualquer texto:
 
+- [ ] O texto usa acentuação correta em português do Brasil? → Se não, corrija TODAS as palavras
 - [ ] Usei travessão onde ponto final, vírgula ou dois-pontos resolveriam? → Reescreva sem o travessão
 - [ ] Usei advérbios em "-mente" desnecessários? → Corte
 - [ ] Usei conectivos em sequência ("Além disso", "Portanto")? → Varie ou elimine

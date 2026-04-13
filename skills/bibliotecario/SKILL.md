@@ -21,6 +21,7 @@ Este agente é acionado quando a tarefa envolver:
 - Consultar o status de preenchimento da biblioteca
 - Detectar e analisar material existente do usuário para pré-preenchimento
 - Organizar a estrutura de documentos de marketing no vault Obsidian
+- **Validar links de documentos** — após qualquer documento ser produzido e salvo, o Bibliotecário verifica que ele está conectado ao grafo do vault (wiki-links para index da área + fontes de dados usadas). Documento sem links não é considerado salvo.
 
 ### Gatilhos de Acionamento
 
@@ -165,7 +166,8 @@ Peça ao Maestro: "[comando sugerido]"
 2. **Templates copiados?** Os 8 templates de identidade estão na pasta `identidade/`?
 3. **Index atualizado?** O arquivo principal da biblioteca (`[nome-da-empresa].md`) reflete o estado real dos arquivos?
 4. **Nada sobrescrito?** Arquivos existentes do usuário foram preservados?
-5. **Próximo passo sugerido?** Sempre indica o que fazer depois?
+5. **Links verificados?** Todo documento tem wiki-links conectando ao index da sua área e às fontes de dados que usou?
+6. **Próximo passo sugerido?** Sempre indica o que fazer depois?
 
 ### 5 Exemplos (errado vs. certo)
 

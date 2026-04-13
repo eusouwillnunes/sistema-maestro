@@ -150,6 +150,10 @@ Protocolo de report: Seguir o formato definido em protocolo-agent.md (seção 2)
 
 ## 4. Seleção de Modelo
 
+### Regra de modelo mínimo
+
+**Sonnet é o modelo mínimo para qualquer conteúdo que o usuário vai ler** — templates preenchidos, documentos de pesquisa, entregas de especialistas, textos revisados. Haiku é permitido APENAS para operações mecânicas que não geram conteúdo textual (CRUD, validação de checklist, criação de estrutura de pastas).
+
 ### Defaults do sistema
 
 | Agente | Modelo default | Justificativa |

@@ -31,6 +31,7 @@ tags: [meta, index, biblioteca]
 
 ## Navegação
 
+### Biblioteca
 - [[identidade/_identidade|Identidade da Marca]] — fundação, preencha primeiro
 - [[escada-de-valor/_escada-de-valor|Escada de Valor]] — mapa de conexão entre produtos
 - [[lead-magnets/_lead-magnets|Lead Magnets]] — iscas digitais
@@ -39,6 +40,11 @@ tags: [meta, index, biblioteca]
 - [[lancamentos/_lancamentos|Lançamentos]] — lançamentos ativos e passados
 - [[campanhas/_campanhas|Campanhas]] — campanhas avulsas
 - [[social/_social|Social]] — conteúdo de redes sociais
+
+### Operacional
+- [[tarefas/_tarefas|Tarefas]] — tarefas em andamento e pendentes
+- [[entrevistas/_entrevistas|Entrevistas]] — coletas de dados com o usuário
+- [[referencias/_referencias|Referências]] — material importado do negócio
 - [[pesquisas/_pesquisas|Pesquisas]] — pesquisas realizadas
 - [[entregas/_entregas|Entregas]] — entregas avulsas dos agentes
 - [[memorias/_memorias|Memórias]] — memórias dos agentes
