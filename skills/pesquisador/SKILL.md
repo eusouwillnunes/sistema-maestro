@@ -113,32 +113,109 @@ pesquisador:
 
 ---
 
-## 4. Fluxo de Execução
+## 4. Protocolo de Encomenda
 
-### Via `/pesquisar` (comando direto do usuário)
+Todo pedido de pesquisa — seja do usuário ou de outro agente — passa por este protocolo ANTES de executar. Sem exceção.
 
-1. **Clarificar objetivo** — pergunte: "O que exatamente quer descobrir? Qual o objetivo dessa pesquisa?"
-2. **Consultar index** — leia `pesquisas/_pesquisas.md` (na pasta configurada). Já tem pesquisa relevante?
-   - **SIM:** "Já temos [[pesquisa-existente]] de [data]. Quer usar essa ou pesquisar novamente?"
-   - **NÃO:** continue
-3. **Sugerir ferramenta** — com base na complexidade, sugira e aguarde confirmação
-4. **Executar pesquisa** — use a ferramenta selecionada
-5. **Gerar documento** — monte o Markdown estruturado seguindo o template (seção 5)
-6. **Salvar** — salve na pasta configurada com nome `AAAA-MM-DD-tema-descritivo.md`
-7. **Atualizar index** — adicione entrada no topo de `pesquisas/_pesquisas.md`
-8. **Entregar** — apresente resumo ao usuário com link pro documento
+### Passo 1 — Clarificar objetivo
 
-### Via Maestro ou agente especialista
+Perguntar ao usuário (ou receber do agente solicitante):
 
-1. **Receber objetivo** — o agente passa o que precisa com contexto claro
-2. **Consultar index** — já tem pesquisa relevante?
-   - **SIM:** retorne a pesquisa existente
-   - **NÃO:** continue
-3. **Sugerir ferramenta** — sugira e aguarde confirmação do usuário
-4. **Executar, gerar, salvar, atualizar index** — mesmo fluxo
-5. **Retornar** — entregue os dados ao agente que pediu + link pro documento
+> "O que exatamente quer descobrir? Qual o objetivo dessa pesquisa?"
 
-### Via teste de conexão (usuário pede para testar OpenRouter)
+Se o objetivo já estiver claro no pedido, confirmar: "Entendi que o objetivo é [X]. Correto?"
+
+Não executar pesquisa sem objetivo definido.
+
+### Passo 2 — Consultar pesquisas existentes
+
+Ler `pesquisas/_pesquisas.md` (na pasta configurada). Já tem pesquisa relevante?
+
+- **SIM:** informar ao usuário: "Já temos [[pesquisa-existente]] de [data]. Quer usar essa ou pesquisar novamente?"
+- **NÃO:** seguir pro passo 3
+
+### Passo 3 — Perguntar modo de pesquisa
+
+OBRIGATÓRIO. Perguntar ao usuário:
+
+> "Quer que eu faça uma pesquisa básica (grátis) ou avançada (paga)?
+>
+> **Básica:** usa o buscador nativo do Claude Code. Funciona bem pra consultas simples.
+> **Avançada:** usa a Perplexity, que traz fontes mais confiáveis e resultados mais completos. Custo: ~R$0,15-0,80 por pesquisa."
+
+Se o usuário escolher avançada e não tiver API key do OpenRouter:
+- Informar: "Pra usar a pesquisa avançada, precisa configurar a API key do OpenRouter. Quer configurar agora ou seguir com a básica?"
+
+**Nunca decidir a ferramenta sozinho.** A escolha é sempre do usuário.
+
+### Passo 4 — Confirmar escopo
+
+Antes de executar, apresentar um resumo:
+
+> "Vou pesquisar:
+> - **Objetivo:** [o que vai buscar]
+> - **Modo:** [básica/avançada]
+> - **Escopo:** [o que pretende cobrir]
+>
+> Posso começar?"
+
+Aguardar confirmação.
+
+### Quando vem de outro agente (via Maestro)
+
+O Maestro já deve ter perguntado o modo ao usuário (restrição 11 do hub). Nesse caso:
+1. Receber objetivo + modo escolhido do Maestro
+2. Consultar pesquisas existentes (passo 2)
+3. Pular passo 3 (modo já definido)
+4. Confirmar escopo (passo 4) — se via Agent(), pular confirmação e executar direto
+
+---
+
+## 5. Protocolo de Entrega
+
+Toda pesquisa concluída passa por este protocolo ANTES de ser entregue ao usuário. Sem exceção.
+
+### Passo 1 — Gerar documento
+
+Montar o Markdown estruturado seguindo o template (seção 6).
+
+### Passo 2 — Salvar
+
+Salvar na pasta configurada com nome `AAAA-MM-DD-tema-descritivo.md`.
+
+### Passo 3 — Atualizar index
+
+Adicionar entrada no topo de `pesquisas/_pesquisas.md`.
+
+### Passo 4 — Validar (Ciclo de Validação)
+
+O documento DEVE passar pelo QA + Revisor antes da entrega final, conforme o Ciclo de Validação do Maestro (seção 6 do hub). Isso garante:
+- Fontes verificáveis em toda afirmação
+- Texto natural (Protocolo de Escrita Natural)
+- Acentuação correta em português
+
+### Passo 5 — Entregar ao usuário
+
+Apresentar um **resumo executivo** (não o documento inteiro):
+
+> "Pesquisa concluída e salva em [[nome-do-arquivo]].
+>
+> **Resumo:**
+> - [Achado principal 1]
+> - [Achado principal 2]
+> - [Achado principal 3]
+>
+> O documento completo com todas as fontes está no vault."
+
+### Quando vem de outro agente (via Maestro)
+
+Retornar os dados ao Maestro via report (seção 11) + link pro documento. O Maestro repassa ao agente solicitante.
+
+---
+
+### Fluxo de Teste de Conexão
+
+Via teste de conexão (usuário pede para testar OpenRouter)
 
 Acionado por: "testa minha conexão", "testar openrouter", "testar chave", "testar api key" ou similar.
 
@@ -162,7 +239,7 @@ curl -s -w "\n%{http_code}" https://openrouter.ai/api/v1/chat/completions \
 
 4. **Salvar pesquisa de teste (apenas quando HTTP 200):**
    - Ler `pasta-pesquisas` de `user/config.md` (padrão: `pesquisas/`)
-   - Criar `{pasta-pesquisas}/AAAA-MM-DD-teste-conexao-openrouter.md` seguindo o template da seção 5, com:
+   - Criar `{pasta-pesquisas}/AAAA-MM-DD-teste-conexao-openrouter.md` seguindo o template da seção 6, com:
      - `titulo: Teste de conexão — OpenRouter`
      - `tipo: livre`
      - `ferramenta: sonar`
@@ -179,7 +256,7 @@ curl -s -w "\n%{http_code}" https://openrouter.ai/api/v1/chat/completions \
 
 ---
 
-## 5. Formato de Entrega
+## 6. Formato de Entrega
 
 ### Nome do arquivo
 
@@ -246,7 +323,7 @@ Regras:
 
 ---
 
-## 6. Abordagem de Trabalho
+## 7. Abordagem de Trabalho
 
 Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protocolos/protocolo-tasks.md`.
 
@@ -272,7 +349,7 @@ Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protoc
 
 ---
 
-## 7. Checklist de Validação
+## 8. Checklist de Validação
 
 **ANTES de entregar qualquer pesquisa, verifique cada item:**
 
@@ -312,7 +389,7 @@ Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protoc
 
 ---
 
-## 8. Restrições
+## 9. Restrições
 
 ### Restrições do domínio
 
@@ -333,7 +410,7 @@ Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protoc
 
 ---
 
-## 9. Exemplos
+## 10. Exemplos
 
 ### Cenário 1: Pesquisa direta via /pesquisar
 
@@ -406,7 +483,7 @@ Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protoc
 
 ---
 
-## 10. Protocolo Agent()
+## 11. Protocolo Agent()
 
 Quando executado como Agent() (sem interação direta com o usuário), siga estas regras adicionais ao protocolo base definido em `core/protocolos/protocolo-agent.md`.
 
@@ -415,7 +492,7 @@ Quando executado como Agent() (sem interação direta com o usuário), siga esta
 2. Leia o bloco ---CONTEXTO--- — pode conter pesquisas anteriores, contexto do projeto, config do pesquisador
 3. Verifique se tem API key do OpenRouter no contexto (se a ferramenta sugerida for paga)
 4. Consulte o index de pesquisas (se passado no contexto) pra evitar duplicação
-5. Execute o fluxo "Via Maestro ou agente especialista" (seção 4)
+5. Execute os protocolos de Encomenda (seção 4, subseção "Quando vem de outro agente") e Entrega (seção 5)
 
 ### Diferenças do modo Skill()
 - **Não pergunta ao usuário sobre a ferramenta.** O Maestro já perguntou e passou a escolha no bloco TAREFA
@@ -485,7 +562,7 @@ ARQUIVOS:
 
 ---
 
-## 11. Memórias e Histórico
+## 12. Memórias e Histórico
 
 ## Memórias
 
