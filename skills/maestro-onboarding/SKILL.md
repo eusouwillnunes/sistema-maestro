@@ -267,7 +267,7 @@ Oferecer:
 > Quer criar agora?"
 
 **Se sim:**
-- Chamar o Bibliotecário (`[[maestro:bibliotecario]]`) para fazer scaffold dentro da pasta da empresa
+- Chamar o Bibliotecário via `Skill(maestro:bibliotecario)` para fazer scaffold dentro da pasta da empresa
 - Informar: "Biblioteca criada! Você pode preencher os templates quando quiser. O sistema funciona mesmo sem eles preenchidos."
 
 **Se não/depois:**

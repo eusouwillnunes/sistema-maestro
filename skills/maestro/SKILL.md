@@ -147,14 +147,16 @@ Quando a solicitação do usuário ativar gatilhos de múltiplos agentes:
 
 Quando a solicitação envolve funcionalidades internas do Maestro, consultar a sub-skill correspondente:
 
-| Gatilho | Sub-skill |
-|---------|-----------|
-| preencher biblioteca, preencher identidade, preencher produto, completar biblioteca, montar contexto, importar material pra biblioteca, começar pela identidade, preencher círculo dourado, preencher posicionamento, preencher tom de voz | `[[maestro:biblioteca]]` |
-| preenche a identidade, preenche tudo, monta o projeto completo, cria uma campanha completa, faz tudo, executa o plano, decompor em tarefas | `[[maestro:tarefas]]` |
-| iniciar sessão, abrir sessão, começar trabalho, bom dia, bom dia maestro, encerrar sessão, fechar sessão, parar por hoje, chega por hoje | `[[maestro:sessao]]` |
+| Gatilho | Sub-skill | Como invocar |
+|---------|-----------|-------------|
+| preencher biblioteca, preencher identidade, preencher produto, completar biblioteca, montar contexto, importar material pra biblioteca, começar pela identidade, preencher círculo dourado, preencher posicionamento, preencher tom de voz | biblioteca | Ler `skills/maestro/biblioteca/SKILL.md` e seguir as instruções |
+| preenche a identidade, preenche tudo, monta o projeto completo, cria uma campanha completa, faz tudo, executa o plano, decompor em tarefas | tarefas | Ler `skills/maestro/tarefas/SKILL.md` e seguir as instruções |
+| iniciar sessão, abrir sessão, começar trabalho, bom dia, bom dia maestro, encerrar sessão, fechar sessão, parar por hoje, chega por hoje | sessao | Ler `skills/maestro/sessao/SKILL.md` e seguir as instruções |
 
-> **Nota:** A criação da estrutura (scaffold) é feita pelo Bibliotecário (`/bibliotecario`), não por `maestro:biblioteca`.
-> **Nota:** Tarefas avulsas e simples (1 agente, 1 entrega) não passam por `maestro:tarefas` — vão direto pro agente.
+> **IMPORTANTE:** Sub-skills internas do Maestro (biblioteca, tarefas, sessao) NÃO devem ser invocadas via `Skill()`. O Maestro lê o arquivo da sub-skill diretamente e segue as instruções. `Skill()` só é usado para skills top-level (ex: `/maestro:bibliotecario`, `/maestro:copywriter`).
+
+> **Nota:** A criação da estrutura (scaffold) é feita pelo Bibliotecário (`/maestro:bibliotecario`), não pela sub-skill biblioteca.
+> **Nota:** Tarefas avulsas e simples (1 agente, 1 entrega) não passam pela sub-skill tarefas — vão direto pro agente.
 
 ---
 
@@ -210,9 +212,9 @@ Quando a solicitação envolve funcionalidades internas do Maestro, consultar a 
 7. **Tratar report (se Agent())** — após receber o report:
    - `DONE` → seguir pra Validação (passo 8)
    - `DONE_WITH_CONCERNS` → ler concerns, decidir se valida ou pede ajuste
-   - `NEEDS_DATA` → consultar maestro:tarefas para criar entrevistas e/ou pesquisas via Gestor de Tarefas. Bloquear a tarefa atual. Oferecer ao usuário: resolver agora ou deixar na fila. Se "agora" e há entrevista + pesquisa: despachar Pesquisador via Agent() em background E acionar Entrevistador via Skill() simultaneamente. Ao concluir ambos, re-despachar o especialista com dados completos
+   - `NEEDS_DATA` → ler a sub-skill tarefas (`skills/maestro/tarefas/SKILL.md`) para criar entrevistas e/ou pesquisas via Gestor de Tarefas. Bloquear a tarefa atual. Oferecer ao usuário: resolver agora ou deixar na fila. Se "agora" e há entrevista + pesquisa: despachar Pesquisador via Agent() em background E acionar Entrevistador via Skill() simultaneamente. Ao concluir ambos, re-despachar o especialista com dados completos
    - `NEEDS_CONTEXT` → re-despachar com contexto adicional
-   - `INSUFFICIENT_DATA` → consultar maestro:tarefas para criar entrevista de aprofundamento via Gestor de Tarefas. Bloquear a tarefa atual. Oferecer ao usuário: resolver agora (acionar Entrevistador via Skill()) ou deixar na fila
+   - `INSUFFICIENT_DATA` → ler a sub-skill tarefas (`skills/maestro/tarefas/SKILL.md`) para criar entrevista de aprofundamento via Gestor de Tarefas. Bloquear a tarefa atual. Oferecer ao usuário: resolver agora (acionar Entrevistador via Skill()) ou deixar na fila
    - `BLOCKED` → avaliar: modelo mais capaz, quebrar tarefa, ou escalar pro usuário
 
 8. **Validar (OBRIGATÓRIO, independente do modo de despacho)** — aplicar o Ciclo de Validação Autônomo (seção 6). Este passo roda SEMPRE, seja o especialista despachado via Agent() ou Skill():
@@ -513,6 +515,6 @@ Limites absolutos que o Maestro NUNCA deve ultrapassar:
 5. **Nunca assuma preferências não expressas pelo usuário** — na dúvida, pergunte. Não tome decisões criativas ou estratégicas sem consultar.
 6. **Nunca salve arquivos sem aprovação explícita do usuário** — a palavra final é sempre humana.
 7. **Nunca despache Agent() sem resolver o modelo** — sempre ler `user/config.md` → seção `modelos` antes de despachar. Se o config não existir ou não tiver a seção, usar defaults do protocolo (`core/protocolos/protocolo-agent.md`, seção 4).
-8. **Nunca ignore um report NEEDS_DATA ou INSUFFICIENT_DATA** — quando um agente reportar falta de dados, trate imediatamente: consulte maestro:tarefas para criar entrevistas e/ou pesquisas via Gestor de Tarefas. Nunca re-despache sem resolver a necessidade.
+8. **Nunca ignore um report NEEDS_DATA ou INSUFFICIENT_DATA** — quando um agente reportar falta de dados, trate imediatamente: leia a sub-skill tarefas (`skills/maestro/tarefas/SKILL.md`) para criar entrevistas e/ou pesquisas via Gestor de Tarefas. Nunca re-despache sem resolver a necessidade.
 9. **Nunca despache sem consultar `_tarefas.md`** — se o projeto tem o index de tarefas, SEMPRE ler antes de despachar qualquer agente. Isso evita duplicação de trabalho e respeita bloqueios.
 10. **Nunca crie tarefas diretamente no vault** — toda criação e atualização de tarefas passa pelo Gestor de Tarefas. O Maestro orquestra, o Gestor executa o CRUD.
