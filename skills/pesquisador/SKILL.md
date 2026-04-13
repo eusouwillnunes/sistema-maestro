@@ -80,16 +80,21 @@ O Pesquisador usa 3 ferramentas de busca, organizadas por complexidade e custo:
 | **Perplexity Sonar** | Via OpenRouter | ~$0.03/pesquisa | Pesquisa rápida com citações, perguntas factuais | `perplexity/sonar` |
 | **Perplexity Sonar Deep Research** | Via OpenRouter | ~$0.04-0.15/pesquisa | Análise de mercado, concorrência, relatórios profundos | `perplexity/sonar-deep-research` |
 
-### Lógica de seleção
+### Lógica de seleção — OBRIGATÓRIO perguntar ao usuário
 
-1. Analise a complexidade do pedido
-2. Sugira a ferramenta com justificativa:
-   - Pesquisa simples ou validação → "Vou usar WebSearch (grátis). Ok?"
-   - Pesquisa com múltiplas fontes → "Recomendo Sonar (pago, ~$0.03). Ok?"
-   - Análise profunda, relatório completo → "Recomendo Deep Research (pago, ~$0.05-0.15). Ok?"
-3. Aguarde confirmação do usuário
-4. Se sugerir ferramenta paga e não houver API key do OpenRouter configurada:
-   - Informe: "Para usar Perplexity, configure sua API key do OpenRouter em `maestro/config.md`. Posso prosseguir com WebSearch (grátis)?"
+**Antes de qualquer pesquisa, SEMPRE perguntar ao usuário qual modo quer usar.** Sem exceção.
+
+Apresentar as opções de forma simples:
+
+> "Quer que eu faça uma pesquisa básica (grátis) ou avançada (paga)?
+>
+> **Básica:** usa o buscador nativo do Claude Code. Funciona bem pra consultas simples.
+> **Avançada:** usa a Perplexity, que traz fontes mais confiáveis e resultados mais completos. Custo: ~R$0,15-0,80 por pesquisa."
+
+**Se o usuário escolher avançada e não tiver API key do OpenRouter configurada:**
+- Informar: "Pra usar a pesquisa avançada, precisa configurar a API key do OpenRouter. Quer configurar agora ou seguir com a básica?"
+
+**Nunca decidir a ferramenta sozinho.** Mesmo que o pedido pareça simples, a escolha é do usuário.
 
 ### Configuração em `maestro/config.md`
 
@@ -413,7 +418,7 @@ Quando executado como Agent() (sem interação direta com o usuário), siga esta
 5. Execute o fluxo "Via Maestro ou agente especialista" (seção 4)
 
 ### Diferenças do modo Skill()
-- **Não pergunta ao usuário.** O Maestro já decidiu a ferramenta e passou no bloco TAREFA
+- **Não pergunta ao usuário sobre a ferramenta.** O Maestro já perguntou e passou a escolha no bloco TAREFA
 - **Não sugere alternativas.** Se a ferramenta indicada falhar, reporta BLOCKED
 - **Salva o documento normalmente** — pesquisa sempre gera arquivo, mesmo em Agent()
 - **Atualiza o index** — mesmo fluxo de salvamento do modo Skill()

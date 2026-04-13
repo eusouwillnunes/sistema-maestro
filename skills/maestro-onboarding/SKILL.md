@@ -29,7 +29,7 @@ Ao ser acionado, verificar o estado atual:
 
 ANTES de criar tasks ou iniciar qualquer etapa, verificar o que já está configurado no ambiente do usuário. Ler silenciosamente:
 
-1. **Dependências:** testar `python --version` e bibliotecas (`docx`, `openpyxl`, `pdfplumber`)
+1. **Dependências:** testar `python --version`, `pandoc --version` e bibliotecas (`docx`, `openpyxl`, `pdfplumber`)
 2. **Permissões:** verificar se `.claude/settings.local.json` já tem a seção `permissions` do Maestro
 3. **Memórias e config:** verificar se `maestro/config.md` e `maestro/memorias/` existem
 4. **Biblioteca:** verificar se a pasta da empresa já existe com scaffold
@@ -150,23 +150,30 @@ O Maestro precisa de ferramentas instaladas pra ler diferentes formatos de arqui
    - Tentar `python --version`, depois `python3 --version` como fallback
    - Se nenhum funcionar: informar que o Python é necessário e pedir pro usuário instalar
 
-2. **Verificar bibliotecas de leitura de documentos:**
+2. **Verificar pandoc:**
+   - Testar `pandoc --version`
+   - Se não encontrado: adicionar à lista de ferramentas a instalar
+   - Windows: `winget install pandoc` (ou pedir pro usuário instalar manualmente via https://pandoc.org/)
+   - macOS: `brew install pandoc`
+   - Linux: `sudo apt install pandoc` ou equivalente
+
+3. **Verificar bibliotecas de leitura de documentos:**
    - Testar: `python -c "import docx" 2>/dev/null`, `python -c "import openpyxl" 2>/dev/null`, `python -c "import pdfplumber" 2>/dev/null`
    - Listar o que está faltando
 
-3. **Pedir autorização pra instalar:**
+4. **Pedir autorização pra instalar:**
 
-   Se faltam bibliotecas:
-   > "Pra ler seus documentos (PDF, Word, Excel), preciso instalar algumas ferramentas. São bibliotecas do Python usadas só pra leitura de arquivos:
+   Se faltam ferramentas ou bibliotecas:
+   > "Pra ler seus documentos (PDF, Word, Excel), preciso instalar algumas ferramentas:
    >
-   > {lista do que falta, ex: python-docx, openpyxl, pdfplumber}
+   > {lista do que falta, ex: pandoc, python-docx, openpyxl, pdfplumber}
    >
    > Posso instalar?"
 
-   **Se sim:** executar `python -m pip install {pacotes faltantes}`
+   **Se sim:** executar os comandos de instalação (pandoc via gerenciador de pacotes do SO, bibliotecas Python via `python -m pip install {pacotes faltantes}`)
    **Se não:** informar que a leitura de alguns formatos pode não funcionar e seguir adiante
 
-4. Se tudo já está instalado, informar brevemente: "Dependências verificadas. Tudo pronto pra leitura de documentos."
+5. Se tudo já está instalado, informar brevemente: "Dependências verificadas. Tudo pronto pra leitura de documentos."
 
 Marcar task "Verificar dependências" como `completed`.
 
