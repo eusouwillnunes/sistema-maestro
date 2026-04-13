@@ -7,6 +7,7 @@ description: >
 ---
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+> Aplica: [[protocolo-interacao]]
 
 ## 1. Detecção de Modo
 
@@ -269,9 +270,13 @@ Marcar task "Criar Biblioteca de Marketing" como `in_progress`.
 
 Oferecer:
 
-> "A Biblioteca de Marketing é onde guardamos todo o contexto do seu negócio: identidade, produtos, público, tom de voz. É uma estrutura organizada com templates prontos pra preencher.
->
-> Quer criar agora?"
+> "A Biblioteca de Marketing é onde guardamos todo o contexto do seu negócio: identidade, produtos, público, tom de voz. É uma estrutura organizada com templates prontos pra preencher."
+
+Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
+- question: "Quer criar a Biblioteca de Marketing agora?"
+- options:
+  - label: "Criar agora (Recomendado)", description: "Monta a estrutura com todos os templates prontos pra preencher"
+  - label: "Depois", description: "Pula por enquanto. Você cria quando quiser pedindo 'cria minha biblioteca'"
 
 **Se sim:**
 - Chamar o Bibliotecário via `Skill(maestro:bibliotecario)` para fazer scaffold dentro da pasta da empresa
@@ -292,9 +297,19 @@ Explicar:
 
 > "Todos os arquivos que o Maestro cria são Markdown puro. Você pode editar direto no terminal, mas existe uma forma mais visual: o **Obsidian**.
 >
-> O Obsidian é um editor gratuito que transforma essa pasta em algo parecido com o Notion. Você navega pelos arquivos, edita com formatação visual, e tudo fica conectado por links. É a forma mais confortável de preencher templates e revisar entregas.
->
-> Quer que eu te guie na instalação?"
+> O Obsidian é um editor gratuito que transforma essa pasta em algo parecido com o Notion. Você navega pelos arquivos, edita com formatação visual, e tudo fica conectado por links. É a forma mais confortável de preencher templates e revisar entregas."
+
+Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
+- question: "Quer configurar o Obsidian como editor visual?"
+- options:
+  - label: "Guiar instalação (Recomendado)", description: "Te guio passo a passo na instalação e configuração do vault"
+  - label: "Já tenho instalado", description: "Pula pra configuração do vault direto"
+  - label: "Depois", description: "Tudo funciona no terminal. Configura quando quiser via /maestro:onboarding"
+
+Ajustar o fluxo conforme a escolha:
+- "Guiar instalação" → segue pra detecção + instalação (passo 2 da seção)
+- "Já tenho instalado" → pula pra criação do vault (passo 3 da seção)
+- "Depois" → segue pro próximo passo
 
 **Se sim:**
 
@@ -345,9 +360,14 @@ Explicar:
 >
 > **Uso básico (grátis):** usa o WebSearch do Claude Code. Já funciona sem configuração.
 >
-> **Uso avançado (pago):** usa a Perplexity, uma ferramenta focada em busca com fontes confiáveis. A conexão é feita pelo OpenRouter, um serviço que dá acesso a vários modelos de IA por uma única API. O custo é por uso (centavos por pesquisa).
->
-> Quer configurar o uso avançado agora ou prefere seguir com o básico?"
+> **Uso avançado (pago):** usa a Perplexity, uma ferramenta focada em busca com fontes confiáveis. A conexão é feita pelo OpenRouter, um serviço que dá acesso a vários modelos de IA por uma única API. O custo é por uso (centavos por pesquisa)."
+
+Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
+- question: "Qual modo de pesquisa quer usar?"
+- options:
+  - label: "Básico (Recomendado)", description: "Usa WebSearch do Claude Code. Grátis, já funciona sem configuração"
+  - label: "Avançado", description: "Usa Perplexity via OpenRouter. Pago (~centavos por pesquisa), resultados mais precisos com fontes"
+  - label: "Depois", description: "Começa com o básico. Configura o avançado quando quiser"
 
 **Se quer configurar agora:**
 - Perguntar: "Você já tem uma API key do OpenRouter?"
@@ -356,7 +376,11 @@ Explicar:
 - Se a key foi informada, perguntar: "Quer que eu faça um teste rápido pra validar se a chave funciona? É uma chamada simples (custo ~$0.01)."
   - **Se sim:** executar teste conforme seção 2.8.1
   - **Se não:** pular o teste
-- Perguntar: "Qual ferramenta usar como padrão? `sonar` (rápido, bom pra maioria das pesquisas) ou `sonar-deep-research` (mais profundo, mais lento, melhor pra análises complexas)?"
+- Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
+  - question: "Qual ferramenta usar como padrão?"
+  - options:
+    - label: "Sonar (Recomendado)", description: "Rápido e econômico. Bom pra maioria das pesquisas"
+    - label: "Deep Research", description: "Mais profundo e lento. Melhor pra análises complexas de mercado"
 - Salvar a escolha no campo `ferramenta-default`
 
 **Se prefere o básico:**
@@ -401,10 +425,11 @@ Oferecer:
 > Qual o site da {nome da empresa}?"
 
 **Se informou o site:**
-- Acionar o Pesquisador (`[[maestro:pesquisador]]`) com a tarefa de analisar o site e identificar: o que a empresa faz, produtos/serviços visíveis, tom de comunicação, público aparente, redes sociais linkadas
-- Se encontrar redes sociais no site, pesquisar também os perfis
-- O Pesquisador gera um documento de pesquisa na pasta `pesquisas/` do projeto
-- Informar o resumo dos achados ao usuário
+- Usar `AskUserQuestion` (conforme [[protocolo-interacao]]) para oferecer o modo de pesquisa:
+  - label: "Básica (Recomendado)", description: "WebSearch grátis. Analisa o site e monta um primeiro retrato"
+  - label: "Avançada", description: "Perplexity Sonar via OpenRouter. Mais profunda, com fontes verificáveis"
+- Despachar o Pesquisador com a tarefa de analisar o site da empresa e redes sociais
+- O Pesquisador segue seus próprios protocolos de encomenda e entrega
 
 **Se não tem site ou prefere pular:**
 - Informar: "Sem problema! Quando quiser, peça: 'pesquisa sobre minha empresa'."
@@ -446,9 +471,11 @@ Marcar task "Importar material de referência" como `completed`.
 
 Marcar task "Configurar Status Line" como `in_progress`.
 
-Oferecer:
-
-> "Quer ativar uma barra de status no terminal? Ela mostra em tempo real o uso de contexto, limites da API e qual modelo está rodando. Você pode desligar a qualquer momento com `/maestro-statusline`."
+Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
+- question: "Quer ativar uma barra de status no terminal?"
+- options:
+  - label: "Ativar (Recomendado)", description: "Mostra em tempo real contexto, limites da API e modelo. Desliga quando quiser"
+  - label: "Não ativar", description: "Pula por agora. Ativa depois com /maestro-statusline"
 
 **Se sim:**
 1. Ler o template do script em `core/statusline/maestro-statusline.sh`
@@ -520,9 +547,30 @@ Configuração atual do Maestro:
 8. Pesquisa inicial: {realizada ✓ | não realizada} [pesquisar]
 9. Importar referências: {N arquivos importados | nenhum} [importar]
 10. Status Line: {ativa ✓ | desativada} [ativar/configurar]
-
-O que você quer alterar? (número ou "nada")
 ```
+
+Após mostrar o estado, usar `AskUserQuestion` (conforme [[protocolo-interacao]]) com `multiSelect: true`:
+
+- question: "O que você quer alterar?"
+- multiSelect: true
+- options:
+  - label: "Identidade", description: "Nome, empresa"
+  - label: "Infraestrutura", description: "Dependências, permissões, Obsidian, status line"
+  - label: "Pesquisa", description: "Pesquisador, pesquisa inicial, importar referências, biblioteca"
+  - label: "Nada", description: "Tudo certo, fechar o onboarding"
+
+Quando o usuário escolher uma categoria, apresentar as opções específicas com `AskUserQuestion`:
+
+**Se "Identidade":**
+- options: "Meu nome" / "Empresa"
+
+**Se "Infraestrutura":**
+- options: "Dependências" / "Permissões" / "Obsidian" / "Status Line"
+
+**Se "Pesquisa":**
+- options: "Pesquisador" / "Pesquisa inicial" / "Importar referências" / "Biblioteca"
+
+Executar o fluxo correspondente (seção 3.3) para cada item escolhido. Se marcou múltiplas categorias, executar em sequência.
 
 Para o item 1 (Seu nome), ler `user/memorias/nome-usuario.md`. Se não existir, mostrar "não configurado".
 
@@ -553,7 +601,12 @@ Para o item 1 (Seu nome), ler `user/memorias/nome-usuario.md`. Se não existir, 
 
 **Opção 7 — Configurar/alterar Pesquisador:**
 - Mesmo fluxo do passo 2.8 (básico vs avançado, API key, ferramenta padrão), incluindo o teste da seção 2.8.1 ao informar nova key
-- Se já tem key configurada, oferecer: "Quer alterar a ferramenta padrão, trocar a key ou remover a configuração?"
+- Se já tem key configurada, usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
+  - question: "O que quer alterar no Pesquisador?"
+  - options:
+    - label: "Trocar ferramenta padrão", description: "Alternar entre Sonar e Deep Research"
+    - label: "Trocar API key", description: "Substituir a chave atual do OpenRouter"
+    - label: "Remover configuração", description: "Volta pro modo básico (WebSearch grátis)"
 
 **Opção 8 — Pesquisa inicial:**
 - Mesmo fluxo do passo 2.9 (pedir site, acionar Pesquisador)

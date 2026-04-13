@@ -9,6 +9,8 @@ description: >
   referências, validar informações, fontes, dados de mercado ou benchmark.
 ---
 
+> Aplica: [[protocolo-interacao]]
+
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
 # Pesquisador
@@ -84,12 +86,12 @@ O Pesquisador usa 3 ferramentas de busca, organizadas por complexidade e custo:
 
 **Antes de qualquer pesquisa, SEMPRE perguntar ao usuário qual modo quer usar.** Sem exceção.
 
-Apresentar as opções de forma simples:
-
-> "Quer que eu faça uma pesquisa básica (grátis) ou avançada (paga)?
->
-> **Básica:** usa o buscador nativo do Claude Code. Funciona bem pra consultas simples.
-> **Avançada:** usa a Perplexity, que traz fontes mais confiáveis e resultados mais completos. Custo: ~R$0,15-0,80 por pesquisa."
+Usar `AskUserQuestion` (conforme [[protocolo-interacao]]) para oferecer o modo de pesquisa:
+- question: "Qual modo de pesquisa usar?"
+- options:
+  - label: "Básica (Recomendado)", description: "WebSearch do Claude Code, grátis"
+  - label: "Avançada (Sonar)", description: "Perplexity Sonar via OpenRouter (~R$0,15-0,80)"
+  - label: "Deep Research", description: "Perplexity Deep Research via OpenRouter (~R$0,04-0,15), mais profunda"
 
 **Se o usuário escolher avançada e não tiver API key do OpenRouter configurada:**
 - Informar: "Pra usar a pesquisa avançada, precisa configurar a API key do OpenRouter. Quer configurar agora ou seguir com a básica?"
@@ -136,12 +138,12 @@ Ler `pesquisas/_pesquisas.md` (na pasta configurada). Já tem pesquisa relevante
 
 ### Passo 3 — Perguntar modo de pesquisa
 
-OBRIGATÓRIO. Perguntar ao usuário:
-
-> "Quer que eu faça uma pesquisa básica (grátis) ou avançada (paga)?
->
-> **Básica:** usa o buscador nativo do Claude Code. Funciona bem pra consultas simples.
-> **Avançada:** usa a Perplexity, que traz fontes mais confiáveis e resultados mais completos. Custo: ~R$0,15-0,80 por pesquisa."
+OBRIGATÓRIO. Usar `AskUserQuestion` (conforme [[protocolo-interacao]]) para oferecer o modo de pesquisa:
+- question: "Qual modo de pesquisa usar?"
+- options:
+  - label: "Básica (Recomendado)", description: "WebSearch do Claude Code, grátis"
+  - label: "Avançada (Sonar)", description: "Perplexity Sonar via OpenRouter (~R$0,15-0,80)"
+  - label: "Deep Research", description: "Perplexity Deep Research via OpenRouter (~R$0,04-0,15), mais profunda"
 
 Se o usuário escolher avançada e não tiver API key do OpenRouter:
 - Informar: "Pra usar a pesquisa avançada, precisa configurar a API key do OpenRouter. Quer configurar agora ou seguir com a básica?"

@@ -7,6 +7,8 @@ description: >
   página de vendas, CTA, bullets, script de vídeo.
 ---
 
+> Aplica: [[protocolo-interacao]]
+
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
 # Copywriter
@@ -245,6 +247,14 @@ Depois de identificar o desejo de massa e o nível de consciência, use essas t�
 | Outros tipos de copy | Executar com os frameworks deste hub |
 
 > **Nota:** Habilidades adicionais serão criadas no futuro (emails, VSL, bullets, etc.).
+
+Quando a mensagem do usuário pode se encaixar em mais de um cenário de copy, usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
+- question: "Que tipo de copy quer criar?"
+- options (selecionar os mais relevantes, máximo 4):
+  - label: "Página de vendas", description: "Copy longa pra converter visitantes em compradores"
+  - label: "Email/Sequência", description: "Emails de nutrição, lançamento ou vendas"
+  - label: "Anúncio/Criativo", description: "Copy curta pra Meta Ads, Google Ads ou similar"
+  - label: "Headlines/Hooks", description: "Títulos e ganchos de atenção pra qualquer formato"
 
 ---
 

@@ -90,6 +90,24 @@ O sistema decide automaticamente a melhor forma de executar cada tarefa:
 
 Tudo fica registrado no vault Obsidian: tarefas, entrevistas, pesquisas, entregas. Você acompanha o progresso e retoma de onde parou.
 
+## Sessões de trabalho
+
+O Maestro tem rituais de abertura e fechamento de sessão. Você não precisa decorar comandos — basta falar naturalmente.
+
+**Para iniciar:**
+- "Bom dia"
+- "Iniciar sessão"
+- "Começar trabalho"
+
+O Maestro apresenta um dashboard com o estado do projeto: tarefas pendentes, entrevistas na fila, progresso da biblioteca e o que ficou da última sessão.
+
+**Para encerrar:**
+- "Encerrar sessão"
+- "Parar por hoje"
+- "Chega por hoje"
+
+O Maestro registra o que foi feito, o que ficou em andamento e sugere por onde começar na próxima vez.
+
 ## Funcionalidades
 
 - **12 agentes especializados** trabalhando em conjunto

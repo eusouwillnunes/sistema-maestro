@@ -8,6 +8,7 @@ description: >
 ---
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
+> Aplica: [[protocolo-interacao]]
 
 # Maestro: Rituais de Sessão
 
@@ -78,7 +79,14 @@ Quer resolver agora? Posso acionar o Entrevistador.
 - **Parou em:** [detalhe específico — ex: "entrevista X (3 de 5 perguntas respondidas)"]
 - **Observações:** [padrões ou preferências notadas]
 
-O que quer fazer hoje?
+Após apresentar o dashboard, usar `AskUserQuestion` (conforme [[protocolo-interacao]]) com opções baseadas no estado atual. Montar as opções dinamicamente:
+
+- Se há entrevistas pendentes: incluir opção "Resolver entrevistas" com description = "Tem [N] pendente(s): [nomes]"
+- Se há tarefas prontas (não bloqueadas): incluir opção "Executar tarefa" com description = "[título da tarefa mais prioritária]"
+- Se há tarefas bloqueadas por entrevista: incluir opção "Desbloquear tarefas" com description = "Resolver o que trava [N] tarefa(s)"
+- Sempre incluir: "Outra coisa" com description = "Pedir algo novo ou diferente"
+
+Máximo 4 opções. Priorizar: entrevistas pendentes > tarefas desbloqueáveis > tarefas prontas > outro.
 ```
 
 ### Regras do dashboard
@@ -100,10 +108,12 @@ Bom dia! Projeto **[Nome da Empresa]** — sem tarefas registradas.
 **Biblioteca:**
 [Resumo rápido — scaffold existe? Quantos templates preenchidos de quantos total?]
 
-Quer começar por alguma área? Posso sugerir:
-- "Preenche a identidade" — começa pela fundação
-- "Cria uma campanha" — se já tem identidade pronta
-- "Pesquisa meus concorrentes" — coleta dados de mercado
+Após apresentar o dashboard, usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
+- question: "Por onde quer começar?"
+- options:
+  - label: "Preencher identidade (Recomendado)", description: "Começa pela fundação: propósito, público, diferencial"
+  - label: "Criar uma campanha", description: "Se já tem identidade pronta, vai direto pra ação"
+  - label: "Pesquisar concorrentes", description: "Coleta dados de mercado antes de decidir"
 ```
 
 ### Dashboard sem projeto

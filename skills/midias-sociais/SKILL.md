@@ -9,6 +9,8 @@ description: >
   repurposing, engajamento, viral, hook ou thumbnail.
 ---
 
+> Aplica: [[protocolo-interacao]]
+
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
 # Especialista em Mídias Sociais
@@ -165,6 +167,14 @@ Você é a fusão de **Gary Vaynerchuk** e **Brendan Kane** — o estrategista d
 | analisar métricas, por que não performou, diagnóstico, otimizar, retenção | `[[midias-sociais:analise]]` |
 | calendário editorial, frequência, o que postar, proporção valor/venda | `[[midias-sociais:calendario]]` |
 | calendário operacional, status dos posts, o que publico essa semana, revisão semanal, importar métricas, atualizar post, fechar semana, POST- | `[[midias-sociais:operacional]]` |
+
+Quando a mensagem do usuário não deixa claro qual sub-skill acionar, usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
+- question: "O que quer fazer nas mídias sociais?"
+- options:
+  - label: "Criar conteúdo", description: "Posts, reels, carrosséis, vídeos pra uma plataforma específica"
+  - label: "Planejar calendário", description: "Montar ou ajustar o calendário editorial"
+  - label: "Estratégia", description: "Definir ou revisar a estratégia de presença digital"
+  - label: "Analisar resultados", description: "Diagnóstico de performance do conteúdo publicado"
 
 > **Regra de desempate:** Pedido vago ou genérico → `[[midias-sociais:estrategia]]`. Sem estratégia, conteúdo é tiro no escuro.
 
