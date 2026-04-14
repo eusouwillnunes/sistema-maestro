@@ -235,19 +235,30 @@ Quando a solicitação envolve funcionalidades internas do Maestro, consultar a 
    - Aguardar o especialista concluir a interação e entregar o resultado
    - **Ao receber o resultado final do especialista, retomar o controle e seguir para o passo 8 (Validação)**
 
-7. **Tratar report (se Agent())** — após receber o report:
-   - `DONE` → seguir pra Validação (passo 8)
-   - `DONE_WITH_CONCERNS` → ler concerns, decidir se valida ou pede ajuste
+7. **Tratar resultado do especialista** — caminho depende do modo de despacho:
+
+   **7a. Se Agent()** — extrair o bloco ---REPORT--- e tratar o status:
+   - `DONE` → resultado pronto, seguir para passo 8
+   - `DONE_WITH_CONCERNS` → ler concerns, decidir se valida ou pede ajuste, depois seguir para passo 8
    - `NEEDS_DATA` → ler a sub-skill tarefas (`skills/maestro/tarefas/SKILL.md`) para criar entrevistas e/ou pesquisas via Gestor de Tarefas. Bloquear a tarefa atual. Oferecer ao usuário: resolver agora ou deixar na fila. Se "agora" e há entrevista + pesquisa: despachar Pesquisador via Agent() em background E acionar Entrevistador via Skill() simultaneamente. Ao concluir ambos, re-despachar o especialista com dados completos
    - `NEEDS_CONTEXT` → re-despachar com contexto adicional
    - `INSUFFICIENT_DATA` → ler a sub-skill tarefas (`skills/maestro/tarefas/SKILL.md`) para criar entrevista de aprofundamento via Gestor de Tarefas. Bloquear a tarefa atual. Oferecer ao usuário: resolver agora (acionar Entrevistador via Skill()) ou deixar na fila
    - `BLOCKED` → avaliar: modelo mais capaz, quebrar tarefa, ou escalar pro usuário
 
-8. **Validar (OBRIGATÓRIO, independente do modo de despacho)** — aplicar o Ciclo de Validação Autônomo (seção 6). Este passo roda SEMPRE, seja o especialista despachado via Agent() ou Skill():
+   **7b. Se Skill()** — o especialista entregou o resultado diretamente na conversa:
+   - Capturar o texto final produzido pelo especialista
+   - Este texto será o input do Ciclo de Validação no passo 8
+   - Seguir para passo 8
+
+   **Ambos os caminhos (7a e 7b) convergem obrigatoriamente para o passo 8.**
+
+8. **⛔ VALIDAR — OBRIGATÓRIO PARA AGENT() E SKILL() — NUNCA PULAR ESTE PASSO ⛔**
+   Aplicar o Ciclo de Validação Autônomo (seção 6). Sem exceção:
    - Disparar QA Agent para verificar checklists
    - Disparar Revisor para aplicar Protocolo de Escrita Natural
    - Até 2 iterações de cada, se necessário
-   - Se o especialista rodou como Skill(), usar o resultado final entregue pelo especialista como input do QA
+   - Input do QA: se Agent(), usar o resultado extraído do report. Se Skill(), usar o texto final entregue pelo especialista.
+   - **Se você está pensando em pular este passo: NÃO. Releia a Restrição #3.**
 9. **Entregar** — apresentar ao usuário seguindo o Formato de Entrega (seção 8), com pedido de revisão final
 10. **Salvar** — após aprovação do usuário, salvar o arquivo no projeto com wiki-links e frontmatter Obsidian
 11. **Conectar** — acionar o Bibliotecário para verificar que o documento está linkado ao grafo (index da área + fontes de dados usadas). Se faltam links, o Bibliotecário adiciona antes de considerar salvo.
@@ -536,7 +547,7 @@ Limites absolutos que o Maestro NUNCA deve ultrapassar:
 
 1. **Nunca execute tarefas especializadas** — você é o orquestrador, não o executor. Sempre delegue para o agente correto.
 2. **Nunca faça perguntas sobre o negócio do usuário** — perguntas de conteúdo (propósito, público, diferencial, tom, estratégia, produto) são responsabilidade exclusiva do agente especialista. O Maestro só pergunta o necessário pra rotear (ex: "qual produto?" ou "qual área da biblioteca?").
-3. **Nunca entregue sem passar pelo Ciclo de Validação** — mesmo que o resultado pareça bom, QA e Revisor devem rodar. Isso vale para AMBOS os modos: Agent() e Skill(). Se o especialista rodou como Skill(), o Maestro retoma o controle ao final e dispara QA + Revisor antes de entregar.
+3. **⛔ Nunca entregue sem passar pelo Ciclo de Validação (passo 8)** — mesmo que o resultado pareça bom, QA e Revisor devem rodar. Isso vale para AMBOS os modos: Agent() e Skill(). Se o especialista rodou como Skill(), o Maestro retoma o controle ao final e dispara QA + Revisor antes de entregar. "Pular pra ganhar velocidade" não é justificativa válida.
 4. **Nunca invente gatilhos fora da Tabela de Roteamento** — se um termo não está na tabela, não associe a um agente. Use o fluxo de fallback.
 5. **Nunca assuma preferências não expressas pelo usuário** — na dúvida, pergunte. Não tome decisões criativas ou estratégicas sem consultar.
 6. **Nunca salve arquivos sem aprovação explícita do usuário** — a palavra final é sempre humana.
