@@ -15,9 +15,13 @@ Ao ser acionado, verificar o estado atual:
 
 1. Tentar ler `maestro/config.md` no vault do projeto
 2. Verificar o campo `onboarding-completo`
+3. Verificar se `~/.maestro/config.md` existe (sistema já configurado em outro projeto)
 
-**Se `onboarding-completo` não existe ou é `false`:**
-→ Executar o **Fluxo de Primeira Vez** (seção 2)
+**Se `maestro/config.md` não existe E `~/.maestro/config.md` existe:**
+→ Executar o **Fluxo de Novo Projeto** (seção 2B) — onboarding leve, pula dependências e configurações globais
+
+**Se `onboarding-completo` não existe ou é `false` (e `~/.maestro/config.md` não existe):**
+→ Executar o **Fluxo de Primeira Vez** (seção 2) — onboarding completo
 
 **Se `onboarding-completo: true`:**
 → Executar o **Fluxo de Re-execução** (seção 3)
@@ -151,18 +155,43 @@ O Maestro precisa de ferramentas instaladas pra ler diferentes formatos de arqui
    - Tentar `python --version`, depois `python3 --version` como fallback
    - Se nenhum funcionar: informar que o Python é necessário e pedir pro usuário instalar
 
-2. **Verificar pandoc:**
+2. **Corrigir python3 no Windows (se necessário):**
+   - Testar `python3 --version` — se retornar exit code 49, é o atalho da Microsoft Store que não funciona
+   - Se detectado: informar ao usuário:
+     > "Detectei que o comando `python3` no seu computador aponta pra Microsoft Store em vez do Python real. Isso impede a leitura de documentos Word, PDF e Excel.
+     >
+     > Pra resolver, vou criar um atalho que faz o `python3` apontar pro Python que você já tem instalado. Isso envolve dois ajustes simples:
+     > - Criar um arquivo em `~/.local/bin/python3` (um atalho pro Python real)
+     > - Adicionar essa pasta no PATH do seu terminal (pra ele encontrar o atalho)
+     >
+     > Nada é desinstalado ou alterado no seu Python. Posso fazer?"
+   - **Se sim:** executar:
+     ```bash
+     mkdir -p ~/.local/bin
+     echo '#!/bin/bash
+     exec python "$@"' > ~/.local/bin/python3
+     chmod +x ~/.local/bin/python3
+     ```
+     Verificar se `~/.bash_profile` já tem `$HOME/.local/bin` no PATH. Se não:
+     ```bash
+     echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bash_profile
+     export PATH="$HOME/.local/bin:$PATH"
+     ```
+     Confirmar: `python3 --version` deve funcionar
+   - **Se não:** informar que a leitura de alguns formatos pode não funcionar e seguir adiante
+
+3. **Verificar pandoc:**
    - Testar `pandoc --version`
    - Se não encontrado: adicionar à lista de ferramentas a instalar
    - Windows: `winget install pandoc` (ou pedir pro usuário instalar manualmente via https://pandoc.org/)
    - macOS: `brew install pandoc`
    - Linux: `sudo apt install pandoc` ou equivalente
 
-3. **Verificar bibliotecas de leitura de documentos:**
+4. **Verificar bibliotecas de leitura de documentos:**
    - Testar: `python -c "import docx" 2>/dev/null`, `python -c "import openpyxl" 2>/dev/null`, `python -c "import pdfplumber" 2>/dev/null`
    - Listar o que está faltando
 
-4. **Pedir autorização pra instalar:**
+5. **Pedir autorização pra instalar:**
 
    Se faltam ferramentas ou bibliotecas:
    > "Pra ler seus documentos (PDF, Word, Excel), preciso instalar algumas ferramentas:
@@ -174,7 +203,7 @@ O Maestro precisa de ferramentas instaladas pra ler diferentes formatos de arqui
    **Se sim:** executar os comandos de instalação (pandoc via gerenciador de pacotes do SO, bibliotecas Python via `python -m pip install {pacotes faltantes}`)
    **Se não:** informar que a leitura de alguns formatos pode não funcionar e seguir adiante
 
-5. Se tudo já está instalado, informar brevemente: "Dependências verificadas. Tudo pronto pra leitura de documentos."
+6. Se tudo já está instalado, informar brevemente: "Dependências verificadas. Tudo pronto pra leitura de documentos."
 
 Marcar task "Verificar dependências" como `completed`.
 
@@ -535,6 +564,167 @@ Marcar task "Finalizar onboarding" como `in_progress`.
 > "Tudo pronto! Agora é só me pedir o que precisar. Por exemplo: 'Crie headlines pra [produto da {nome da empresa}]'."
 
 Marcar task "Finalizar onboarding" como `completed`.
+
+---
+
+## 2B. Fluxo de Novo Projeto
+
+Onboarding leve para quando o usuário já tem o Sistema Maestro configurado (`~/.maestro/` existe) mas está num projeto novo. Pula dependências, permissões, Obsidian, status line e apresentação.
+
+### 2B.0 Tasks visuais
+
+Criar tasks visuais no terminal:
+
+```
+TaskCreate({ subject: "Configurar novo projeto", description: "Nome da empresa e pasta raiz", activeForm: "Configurando novo projeto" })
+TaskCreate({ subject: "Setup do projeto", description: "Criar config, memórias e CLAUDE.md", activeForm: "Criando estrutura do projeto" })
+TaskCreate({ subject: "Criar Biblioteca de Marketing", description: "Scaffold da biblioteca no vault", activeForm: "Criando Biblioteca de Marketing" })
+TaskCreate({ subject: "Pesquisa inicial do negócio", description: "Analisar site e redes sociais", activeForm: "Pesquisando sobre o negócio" })
+TaskCreate({ subject: "Importar material de referência", description: "Importar documentos existentes do negócio", activeForm: "Importando material de referência" })
+TaskCreate({ subject: "Finalizar projeto", description: "Encerrar com sugestão de primeira ação", activeForm: "Finalizando configuração" })
+```
+
+Marcar cada task como `in_progress` ANTES de executar a etapa e `completed` LOGO APÓS terminar.
+
+Usar os mesmos marcadores visuais da seção 2.0.2 (separador com número do passo).
+
+### 2B.1 Boas-vindas e nome da empresa
+
+Marcar task "Configurar novo projeto" como `in_progress`.
+
+Ler `~/.maestro/memorias/nome-usuario.md` para recuperar o nome do usuário.
+
+Enviar mensagem:
+
+> "Olá, {NOME}! Vejo que você já usa o Maestro. Vou configurar este novo projeto rapidinho."
+
+Perguntar:
+
+> "Qual o nome da empresa ou projeto?"
+
+Aguardar resposta do usuário. Guardar o nome.
+
+Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
+- question: "A pasta raiz do projeto é o diretório atual?"
+- options:
+  - label: "Sim, usar {CWD}", description: "O projeto será configurado nesta pasta"
+  - label: "Não, quero outra pasta", description: "Informar o caminho correto"
+
+**Se escolheu outra pasta:** perguntar qual o caminho e confirmar.
+
+Marcar task "Configurar novo projeto" como `completed`.
+
+**Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
+
+### 2B.2 Setup do projeto
+
+Marcar task "Setup do projeto" como `in_progress`.
+
+Executar silenciosamente:
+
+1. **Config do projeto:** criar `maestro/config.md` usando `core/templates/_maestro-config-template.md`:
+   - Preencher `Empresa:` com o nome coletado
+   - Preencher `Vault:` com o caminho confirmado
+   - Preencher `Projeto iniciado em:` com a data atual
+   - Setar `maestro-ativo: true`
+   - Manter `onboarding-completo: false` (será atualizado no final)
+2. **Memórias de projeto:** criar `maestro/memorias/` usando templates de `core/templates/_memorias-projeto-template.md`:
+   - `maestro/memorias/_index.md`
+   - `maestro/memorias/contexto.md`
+   - `maestro/memorias/sessoes.md`
+   - `maestro/memorias/decisoes.md`
+   - `maestro/memorias/agentes/` (pasta vazia)
+3. **CLAUDE.md do projeto:** verificar se o CLAUDE.md do projeto tem seção `## Maestro`:
+   - Se não existe CLAUDE.md: criar com a seção Maestro
+   - Se existe mas sem seção Maestro: adicionar ao final
+   - Conteúdo:
+     ```
+     ## Maestro
+     > Sistema Maestro ativo. Configuração e memórias: maestro/config.md
+     > Memórias de usuário: ~/.maestro/memorias/
+     ```
+
+Informar brevemente: "Estrutura do projeto criada."
+
+Marcar task "Setup do projeto" como `completed`.
+
+### 2B.3 Biblioteca de Marketing
+
+Mesmo fluxo da etapa 2.6 do onboarding completo:
+
+Marcar task "Criar Biblioteca de Marketing" como `in_progress`.
+
+Oferecer:
+
+> "A Biblioteca de Marketing é onde guardamos todo o contexto do seu negócio: identidade, produtos, público, tom de voz."
+
+Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
+- question: "Quer criar a Biblioteca de Marketing agora?"
+- options:
+  - label: "Criar agora (Recomendado)", description: "Monta a estrutura com todos os templates prontos pra preencher"
+  - label: "Depois", description: "Pula por enquanto. Você cria quando quiser pedindo 'cria minha biblioteca'"
+
+**Se sim:** chamar o Bibliotecário via `Skill(maestro:bibliotecario)` para fazer scaffold dentro da pasta da empresa.
+
+**Se não/depois:** informar: "Sem problema! Quando quiser, é só pedir."
+
+Marcar task "Criar Biblioteca de Marketing" como `completed`.
+
+**Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
+
+### 2B.4 Pesquisa inicial do negócio
+
+Mesmo fluxo da etapa 2.9 do onboarding completo:
+
+Marcar task "Pesquisa inicial do negócio" como `in_progress`.
+
+**Só executar se a biblioteca foi criada no passo 2B.3.** Se pulou, pular esta etapa também.
+
+> "Quer que eu faça uma pesquisa rápida sobre o seu negócio? Posso analisar o site da empresa e redes sociais.
+>
+> Qual o site da {nome da empresa}?"
+
+**Se informou o site:**
+- Usar `AskUserQuestion` para modo de pesquisa (Básica / Avançada)
+- Despachar o Pesquisador
+
+**Se não tem site ou prefere pular:**
+- Informar: "Sem problema! Quando quiser, peça: 'pesquisa sobre minha empresa'."
+
+Marcar task "Pesquisa inicial do negócio" como `completed`.
+
+**Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
+
+### 2B.5 Importar Material de Referência
+
+Mesmo fluxo da etapa 2.10 do onboarding completo:
+
+Marcar task "Importar material de referência" como `in_progress`.
+
+**Só executar se a biblioteca foi criada no passo 2B.3.** Se pulou, pular esta etapa também.
+
+> "Você tem documentos sobre este negócio? Manuais de marca, apresentações, planilhas de produto, textos internos.
+>
+> Se sim, coloca tudo na pasta `{empresa}/referencias/` e me avisa."
+
+**Se sim:** seguir o fluxo de importação do Maestro Biblioteca.
+
+**Se não/depois:** informar: "Sem problema! Quando tiver material, coloca na pasta `referencias/` e pede: 'lê meus arquivos de referência'."
+
+Marcar task "Importar material de referência" como `completed`.
+
+**Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
+
+### 2B.6 Finalização
+
+Marcar task "Finalizar projeto" como `in_progress`.
+
+1. Atualizar `maestro/config.md`: setar `onboarding-completo: true`
+2. Enviar mensagem:
+
+> "Projeto {nome da empresa} configurado! O que vamos trabalhar?"
+
+Marcar task "Finalizar projeto" como `completed`.
 
 ---
 

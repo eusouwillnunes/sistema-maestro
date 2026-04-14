@@ -55,8 +55,13 @@ Tente ler `maestro/config.md` no diretório de trabalho atual.
 **Se a mensagem é ação no projeto:**
 
 1. **`maestro/config.md` não existe** (projeto nunca ativado):
-   → Informar: "Pra isso eu preciso do projeto configurado. Vou iniciar o setup do Sistema Maestro."
-   → Executar o fluxo de onboarding guiado (skill `[[maestro:onboarding]]`).
+   → Verificar se `~/.maestro/config.md` existe (sistema já configurado em outro projeto)
+   → **Se `~/.maestro/config.md` existe** (usuário já usa o Maestro):
+     → Informar: "Vejo que você já usa o Maestro! Vou configurar este projeto."
+     → Executar o fluxo de onboarding de novo projeto (skill `[[maestro:onboarding]]` com tipo `novo-projeto`).
+   → **Se `~/.maestro/config.md` não existe** (primeira vez no sistema):
+     → Informar: "Pra isso eu preciso do projeto configurado. Vou iniciar o setup do Sistema Maestro."
+     → Executar o fluxo de onboarding completo (skill `[[maestro:onboarding]]`).
 
 2. **`maestro-ativo: false`** (projeto desligado):
    → Informar: "O Sistema Maestro estava desligado neste projeto. Vou reativar."
