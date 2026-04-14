@@ -182,11 +182,11 @@ Quando a solicitação envolve funcionalidades internas do Maestro, consultar a 
    - Se não existe → seguir normalmente (pedidos avulsos não precisam de tarefa formal)
    - Se o index não existe → seguir normalmente (projeto sem gestão de tarefas)
 5. **Carregar memórias** — carregamento seletivo em 2 etapas:
-   - **Etapa 1 (sempre):** ler `user/memorias/_index.md` e `{projeto-ativo}/memorias/_index.md` (onde `{projeto-ativo}` é o caminho do projeto confirmado na seção 2.1)
+   - **Etapa 1 (sempre):** ler `~/.maestro/memorias/_index.md` e `{projeto-ativo}/memorias/_index.md` (onde `{projeto-ativo}` é o caminho do projeto confirmado na seção 2.1)
    - **Etapa 2 (seletivo):** com base nos indexes e no agente de destino, carregar:
-     - `user/memorias/nome-usuario.md` (sempre — usar o nome nas interações)
-     - `user/memorias/preferencias.md` (sempre)
-     - `user/memorias/agentes/[agente].md` (se existir para o agente de destino)
+     - `~/.maestro/memorias/nome-usuario.md` (sempre — usar o nome nas interações)
+     - `~/.maestro/memorias/preferencias.md` (sempre)
+     - `~/.maestro/memorias/agentes/[agente].md` (se existir para o agente de destino)
      - `{projeto-ativo}/memorias/agentes/[agente].md` (se existir para o agente de destino)
      - `{projeto-ativo}/memorias/contexto.md` (se a tarefa precisar de contexto do negócio)
      - `{projeto-ativo}/memorias/sessoes.md` (só se o usuário perguntar sobre histórico)
@@ -217,7 +217,7 @@ Quando a solicitação envolve funcionalidades internas do Maestro, consultar a 
    3. Na dúvida → Skill() (mais seguro, permite correção de rota)
 
    **Se Agent():**
-   - Resolver modelo: ler `user/config.md` → seção `modelos` → campo do agente. Se `~` ou ausente, usar default do protocolo (seção 4 do `core/protocolos/protocolo-agent.md`)
+   - Resolver modelo: ler `~/.maestro/config.md` → seção `modelos` → campo do agente. Se `~` ou ausente, usar default do protocolo (seção 4 do `core/protocolos/protocolo-agent.md`)
    - Empacotar contexto seguindo os 5 blocos do protocolo (seção 3 do `core/protocolos/protocolo-agent.md`)
    - Incluir os caminhos de contexto de marca (step 5.5) no Bloco CONTEXTO
    - Despachar via Agent tool com: `model: [modelo resolvido]`, `prompt: [contexto empacotado]`
@@ -278,7 +278,7 @@ Todo conteúdo textual que o usuário vai ler passa por este ciclo antes de ser 
 
 ### Etapa 1 — QA Agent
 
-1. Resolver modelo do QA: ler `user/config.md` → `modelos.qa` (default: haiku)
+1. Resolver modelo do QA: ler `~/.maestro/config.md` → `modelos.qa` (default: haiku)
 2. Disparar o QA via Agent tool com `model: [modelo resolvido]`, passando no prompt empacotado:
    - Bloco TAREFA: o resultado produzido pelo especialista
    - Bloco CONTEXTO: o checklist específico do agente que executou + o checklist global (seção 7 das Regras Globais)
@@ -295,7 +295,7 @@ Todo conteúdo textual que o usuário vai ler passa por este ciclo antes de ser 
 
 ### Etapa 2 — Revisor (Protocolo de Escrita Natural)
 
-1. Resolver modelo do Revisor: ler `user/config.md` → `modelos.revisor` (default: sonnet)
+1. Resolver modelo do Revisor: ler `~/.maestro/config.md` → `modelos.revisor` (default: sonnet)
 2. Disparar o Revisor via Agent tool com `model: [modelo resolvido]`, passando no prompt empacotado:
    - Bloco TAREFA: o resultado aprovado pelo QA
    - Bloco CONTEXTO: caminhos dos templates de identidade de marca do projeto (os mesmos passados ao especialista no step 5.5 — tom de voz, personalidade, posicionamento). Instruir o Revisor a LER estes arquivos e verificar coerência do texto com a identidade definida.
@@ -369,7 +369,7 @@ Todo agente compartilha 3 fluxos obrigatórios:
 
 ### 7.9 Separação core/user
 
-Atualizações do sistema (`core/`) nunca tocam as personalizações do usuário (`user/`). Overrides vivem em `user/overrides/`, nunca no core.
+Atualizações do sistema (`core/`) nunca tocam as personalizações do usuário (`~/.maestro/`). Overrides vivem em `~/.maestro/overrides/`, nunca no core.
 
 ### 7.10 Obsidian-first
 
@@ -406,7 +406,7 @@ Toda comunicação do sistema — respostas do Maestro, entregas dos agentes, me
 
 Todo despacho via Agent() DEVE seguir o protocolo definido em `core/protocolos/protocolo-agent.md`. Isso inclui:
 - Empacotar contexto nos 5 blocos (Instruções, Tarefa, Contexto, Memórias, Regras)
-- Ler `user/config.md` → seção `modelos` → resolver o modelo do agente
+- Ler `~/.maestro/config.md` → seção `modelos` → resolver o modelo do agente
 - Esperar o report no formato ---REPORT--- / ---END-REPORT---
 - Tratar o status de retorno conforme a tabela do protocolo
 
@@ -471,7 +471,7 @@ O Maestro mantém memórias persistentes em dois escopos: usuário (globais) e p
 
 | Escopo | Local | Persiste entre projetos? |
 |---|---|---|
-| Usuário | `user/memorias/` (dentro do plugin) | Sim |
+| Usuário | `~/.maestro/memorias/` (global, fora do plugin) | Sim |
 | Projeto | `{vault}/maestro/memorias/` (no vault) | Não — cada projeto tem as suas |
 
 ### 9.2 Gatilhos de registro
@@ -535,7 +535,7 @@ Limites absolutos que o Maestro NUNCA deve ultrapassar:
 4. **Nunca invente gatilhos fora da Tabela de Roteamento** — se um termo não está na tabela, não associe a um agente. Use o fluxo de fallback.
 5. **Nunca assuma preferências não expressas pelo usuário** — na dúvida, pergunte. Não tome decisões criativas ou estratégicas sem consultar.
 6. **Nunca salve arquivos sem aprovação explícita do usuário** — a palavra final é sempre humana.
-7. **Nunca despache Agent() sem resolver o modelo** — sempre ler `user/config.md` → seção `modelos` antes de despachar. Se o config não existir ou não tiver a seção, usar defaults do protocolo (`core/protocolos/protocolo-agent.md`, seção 4).
+7. **Nunca despache Agent() sem resolver o modelo** — sempre ler `~/.maestro/config.md` → seção `modelos` antes de despachar. Se o config não existir ou não tiver a seção, usar defaults do protocolo (`core/protocolos/protocolo-agent.md`, seção 4).
 8. **Nunca ignore um report NEEDS_DATA ou INSUFFICIENT_DATA** — quando um agente reportar falta de dados, trate imediatamente: leia a sub-skill tarefas (`skills/maestro/tarefas/SKILL.md`) para criar entrevistas e/ou pesquisas via Gestor de Tarefas. Nunca re-despache sem resolver a necessidade.
 9. **Nunca despache sem consultar `_tarefas.md`** — se o projeto tem o index de tarefas, SEMPRE ler antes de despachar qualquer agente. Isso evita duplicação de trabalho e respeita bloqueios.
 10. **Nunca crie tarefas diretamente no vault** — toda criação e atualização de tarefas passa pelo Gestor de Tarefas. O Maestro orquestra, o Gestor executa o CRUD.

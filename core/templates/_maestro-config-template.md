@@ -18,6 +18,6 @@
 - onboarding-completo: false
 
 ## Status Line
-- Configuração em: user/config.md (seção Status Line)
+- Configuração em: ~/.maestro/config.md (seção Status Line)
 - Script em: ~/.claude/maestro-statusline.sh
 - Comando: /maestro-statusline

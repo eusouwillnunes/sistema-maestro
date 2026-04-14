@@ -183,12 +183,12 @@ Material de referência:
 
 ### Overrides do usuário
 
-O Maestro lê `user/config.md` antes de cada despacho Agent(). Se o campo do agente tem valor diferente de `~`, usa o override. Se é `~` ou não existe, usa o default acima.
+O Maestro lê `~/.maestro/config.md` antes de cada despacho Agent(). Se o campo do agente tem valor diferente de `~`, usa o override. Se é `~` ou não existe, usa o default acima.
 
 ### Lógica de resolução
 
 ```
-1. Ler user/config.md → seção modelos → campo do agente
+1. Ler ~/.maestro/config.md → seção modelos → campo do agente
 2. Se campo existe e valor ≠ ~ → usar o override
 3. Se campo não existe ou valor = ~ → usar default da tabela acima
 4. Passar o modelo resolvido no parâmetro model: do Agent()

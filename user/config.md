@@ -31,7 +31,7 @@ pasta-pesquisas: pesquisas/    # caminho relativo no vault do projeto
 ## Memórias
 
 ```yaml
-memorias-usuario: user/memorias/         # dentro do plugin (global)
+memorias-usuario: ~/.maestro/memorias/   # global, fora do plugin
 memorias-projeto: maestro/memorias/      # dentro do vault (por projeto)
 ```
 

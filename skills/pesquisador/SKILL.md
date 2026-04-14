@@ -221,8 +221,8 @@ Via teste de conexão (usuário pede para testar OpenRouter)
 
 Acionado por: "testa minha conexão", "testar openrouter", "testar chave", "testar api key" ou similar.
 
-1. **Verificar configuração** — ler `user/config.md` e buscar `openrouter-api-key`
-   - **Se não tem key:** informar "Você ainda não configurou a API key do OpenRouter. Quer configurar agora?" Se sim, pedir a key e salvar em `user/config.md`.
+1. **Verificar configuração** — ler `~/.maestro/config.md` e buscar `openrouter-api-key`
+   - **Se não tem key:** informar "Você ainda não configurou a API key do OpenRouter. Quer configurar agora?" Se sim, pedir a key e salvar em `~/.maestro/config.md`.
    - **Se tem key:** continuar
 2. **Executar teste** — chamada `curl` ao modelo mais barato (`perplexity/sonar`):
 
@@ -240,7 +240,7 @@ curl -s -w "\n%{http_code}" https://openrouter.ai/api/v1/chat/completions \
    - **Outro erro:** informar "Não consegui conectar ao OpenRouter agora. Tente novamente mais tarde."
 
 4. **Salvar pesquisa de teste (apenas quando HTTP 200):**
-   - Ler `pasta-pesquisas` de `user/config.md` (padrão: `pesquisas/`)
+   - Ler `pasta-pesquisas` de `~/.maestro/config.md` (padrão: `pesquisas/`)
    - Criar `{pasta-pesquisas}/AAAA-MM-DD-teste-conexao-openrouter.md` seguindo o template da seção 6, com:
      - `titulo: Teste de conexão — OpenRouter`
      - `tipo: livre`
@@ -528,7 +528,7 @@ STATUS: BLOCKED
 
 BLOCKER:
   - motivo: "Ferramenta [nome] requer API key do OpenRouter, não encontrada no contexto"
-  - tentativas: "Verificou user/config.md e bloco CONTEXTO"
+  - tentativas: "Verificou ~/.maestro/config.md e bloco CONTEXTO"
   - sugestao: "Re-despachar com ferramenta websearch (grátis) ou configurar API key"
 
 ARQUIVOS:

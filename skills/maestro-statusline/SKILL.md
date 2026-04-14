@@ -11,7 +11,7 @@ description: >
 
 Ao ser acionado, verificar o estado atual:
 
-1. Ler `user/config.md` do plugin
+1. Ler `~/.maestro/config.md` do plugin
 2. Verificar se existe a seção `## Status Line` com campo `statusline-ativo`
 
 **Se `statusline-ativo` não existe ou é `false`:**
@@ -28,7 +28,7 @@ Ao ser acionado, verificar o estado atual:
 
 ### 2.1 Ler preferências
 
-Verificar se já existem preferências salvas em `user/config.md` (seção `## Status Line`).
+Verificar se já existem preferências salvas em `~/.maestro/config.md` (seção `## Status Line`).
 
 **Se existem:** usar as preferências salvas (o usuário configurou antes e desligou).
 
@@ -142,7 +142,7 @@ Explicar ao usuário e pedir confirmação antes de corrigir:
 
 ### 2.5 Salvar estado
 
-Atualizar `user/config.md` — setar `statusline-ativo: true` na seção `## Status Line`.
+Atualizar `~/.maestro/config.md` — setar `statusline-ativo: true` na seção `## Status Line`.
 Se a seção não existe, criá-la ao final do arquivo com todos os campos de preferências.
 
 ### 2.6 Confirmar
@@ -165,7 +165,7 @@ Informar:
 
 ### 3.2 Atualizar estado
 
-Atualizar `user/config.md` — setar `statusline-ativo: false`.
+Atualizar `~/.maestro/config.md` — setar `statusline-ativo: false`.
 **Manter todas as outras preferências** (itens, estilos, faixas) — quando o usuário religar, volta com a mesma configuração.
 
 ### 3.3 Confirmar
@@ -190,7 +190,7 @@ Configuração da Status Line:
 O que quer alterar? (número ou "pronto")
 ```
 
-Ler as preferências atuais de `user/config.md` para montar o menu.
+Ler as preferências atuais de `~/.maestro/config.md` para montar o menu.
 
 ### 4.1 Opção 1 — Itens visíveis
 
@@ -207,7 +207,7 @@ Quais itens mostrar na barra?
 Fale quais quer ligar ou desligar.
 ```
 
-Aguardar resposta. Atualizar `statusline-itens` em `user/config.md`.
+Aguardar resposta. Atualizar `statusline-itens` em `~/.maestro/config.md`.
 
 ### 4.2 Opção 2 — Estilo por item
 
@@ -223,7 +223,7 @@ Qual estilo para cada item?
 Fale qual item quer mudar e pra qual estilo.
 ```
 
-Aguardar resposta. Atualizar `statusline-estilo-[item]` em `user/config.md`.
+Aguardar resposta. Atualizar `statusline-estilo-[item]` em `~/.maestro/config.md`.
 
 ### 4.3 Opção 3 — Faixas de cor do contexto
 
@@ -245,7 +245,7 @@ Aguardar resposta.
 
 Após qualquer mudança (ou quando o usuário disser "pronto"):
 
-1. Salvar preferências atualizadas em `user/config.md`
+1. Salvar preferências atualizadas em `~/.maestro/config.md`
 2. Regenerar o script `~/.claude/maestro-statusline.sh` (mesmo fluxo da seção 2.2)
 3. Informar: "Configuração atualizada! A barra já muda na próxima mensagem."
 

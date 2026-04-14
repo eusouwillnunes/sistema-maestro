@@ -26,8 +26,8 @@ Além dos documentos da Biblioteca de Marketing, o sistema carrega memórias rel
 
 | Fonte | Quando carregar | Escopo |
 |---|---|---|
-| `user/memorias/preferencias.md` | Sempre, em toda tarefa | Usuário |
-| `user/memorias/agentes/[agente].md` | Quando o agente de destino tem ajustes | Usuário |
+| `~/.maestro/memorias/preferencias.md` | Sempre, em toda tarefa | Usuário |
+| `~/.maestro/memorias/agentes/[agente].md` | Quando o agente de destino tem ajustes | Usuário |
 | `maestro/memorias/contexto.md` | Quando a tarefa precisa de contexto do negócio | Projeto |
 | `maestro/memorias/agentes/[agente].md` | Quando o agente tem feedbacks do projeto | Projeto |
 | `maestro/memorias/sessoes.md` | Só quando o usuário perguntar sobre histórico | Projeto |

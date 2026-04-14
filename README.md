@@ -148,6 +148,10 @@ O Maestro registra o que foi feito, o que ficou em andamento e sugere por onde c
 /plugin marketplace remove sistema-maestro
 ```
 
+## Maestro Pro
+
+Membros da [Comunidade dos Últimos](https://acomunidadedosultimos.com.br) têm acesso ao **Maestro Pro** — com agentes exclusivos, funcionalidades avançadas e novos recursos a cada atualização.
+
 ## Autor
 
 **Willian Nunes** — [@eusouwillnunes](https://instagram.com/eusouwillnunes)

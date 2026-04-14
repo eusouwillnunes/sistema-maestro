@@ -34,7 +34,7 @@ ANTES de criar tasks ou iniciar qualquer etapa, verificar o que já está config
 2. **Permissões:** verificar se `.claude/settings.local.json` já tem a seção `permissions` do Maestro
 3. **Memórias e config:** verificar se `maestro/config.md` e `maestro/memorias/` existem
 4. **Biblioteca:** verificar se a pasta da empresa já existe com scaffold
-5. **Pesquisador:** ler `user/config.md` e verificar se `openrouter-api-key` tem valor
+5. **Pesquisador:** ler `~/.maestro/config.md` e verificar se `openrouter-api-key` tem valor
 6. **Status Line:** ler `~/.claude/settings.json` e verificar se `statusLine` já está configurada
 7. **Obsidian:** verificar se está instalado usando TODOS os métodos abaixo (em ordem):
    - Windows: testar se existe `$LOCALAPPDATA/Obsidian/Obsidian.exe` ou `$APPDATA/../Local/Obsidian/Obsidian.exe`
@@ -98,7 +98,7 @@ Responder:
 
 > "É um prazer, {NOME}!"
 
-Salvar o nome na memória de usuário (`user/memorias/`). Criar ou atualizar o arquivo `user/memorias/nome-usuario.md` com:
+Salvar o nome na memória de usuário (`~/.maestro/memorias/`). Criar ou atualizar o arquivo `~/.maestro/memorias/nome-usuario.md` com:
 
 ```markdown
 ---
@@ -109,7 +109,7 @@ descricao: Como o usuário gostaria de ser chamado
 Nome: {NOME}
 ```
 
-Atualizar o index `user/memorias/_index.md` se necessário.
+Atualizar o index `~/.maestro/memorias/_index.md` se necessário.
 
 A partir deste ponto, usar o nome do usuário nas interações sempre que natural (sem forçar em toda frase).
 
@@ -180,6 +180,22 @@ Marcar task "Verificar dependências" como `completed`.
 
 **Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
+### 2.3.5 Verificar ~/.maestro/
+
+Executar silenciosamente, sem mensagem detalhada ao usuário:
+
+1. Verificar se `~/.maestro/` existe: `test -d ~/.maestro`
+2. Se **NÃO existir** → criar a estrutura:
+   ```bash
+   mkdir -p ~/.maestro/memorias/agentes ~/.maestro/overrides ~/.maestro/personas
+   ```
+3. Verificar se `~/.maestro/config.md` existe: `test -f ~/.maestro/config.md`
+   - Se **NÃO existir** → copiar o template inicial: `cp [plugin]/user/config.md ~/.maestro/config.md`
+   - Substituir `[plugin]` pelo caminho real do diretório do plugin (onde está o SKILL.md)
+4. Se já existir → manter sem alteração (preservar configurações do usuário)
+
+Informar brevemente apenas se precisou criar: "Diretório `~/.maestro/` criado para suas configurações globais."
+
 ### 2.4 Permissões do projeto
 
 Marcar task "Configurar permissões" como `in_progress`.
@@ -237,7 +253,7 @@ Marcar task "Setup técnico" como `in_progress`.
 
 Executar silenciosamente (sem mensagens detalhadas para cada item):
 
-1. **Ativar sistema:** setar `maestro-ativo: true` em `user/config.md`
+1. **Ativar sistema:** setar `maestro-ativo: true` em `~/.maestro/config.md`
 2. **Memórias de projeto:** criar `maestro/memorias/` usando templates de `core/templates/_memorias-projeto-template.md`:
    - `maestro/memorias/_index.md`
    - `maestro/memorias/contexto.md`
@@ -256,9 +272,9 @@ Executar silenciosamente (sem mensagens detalhadas para cada item):
      ```
      ## Maestro
      > Sistema Maestro ativo. Configuração e memórias: maestro/config.md
-     > Memórias de usuário: [caminho do plugin]/user/memorias/
+     > Memórias de usuário: ~/.maestro/memorias/
      ```
-5. **Memórias de usuário:** verificar se `user/memorias/_index.md` existe no plugin. Se não existe, informar que precisa ser recriado.
+5. **Memórias de usuário:** verificar se `~/.maestro/memorias/_index.md` existe. Se não existe, criar a estrutura `~/.maestro/` (conforme passo 2.3.5).
 
 Informar brevemente: "Estrutura de memórias e configuração criadas."
 
@@ -371,7 +387,7 @@ Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
 
 **Se quer configurar agora:**
 - Perguntar: "Você já tem uma API key do OpenRouter?"
-  - **Se sim:** pedir a key e salvar em `user/config.md` no campo `openrouter-api-key`
+  - **Se sim:** pedir a key e salvar em `~/.maestro/config.md` no campo `openrouter-api-key`
   - **Se não:** informar: "Você pode criar uma conta em https://openrouter.ai/, adicionar créditos e gerar uma API key na seção 'Keys'. Quando tiver, rode `/maestro:onboarding` pra configurar."
 - Se a key foi informada, perguntar: "Quer que eu faça um teste rápido pra validar se a chave funciona? É uma chamada simples (custo ~$0.01)."
   - **Se sim:** executar teste conforme seção 2.8.1
@@ -408,7 +424,7 @@ curl -s -w "\n%{http_code}" https://openrouter.ai/api/v1/chat/completions \
 - **HTTP 402 ou erro de crédito:** informar "A chave é válida, mas sua conta no OpenRouter não tem créditos. Adicione saldo em openrouter.ai e a pesquisa paga vai funcionar."
 - **Outro erro (timeout, rede):** informar "Não consegui conectar ao OpenRouter agora. A chave foi salva. Você pode testar depois pedindo: 'testa minha conexão com o OpenRouter'."
 
-Se a chave falhou (401/403), **remover** o valor salvo em `user/config.md` e setar `ferramenta-default: websearch`.
+Se a chave falhou (401/403), **remover** o valor salvo em `~/.maestro/config.md` e setar `ferramenta-default: websearch`.
 
 ### 2.9 Pesquisa inicial do negócio
 
@@ -501,7 +517,7 @@ Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
      > Esse projeto está com o trust desativado. Posso ativar?"
    - Se o usuário aceitar: corrigir com replace binário (`false` → `true`). **Nunca usar json.load/json.dump** porque o arquivo tem surrogates Unicode que corrompem na serialização. Informar que a barra aparece após reiniciar.
    - Se o usuário recusar: informar que a barra não vai funcionar sem trust e seguir adiante.
-6. Atualizar `user/config.md`: setar `statusline-ativo: true` na seção `## Status Line`
+6. Atualizar `~/.maestro/config.md`: setar `statusline-ativo: true` na seção `## Status Line`
 7. Informar: "Barra de status ativada! Ela mostra contexto, limites e modelo. Pra configurar ou desligar: `/maestro-statusline`."
 
 **Se não:**
@@ -528,7 +544,7 @@ Quando `onboarding-completo: true`, mostrar o estado atual e permitir alteraçõ
 
 ### 3.1 Detectar estado atual
 
-Ler `maestro/config.md` e `user/config.md` para montar o status.
+Ler `maestro/config.md` e `~/.maestro/config.md` para montar o status.
 
 ### 3.2 Mostrar menu
 
@@ -572,13 +588,13 @@ Quando o usuário escolher uma categoria, apresentar as opções específicas co
 
 Executar o fluxo correspondente (seção 3.3) para cada item escolhido. Se marcou múltiplas categorias, executar em sequência.
 
-Para o item 1 (Seu nome), ler `user/memorias/nome-usuario.md`. Se não existir, mostrar "não configurado".
+Para o item 1 (Seu nome), ler `~/.maestro/memorias/nome-usuario.md`. Se não existir, mostrar "não configurado".
 
 ### 3.3 Executar alterações
 
 **Opção 1 — Alterar nome do usuário:**
 - Perguntar: "Como você gostaria que eu te chamasse?"
-- Atualizar `user/memorias/nome-usuario.md` com o novo nome
+- Atualizar `~/.maestro/memorias/nome-usuario.md` com o novo nome
 - Confirmar: "Pronto! A partir de agora te chamo de {NOME}."
 
 **Opção 2 — Alterar empresa:**
