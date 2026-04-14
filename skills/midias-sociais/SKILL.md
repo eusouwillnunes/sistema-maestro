@@ -10,6 +10,7 @@ description: >
 ---
 
 > Aplica: [[protocolo-interacao]]
+> Aplica: [[protocolo-contexto]]
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
@@ -184,36 +185,21 @@ Quando a mensagem do usuário não deixa claro qual sub-skill acionar, usar `Ask
 
 ## 6. Contexto e Biblioteca
 
-Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protocolos/protocolo-tasks.md`.
-
-Antes de executar qualquer tarefa, busque contexto na Biblioteca de Marketing seguindo o `core/protocolos/protocolo-biblioteca.md`.
+Antes de executar qualquer tarefa, leia o contexto de marca indicado no Bloco CONTEXTO (modo Agent()) ou em `biblioteca/identidade/` (modo Skill()). Conforme [[protocolo-contexto]].
 
 ### Mapa de Necessidades
 
-| Tipo de tarefa | Identidade | Produto | Referência |
-|---------------|:----------:|:-------:|:----------:|
-| Estratégia de mídias sociais | Toda | Dossiê, Prospect | Plataformas Ativas, Métricas |
-| Criação de conteúdo viral | Toda | Dossiê, Prospect | Tom de Voz, Plataforma-alvo |
-| Análise de performance social | Toda | Métricas | Conteúdos Recentes, Plataformas |
-| Calendário editorial | Toda | Dossiê | Recursos Disponíveis, Plataformas |
-| Calendário operacional | Toda | Dossiê | Recursos Disponíveis, Plataformas, Arquivo Morto |
-| Repurposing de conteúdo | Toda | Pillar Content | Plataformas-alvo |
+| Tipo de tarefa | Templates obrigatórios | Templates complementares |
+|---------------|----------------------|------------------------|
+| Criar conteúdo | tom-de-voz, perfil-publico | dossiê do produto, swipe-file |
+| Planejar calendário | tom-de-voz, perfil-publico, dossiê | análise-mercado |
+| Estratégia | posicionamento, perfil-publico | análise-mercado, dossiê |
+| Analisar resultados | perfil-publico | dossiê |
 
-### Regra de Autonomia
+**Obrigatório** = leia antes de executar. Se não existe, pergunte ao usuário ou solicite material de referência.
+**Complementar** = leia se existir. Melhora a qualidade mas não bloqueia.
 
-Se um template não está preenchido ou não existe na Biblioteca, resolva com seus frameworks:
-- Sem identidade/tom de voz? → Pergunte ao usuário e defina um tom provisório pra tarefa
-- Sem métricas? → Trabalhe com benchmarks gerais do setor e aplique os frameworks
-- Sem calendário prévio? → Construa do zero com Document Don't Create e JJJRH 80/20
-
-Nunca pare por falta de template. Templates aceleram, não bloqueiam.
-
-### Sugestão de Templates
-
-Após entregar, avalie se o resultado merece virar template:
-- Estratégia de conteúdo, calendário editorial modelo → **Sugira** salvar como template reutilizável em `user/biblioteca/`
-- Post individual, carrossel específico → **NÃO sugira** (peça final de conteúdo)
-- Framework de conteúdo personalizado (ex: "meu modelo de reels") → **Sugira** salvar como template reutilizável
+Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
 
 ---
 

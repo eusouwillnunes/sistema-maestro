@@ -118,10 +118,20 @@ Protocolo de report: Seguir o formato definido em protocolo-agent.md (seção 2)
 
 ```
 ---CONTEXTO---
-[Templates já preenchidos — conteúdo completo, na ordem da cadeia de dependências]
-[Entrevistas concluídas relevantes — seção Respostas]
-[Pesquisas disponíveis — resumo executivo + link]
-[Material de referência pertinente — conteúdo ou resumo]
+Contexto de marca (LEIA estes arquivos antes de executar):
+- [caminhos dos templates de identidade preenchidos — conforme protocolo-contexto.md]
+
+Contexto complementar (leia se relevante pra tarefa):
+- [caminhos dos templates do Mapa de Necessidades do agente]
+
+Entrevistas concluídas:
+- [caminhos das entrevistas relevantes]
+
+Pesquisas disponíveis:
+- [caminhos das pesquisas relevantes]
+
+Material de referência:
+- [caminhos de documentos pertinentes]
 ---END-CONTEXTO---
 ```
 
@@ -142,6 +152,7 @@ Protocolo de report: Seguir o formato definido em protocolo-agent.md (seção 2)
 - Siga convenções Obsidian: frontmatter YAML, wiki-links [[...]], callouts (> [!tip]), tags #maestro/
 - NUNCA invente dados. Se falta informação, reporte NEEDS_DATA ou INSUFFICIENT_DATA
 - Use templates anteriormente preenchidos como base (preenchimento sequencial)
+- Antes de executar, LEIA os arquivos listados no bloco CONTEXTO. Especialmente identidade de marca (tom de voz, personalidade, posicionamento). Esses arquivos contêm o contexto necessário pra produzir com qualidade e coerência.
 - Ao concluir, reporte usando o formato ---REPORT--- definido no protocolo
 ---END-REGRAS---
 ```
@@ -196,7 +207,7 @@ Quando executado como Agent() (sem interação direta com o usuário), siga esta
 
 ### Antes de executar
 1. Leia o bloco ---TAREFA--- para entender o objetivo
-2. Leia o bloco ---CONTEXTO--- para verificar os dados disponíveis
+2. Leia o bloco ---CONTEXTO--- e LEIA os arquivos referenciados nele (especialmente identidade de marca). O contexto vem como caminhos de arquivo — use Read pra carregar cada um antes de executar.
 3. Leia o bloco ---MEMORIAS--- para aplicar preferências do usuário
 4. Verifique se o contexto é suficiente para produzir com qualidade:
    - Se falta dado que não existe → reporte NEEDS_DATA

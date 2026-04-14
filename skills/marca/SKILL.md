@@ -10,6 +10,7 @@ description: >
 ---
 
 > Aplica: [[protocolo-interacao]]
+> Aplica: [[protocolo-contexto]]
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
@@ -164,37 +165,22 @@ Quando a mensagem do usuário não deixa claro qual sub-skill acionar, usar `Ask
 
 ## 6. Contexto e Biblioteca
 
-Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protocolos/protocolo-tasks.md`.
+Antes de executar qualquer tarefa, leia o contexto existente na Biblioteca (modo Agent(): Bloco CONTEXTO; modo Skill(): `biblioteca/identidade/`). Conforme [[protocolo-contexto]].
 
-Antes de executar qualquer tarefa, busque contexto na Biblioteca de Marketing seguindo o `core/protocolos/protocolo-biblioteca.md`.
+O agente de Marca lê o que já existe pra evoluir, não pra começar do zero.
 
 ### Mapa de Necessidades
 
-| Tipo de tarefa | Identidade | Produto | Referência |
-|---------------|:----------:|:-------:|:----------:|
-| Identidade de marca | (coleta do zero ou docs existentes) | — | Referências de concorrência |
-| Posicionamento | Toda | — | Mercado, Concorrência |
-| Naming | Toda + Posicionamento | — | Público, Concorrência, Arquétipo |
-| Manifesto | Toda | — | Posicionamento, Tom de Voz |
-| Tom de voz | Toda + Personalidade | — | Público, Concorrência |
+| Tipo de tarefa | Templates obrigatórios | Templates complementares |
+|---------------|----------------------|------------------------|
+| Identidade | circulo-dourado (se existir) | posicionamento, personalidade |
+| Posicionamento | circulo-dourado, perfil-publico | personalidade, tom-de-voz |
+| Naming | circulo-dourado, posicionamento, personalidade | tom-de-voz |
 
-### Regra de Autonomia
+**Obrigatório** = leia antes de executar. Se não existe, pergunte ao usuário ou solicite material de referência.
+**Complementar** = leia se existir. Melhora a qualidade mas não bloqueia.
 
-Se um template não está preenchido ou não existe na Biblioteca, resolva com seus frameworks:
-- Sem identidade prévia? → É o cenário de criação do zero — colete tudo do usuário
-- Sem posicionamento? → Construa usando Onlyness Statement durante a tarefa
-- Sem referências de concorrência? → Sugira acionar o Pesquisador, mas prossiga sem se o usuário preferir
-
-Nunca pare por falta de template. Templates aceleram, não bloqueiam.
-
-### Sugestão de Templates
-
-Após entregar, avalie se o resultado merece virar template:
-- Identidade completa, posicionamento, tom de voz → **Sugira** salvar na biblioteca do projeto (são dados do projeto, não templates reutilizáveis)
-- Naming aprovado → **Sugira** salvar na biblioteca do projeto
-- Manifesto, guia de voz → **Sugira** salvar na biblioteca do projeto
-
-> **Nota:** Entregas do agente Marca geralmente são dados do projeto (identidade DESTE negócio), não templates reutilizáveis entre projetos. Salvar em `biblioteca/identidade/` do projeto, não em `user/biblioteca/`.
+Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
 
 ---
 

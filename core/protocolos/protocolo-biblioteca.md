@@ -8,6 +8,7 @@ tags:
 
 > [!info] Protocolo compartilhado do sistema MAESTRO.
 > Referenciado por todos os agentes especialistas que consomem contexto da Biblioteca de Marketing.
+> Ver também: [[protocolo-contexto]] para as regras de carregamento de contexto de marca pelo Maestro.
 
 ## Objetivo
 
@@ -41,6 +42,31 @@ O agente busca contexto nesta ordem de prioridade. A primeira fonte encontrada p
 ### Passo 1 — Identificar necessidades
 
 Cada agente tem seu próprio **Mapa de Necessidades** (definido na seção "Contexto e Biblioteca" da sua skill). Consulte o mapa para saber o que carregar com base no tipo de tarefa.
+
+### Passo 1.5 — Verificar dependências do template
+
+Se a tarefa envolve preencher um template:
+
+1. Ler o frontmatter do template-alvo
+2. Verificar o campo `depende-de` (lista de caminhos relativos à biblioteca)
+3. Para cada dependência listada, ler o template correspondente em `biblioteca/`
+4. Se a dependência não está preenchida (só tem [PREENCHER]), seguir sem — mas anotar como lacuna e informar ao usuário que a qualidade será melhor com essa dependência preenchida
+5. Dependências preenchidas servem como contexto pra produzir com coerência
+
+Exemplo de frontmatter com dependências:
+
+```yaml
+---
+titulo: Dossiê de Produto
+tipo: template
+camada: 2
+depende-de:
+  - identidade/posicionamento
+  - identidade/perfil-publico
+---
+```
+
+O campo `depende-de` usa caminhos relativos à pasta `biblioteca/`. Exemplo: `identidade/posicionamento` resolve pra `biblioteca/identidade/posicionamento.md`.
 
 ### Passo 2 — Buscar na Biblioteca
 

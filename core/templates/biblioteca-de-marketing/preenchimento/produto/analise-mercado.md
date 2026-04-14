@@ -4,6 +4,9 @@ tipo: produto
 camada: 3
 status: vazio
 produto: [NOME DO PRODUTO]
+depende-de:
+  - identidade/posicionamento
+  - identidade/perfil-publico
 tags: [produto, mercado, concorrência, posicionamento]
 ---
 

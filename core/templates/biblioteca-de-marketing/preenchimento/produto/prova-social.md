@@ -4,6 +4,8 @@ tipo: produto
 camada: 3
 status: vazio
 produto: [NOME DO PRODUTO]
+depende-de:
+  - produto/dossie
 tags: [produto, prova-social, depoimentos, credibilidade]
 ---
 

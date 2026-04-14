@@ -9,6 +9,7 @@ description: >
 ---
 
 > Aplica: [[protocolo-interacao]]
+> Aplica: [[protocolo-contexto]]
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
@@ -160,36 +161,21 @@ Quando a mensagem do usuário não deixa claro qual sub-skill acionar, usar `Ask
 
 ## 6. Contexto e Biblioteca
 
-Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protocolos/protocolo-tasks.md`.
-
-Antes de executar qualquer tarefa, busque contexto na Biblioteca de Marketing seguindo o `core/protocolos/protocolo-biblioteca.md`.
+Antes de executar qualquer tarefa, leia o contexto de marca indicado no Bloco CONTEXTO (modo Agent()) ou em `biblioteca/identidade/` (modo Skill()). Conforme [[protocolo-contexto]].
 
 ### Mapa de Necessidades
 
-| Tipo de tarefa | Identidade | Produto | Referência |
-|---------------|:----------:|:-------:|:----------:|
-| Diagnóstico de negócio | Toda | Dossiê | Mercado, Concorrência |
-| Criação de oferta | Toda | Dossiê, Prospect | Escada de Valor, Prova Social |
-| Planejamento de funil | Toda | Dossiê, Prospect | Escada de Valor, Oferta |
-| Criação de lead magnet | Toda | Dossiê, Prospect, Oferta | Funil, Mercado |
-| Script de vendas/aquisição | Toda | Dossiê, Prospect, Oferta | Objeções, Prova Social |
-| Estrutura de webinário | Toda | Dossiê, Prospect, Oferta | Crenças do Público, Prova Social |
-| Estratégia de lançamento | Toda | Dossiê, Prospect, Mercado | Escada de Valor, Funil |
+| Tipo de tarefa | Templates obrigatórios | Templates complementares |
+|---------------|----------------------|------------------------|
+| Diagnóstico | posicionamento, perfil-publico | dossiê, análise-mercado |
+| Oferta | posicionamento, perfil-publico, dossiê | oferta existente, prova-social |
+| Funil | posicionamento, perfil-publico, dossiê, oferta | análise-mercado |
+| Aquisição | perfil-publico, análise-mercado | dossiê, oferta |
 
-### Regra de Autonomia
+**Obrigatório** = leia antes de executar. Se não existe, pergunte ao usuário ou solicite material de referência.
+**Complementar** = leia se existir. Melhora a qualidade mas não bloqueia.
 
-Se um template não está preenchido ou não existe na Biblioteca, resolva com seus frameworks:
-- Sem identidade? → Colete contexto mínimo e aplique Secret Formula
-- Sem dossiê? → Pergunte ao usuário sobre o negócio e monte o cenário
-- Sem escada de valor? → Construa com o framework Value Ladder durante a tarefa
-
-Nunca pare por falta de template. Templates aceleram, não bloqueiam.
-
-### Sugestão de Templates
-
-Após entregar, avalie se o resultado merece virar template:
-- Plano de lançamento, funil, oferta estruturada → **Sugira** salvar como template reutilizável
-- Diagnóstico pontual, análise de cenário → **NÃO sugira** (análise específica do momento)
+Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
 
 ---
 

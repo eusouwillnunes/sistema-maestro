@@ -4,6 +4,9 @@ tipo: produto
 camada: 2
 status: vazio
 produto: [NOME DO PRODUTO]
+depende-de:
+  - identidade/posicionamento
+  - identidade/perfil-publico
 tags: [produto, dossiê, base-de-marketing]
 ---
 

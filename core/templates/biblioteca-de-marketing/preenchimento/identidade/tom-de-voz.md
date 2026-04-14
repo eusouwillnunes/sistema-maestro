@@ -3,6 +3,9 @@ titulo: Tom de Voz e Elementos Verbais
 tipo: identidade
 camada: 1
 status: vazio
+depende-de:
+  - identidade/personalidade-marca
+  - identidade/posicionamento
 tags: [identidade, tom-de-voz, elementos-verbais, linguagem, vocabulário]
 ---
 

@@ -8,6 +8,7 @@ description: >
 ---
 
 > Aplica: [[protocolo-interacao]]
+> Aplica: [[protocolo-contexto]]
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
@@ -260,35 +261,21 @@ Quando a mensagem do usuário pode se encaixar em mais de um cenário de copy, u
 
 ## 6. Contexto e Biblioteca
 
-Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protocolos/protocolo-tasks.md`.
-
-Antes de executar qualquer tarefa, busque contexto na Biblioteca de Marketing seguindo o `core/protocolos/protocolo-biblioteca.md`.
+Antes de executar qualquer tarefa, leia o contexto de marca indicado no Bloco CONTEXTO (modo Agent()) ou em `biblioteca/identidade/` (modo Skill()). Conforme [[protocolo-contexto]].
 
 ### Mapa de Necessidades
 
-| Tipo de tarefa | Identidade | Produto | Referência |
-|---------------|:----------:|:-------:|:----------:|
-| Headline | Toda | Dossiê, Prospect | Desejos de Massa |
-| Copy de anúncio | Toda | Dossiê, Prospect | Desejos de Massa, Prova Social |
-| Página de vendas | Toda | Toda (dossiê, prospect, oferta) | Prova Social, Big Idea |
-| Script de VSL | Toda | Toda (dossiê, prospect, oferta) | Prova Social, Big Idea |
-| Sequência de emails | Toda | Toda (dossiê, prospect, oferta) | Funil, Lançamento |
-| Bullets / fascinations | — | Dossiê, Prospect, Oferta | Desejos de Massa |
+| Tipo de tarefa | Templates obrigatórios | Templates complementares |
+|---------------|----------------------|------------------------|
+| Página de vendas | tom-de-voz, perfil-publico, dossiê do produto, oferta | prova-social, big-idea-hook |
+| Email/Sequência | tom-de-voz, perfil-publico, dossiê do produto | oferta, desejos-massa |
+| Anúncio/Criativo | tom-de-voz, perfil-publico | dossiê do produto, big-idea-hook |
+| Headlines/Hooks | tom-de-voz | perfil-publico, desejos-massa |
 
-### Regra de Autonomia
+**Obrigatório** = leia antes de executar. Se não existe, pergunte ao usuário ou solicite material de referência.
+**Complementar** = leia se existir. Melhora a qualidade mas não bloqueia.
 
-Se um template não está preenchido ou não existe na Biblioteca, resolva com seus frameworks:
-- Sem identidade? → Pergunte o contexto mínimo ao usuário e prossiga
-- Sem dossiê de produto? → Colete as informações diretamente na conversa
-- Sem oferta definida? → Use o framework de copy pra construir a argumentação com o que tem
-
-Nunca pare por falta de template. Templates aceleram, não bloqueiam.
-
-### Sugestão de Templates
-
-Após entregar, avalie se o resultado merece virar template:
-- Página de vendas, email, headline → **NÃO sugira** (peça final de conteúdo)
-- Big Idea documentada, Swipe File estruturado → **Sugira** salvar como referência
+Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
 
 ---
 

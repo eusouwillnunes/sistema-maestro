@@ -4,6 +4,9 @@ tipo: produto
 camada: 3
 status: vazio
 produto: [NOME DO PRODUTO]
+depende-de:
+  - identidade/perfil-publico
+  - produto/perfil-prospect
 tags: [produto, desejos, psicologia, copy]
 ---
 

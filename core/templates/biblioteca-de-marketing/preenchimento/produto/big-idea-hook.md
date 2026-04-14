@@ -4,6 +4,10 @@ tipo: produto
 camada: 3
 status: vazio
 produto: [NOME DO PRODUTO]
+depende-de:
+  - identidade/tom-de-voz
+  - produto/dossie
+  - produto/desejos-massa
 tags: [produto, big-idea, hook, estratégia-criativa]
 ---
 

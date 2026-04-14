@@ -10,6 +10,7 @@ description: >
 ---
 
 > Aplica: [[protocolo-interacao]]
+> Aplica: [[protocolo-contexto]]
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
@@ -158,36 +159,20 @@ Quando a mensagem do usuário não deixa claro qual sub-skill acionar, usar `Ask
 
 ## 6. Contexto e Biblioteca
 
-Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protocolos/protocolo-tasks.md`.
-
-Antes de executar qualquer tarefa, busque contexto na Biblioteca de Marketing seguindo o `core/protocolos/protocolo-biblioteca.md`.
+Antes de executar qualquer tarefa, leia o contexto indicado no Bloco CONTEXTO (modo Agent()) ou em `biblioteca/identidade/` (modo Skill()). Conforme [[protocolo-contexto]].
 
 ### Mapa de Necessidades
 
-| Tipo de tarefa | Identidade | Produto | Referência |
-|---------------|:----------:|:-------:|:----------:|
-| Diagnóstico de campanha paga | Resumo (posicionamento) | Métricas | Plataforma, Período, Metas |
-| Planejamento de testes A/B | Resumo (posicionamento) | Métricas | Campanhas Ativas, Budget |
-| Seleção de canais de tráfego | Resumo (posicionamento) | Dossiê | Público, Modelo de Negócio, Budget |
-| Otimização de budget | — | Métricas | Canais Ativos, Budget Total |
+| Tipo de tarefa | Templates obrigatórios | Templates complementares |
+|---------------|----------------------|------------------------|
+| Diagnóstico de campanha | perfil-publico | dossiê, análise-mercado |
+| Planejar testes | perfil-publico, dossiê | oferta |
+| Avaliar canais | perfil-publico | análise-mercado |
 
-> **Nota:** O agente Performance usa "Resumo" de identidade, não a identidade toda. Basta posicionamento e público-alvo pra contextualizar a análise.
+**Obrigatório** = leia antes de executar. Se não existe, pergunte ao usuário ou solicite material de referência.
+**Complementar** = leia se existir. Melhora a qualidade mas não bloqueia.
 
-### Regra de Autonomia
-
-Se um template não está preenchido ou não existe na Biblioteca, resolva com seus frameworks:
-- Sem métricas na Biblioteca? → Peça ao usuário (métricas são dados vivos, raramente estão em template)
-- Sem posicionamento? → Pergunte ao usuário sobre público e produto, e prossiga
-- Sem budget definido? → Trabalhe com cenários (conservador/moderado/agressivo)
-
-Nunca pare por falta de template. Templates aceleram, não bloqueiam.
-
-### Sugestão de Templates
-
-Após entregar, avalie se o resultado merece virar template:
-- Framework de diagnóstico personalizado, modelo de relatório → **Sugira** salvar como template
-- Diagnóstico específico, análise de campanha → **NÃO sugira** (análise pontual)
-- Plano de testes recorrente → **Sugira** salvar como template reutilizável
+Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
 
 ---
 

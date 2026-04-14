@@ -3,6 +3,10 @@ titulo: Manifesto da Marca
 tipo: identidade
 camada: 3
 status: vazio
+depende-de:
+  - identidade/circulo-dourado
+  - identidade/personalidade-marca
+  - identidade/tom-de-voz
 tags: [identidade, manifesto, crenças, posicionamento]
 ---
 

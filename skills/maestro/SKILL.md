@@ -7,6 +7,7 @@ description: >
 ---
 
 > Aplica: [[protocolo-interacao]]
+> Aplica: [[protocolo-contexto]]
 
 ## 1. Papel
 
@@ -190,6 +191,19 @@ Quando a solicitação envolve funcionalidades internas do Maestro, consultar a 
      - `{projeto-ativo}/memorias/contexto.md` (se a tarefa precisar de contexto do negócio)
      - `{projeto-ativo}/memorias/sessoes.md` (só se o usuário perguntar sobre histórico)
    - **Passar as memórias ao agente** junto com a tarefa, como contexto adicional após as instruções originais da skill
+5.5. **Carregar contexto de marca** (conforme [[protocolo-contexto]]) — verificar `biblioteca/identidade/` no projeto ativo:
+   - **Se existe e tem templates preenchidos:** montar lista de caminhos dos templates preenchidos (não vazios / não só [PREENCHER])
+   - **Se existe mas está vazio ou não existe:** exibir aviso persuasivo via `AskUserQuestion` (conforme [[protocolo-interacao]]):
+     - question: "A identidade de marca ainda não foi preenchida. Quer preencher antes?"
+     - options:
+       - label: "Preencher agora (Recomendado)", description: "5-10 minutos que mudam a qualidade de tudo que o sistema produz"
+       - label: "Seguir sem identidade", description: "O resultado pode ficar genérico sem tom de voz e personalidade definidos"
+     - Se "preencher": acionar fluxo de preenchimento da biblioteca (identidade primeiro)
+     - Se "seguir sem": prosseguir normalmente
+   - **Identificar templates complementares:** com base no Mapa de Necessidades do agente de destino (definido na seção "Contexto e Biblioteca" de cada especialista), listar caminhos de templates de produto e referência relevantes pra tarefa
+   - **Incluir no despacho:**
+     - Se Agent(): incluir todos os caminhos no Bloco CONTEXTO (formato do protocolo-agent.md)
+     - Se Skill(): instruir o especialista a ler `biblioteca/identidade/` e os templates complementares antes de executar
 6. **Decidir modo de despacho** — antes de delegar, determinar se o agente roda como Skill() ou Agent():
 
    **Agentes com modo fixo:**
@@ -205,11 +219,13 @@ Quando a solicitação envolve funcionalidades internas do Maestro, consultar a 
    **Se Agent():**
    - Resolver modelo: ler `user/config.md` → seção `modelos` → campo do agente. Se `~` ou ausente, usar default do protocolo (seção 4 do `core/protocolos/protocolo-agent.md`)
    - Empacotar contexto seguindo os 5 blocos do protocolo (seção 3 do `core/protocolos/protocolo-agent.md`)
+   - Incluir os caminhos de contexto de marca (step 5.5) no Bloco CONTEXTO
    - Despachar via Agent tool com: `model: [modelo resolvido]`, `prompt: [contexto empacotado]`
    - Ao receber resposta, extrair o bloco ---REPORT--- e tratar o status
 
    **Se Skill():**
-   - Delegar normalmente via Skill tool, passando pedido + memórias + contexto
+   - Delegar via Skill tool, passando pedido + memórias + contexto
+   - Instruir o especialista: "Antes de executar, leia os arquivos de identidade de marca em `biblioteca/identidade/`. Especialmente tom de voz e personalidade. Consulte também os templates complementares do seu Mapa de Necessidades."
    - O agente é quem entrevista o usuário
    - Aguardar o especialista concluir a interação e entregar o resultado
    - **Ao receber o resultado final do especialista, retomar o controle e seguir para o passo 8 (Validação)**
@@ -282,7 +298,7 @@ Todo conteúdo textual que o usuário vai ler passa por este ciclo antes de ser 
 1. Resolver modelo do Revisor: ler `user/config.md` → `modelos.revisor` (default: sonnet)
 2. Disparar o Revisor via Agent tool com `model: [modelo resolvido]`, passando no prompt empacotado:
    - Bloco TAREFA: o resultado aprovado pelo QA
-   - Bloco CONTEXTO: identidade de marca do projeto (se existir — tom de voz, personalidade, vocabulário proprietário)
+   - Bloco CONTEXTO: caminhos dos templates de identidade de marca do projeto (os mesmos passados ao especialista no step 5.5 — tom de voz, personalidade, posicionamento). Instruir o Revisor a LER estes arquivos e verificar coerência do texto com a identidade definida.
    - Bloco REGRAS: instruções do protocolo
 3. Extrair o report do Revisor:
    - O Revisor sempre reporta DONE — com texto original (aprovado) ou texto revisado (corrigido)

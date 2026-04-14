@@ -3,6 +3,9 @@ titulo: Manual de Identidade Visual
 tipo: identidade
 camada: 1
 status: vazio
+depende-de:
+  - identidade/personalidade-marca
+  - identidade/posicionamento
 tags: [identidade, visual, cores, tipografia, logo]
 ---
 

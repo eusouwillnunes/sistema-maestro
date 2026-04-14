@@ -3,6 +3,9 @@ titulo: Personalidade da Marca
 tipo: identidade
 camada: 1
 status: vazio
+depende-de:
+  - identidade/circulo-dourado
+  - identidade/posicionamento
 tags: [identidade, personalidade, arquétipo, marca]
 ---
 

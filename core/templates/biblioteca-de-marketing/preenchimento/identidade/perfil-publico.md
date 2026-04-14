@@ -3,6 +3,9 @@ titulo: Perfil do Público
 tipo: identidade
 camada: 1
 status: vazio
+depende-de:
+  - identidade/circulo-dourado
+  - identidade/posicionamento
 tags: [identidade, público, persona, audiência]
 ---
 

@@ -4,6 +4,9 @@ tipo: produto
 camada: 2
 status: vazio
 produto: [NOME DO PRODUTO]
+depende-de:
+  - produto/dossie
+  - identidade/perfil-publico
 tags: [produto, oferta, hormozi, equação-de-valor]
 ---
 

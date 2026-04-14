@@ -4,6 +4,8 @@ tipo: produto
 camada: 2
 status: vazio
 produto: [NOME DO PRODUTO]
+depende-de:
+  - identidade/perfil-publico
 tags: [produto, prospect, público-alvo, schwartz]
 ---
 
