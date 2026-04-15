@@ -170,7 +170,7 @@ Material de referência:
 | Agente | Modelo default | Justificativa |
 |--------|---------------|---------------|
 | QA | haiku | Verificação mecânica de checklist |
-| Gestor de Tarefas | haiku | CRUD operacional |
+| Gerente de Projetos | haiku/sonnet | CRUD (haiku), decomposição e conclusão (sonnet) |
 | Bibliotecário | haiku | Criação de estrutura de pastas |
 | Pesquisador | sonnet | Síntese de dados, sem criação |
 | Revisor | sonnet | Julgamento de qualidade textual |

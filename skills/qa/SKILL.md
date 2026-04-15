@@ -4,6 +4,7 @@ description: >
   Verificação de checklists do Sistema Maestro. Recebe o resultado de um
   agente especialista e verifica item por item se o checklist foi cumprido.
   Retorna aprovação ou lista de itens que falharam com feedback específico.
+  Quando reprova, reporta achados para o Gerente de Projetos criar tarefa de revisão.
 user-invocable: false
 ---
 
@@ -74,6 +75,10 @@ Aplicar sempre, independentemente do agente especialista:
 
 ### Feedback para o especialista
 [Instruções claras e específicas do que precisa mudar]
+
+### Nota para o Maestro
+Os achados acima devem ser encaminhados ao Gerente de Projetos para criação de tarefa de revisão.
+O especialista original é quem deve corrigir — o QA apenas diagnostica.
 ```
 
 ---

@@ -9,7 +9,7 @@ tags:
 # Entrevistas
 
 > [!info] Index de entrevistas
-> Mantido automaticamente pelo Gestor de Tarefas. Consultável no Obsidian.
+> Mantido automaticamente pelo Gerente de Projetos. Consultável no Obsidian.
 
 ## Pendentes
 

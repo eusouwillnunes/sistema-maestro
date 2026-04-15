@@ -143,14 +143,14 @@ Quando o usuário pede para preencher um template da biblioteca:
    - Despachar via Agent tool com modelo resolvido
    - Ao receber report:
      - `DONE` → seguir pra Validação (passo 8)
-     - `NEEDS_DATA` → acionar maestro:tarefas para criar entrevistas e/ou pesquisas via Gestor. Oferecer ao usuário: resolver agora (Entrevistador Skill() + Pesquisador Agent() em paralelo) ou depois. Após resolução, re-despachar o especialista
-     - `INSUFFICIENT_DATA` → acionar maestro:tarefas para criar entrevista de aprofundamento. Oferecer resolver agora (Entrevistador) ou depois
+     - `NEEDS_DATA` → acionar Gerente de Projetos para criar entrevistas e/ou pesquisas. Oferecer ao usuário: resolver agora (Entrevistador Skill() + Pesquisador Agent() em paralelo) ou depois. Após resolução, re-despachar o especialista
+     - `INSUFFICIENT_DATA` → acionar Gerente de Projetos para criar entrevista de aprofundamento. Oferecer resolver agora (Entrevistador) ou depois
      - `NEEDS_CONTEXT` → re-despachar com contexto adicional
 7. **Se Skill():**
    - Delegar normalmente — o agente conversa com o usuário, faz perguntas e preenche
 8. **Validar** — QA + Revisor (ciclo padrão do Maestro)
 9. **Salvar** — gravar no arquivo do template **dentro da pasta do projeto ativo**, atualizar frontmatter `status`, atualizar o index de área
-10. **Atualizar tarefa** — se havia tarefa formal no vault para este preenchimento, marcar como `concluida` via Gestor de Tarefas. Verificar desbloqueios.
+10. **Atualizar tarefa** — se havia tarefa formal no vault para este preenchimento, marcar como `concluida` via Gerente de Projetos. Verificar desbloqueios.
 11. **Próximo passo** — sugerir o próximo template seguindo a ordem recomendada
 
 ---

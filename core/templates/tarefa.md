@@ -2,35 +2,34 @@
 titulo: "[PREENCHER]"
 tipo: tarefa
 agente: "[PREENCHER]"
-sub-skill: "[PREENCHER — se aplicável]"
+categoria: "[identidade|copy|estrategia|midias|performance|pesquisa|biblioteca|revisao|geral]"
 status: pendente
 bloqueada-por: []
 grupo: "[PREENCHER]"
-modelo: ~
 prioridade: media
 solicitante: "[PREENCHER]"
 data-criacao: "[PREENCHER]"
 data-inicio: ~
 data-conclusao: ~
+tempo-execucao: ~
+resultado: ~
 tags:
   - "#maestro/tarefa"
 ---
 
 ## Descrição
 
-[O que precisa ser feito — preenchido pelo Maestro via Gestor de Tarefas]
+[O que precisa ser feito]
+
+## Checklist
+
+[Preenchido pelo Gerente com base na categoria]
 
 ## Dependências
 
-- **Entrevistas:** nenhuma
-- **Pesquisas:** nenhuma
-- **Tarefas anteriores:** nenhuma
-- **Templates necessários:** nenhum
-
-## Contexto para o Agente
-
-[Montado pelo Maestro no momento do despacho — templates preenchidos, entrevistas concluídas, pesquisas disponíveis]
+- **Bloqueada por:** nenhuma
+- **Bloqueia:** nenhuma
 
 ## Resultado
 
-[Preenchido após conclusão — link pro template preenchido, status do QA/Revisor]
+[Preenchido após conclusão — caminho do arquivo produzido, observações]

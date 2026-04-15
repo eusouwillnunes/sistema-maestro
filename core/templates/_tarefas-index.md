@@ -1,40 +1,61 @@
 ---
 tipo: index
 area: tarefas
-descricao: "Registro de todas as tarefas do projeto"
+descricao: "Painel de gestão de tarefas do projeto"
 tags:
   - "#maestro/index"
 ---
 
 # Tarefas
 
-> [!info] Index de tarefas
-> Mantido automaticamente pelo Gestor de Tarefas. Consultável no Obsidian.
+> [!info] Painel de tarefas
+> Mantido automaticamente pelo Gerente de Projetos. Consultável no Obsidian.
 
-## Resumo
+## Estatísticas
 
-- Total: 0 | Concluídas: 0 | Em andamento: 0 | Bloqueadas: 0 | Pendentes: 0
+| Métrica | Valor |
+|---------|-------|
+| Total | 0 |
+| Concluídas | 0 |
+| Em andamento | 0 |
+| Pendentes | 0 |
+| Bloqueadas | 0 |
+| Tempo médio de execução | — |
 
-## Bloqueadas
+### Por agente
 
-| Tarefa | Agente | Bloqueada por | Grupo |
-|--------|--------|---------------|-------|
-| (nenhuma) | — | — | — |
+| Agente | Concluídas | Pendentes | Bloqueadas |
+|--------|-----------|-----------|------------|
+| (nenhum) | — | — | — |
 
-## Pendentes
+### Por solicitante
 
-| Tarefa | Agente | Prioridade | Grupo |
-|--------|--------|------------|-------|
-| (nenhuma) | — | — | — |
+| Solicitante | Total | Concluídas | Em andamento |
+|-------------|-------|-----------|--------------|
+| (nenhum) | — | — | — |
+
+---
 
 ## Em Andamento
 
-| Tarefa | Agente | Início |
-|--------|--------|--------|
-| (nenhuma) | — | — |
+| Tarefa | Agente | Solicitante | Início | Checklist |
+|--------|--------|-------------|--------|-----------|
+| (nenhuma) | — | — | — | — |
 
-## Concluídas (últimas 10)
+## Pendentes
 
-| Tarefa | Agente | Grupo | Data |
-|--------|--------|-------|------|
+| Tarefa | Agente | Solicitante | Prioridade | Criação |
+|--------|--------|-------------|------------|---------|
+| (nenhuma) | — | — | — | — |
+
+## Bloqueadas
+
+| Tarefa | Agente | Bloqueada por | Solicitante |
+|--------|--------|---------------|-------------|
 | (nenhuma) | — | — | — |
+
+## Concluídas (últimas 15)
+
+| Tarefa | Agente | Solicitante | Tempo | Conclusão |
+|--------|--------|-------------|-------|-----------|
+| (nenhuma) | — | — | — | — |

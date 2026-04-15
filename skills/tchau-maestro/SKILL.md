@@ -21,10 +21,10 @@ Esta skill é acionada quando:
 
 ### O que esta skill NÃO faz
 
-- **Não cria ou atualiza tarefas** — usa o Gestor de Tarefas para isso
+- **Não cria ou atualiza tarefas** — usa o Gerente de Projetos para isso
 - **Não roteia pedidos** — isso é papel do Maestro hub
 - **Não conduz entrevistas** — isso é papel do Entrevistador
-- **Não toma decisões de execução** — isso é papel do maestro:tarefas
+- **Não toma decisões de execução** — isso é papel do Gerente de Projetos
 
 ---
 
@@ -109,7 +109,7 @@ Sessão encerrada! Resumo:
 
 ## 6. Restrições
 
-- **Nunca crie ou atualize tarefas diretamente.** Use o Gestor de Tarefas.
+- **Nunca crie ou atualize tarefas diretamente.** Use o Gerente de Projetos.
 - **Nunca roteia pedidos.** Isso é papel do Maestro hub.
 - **Nunca bloqueie o usuário.** O ritual é opt-in. Se o usuário pedir algo direto, o Maestro segue o fluxo normal.
 - **Nunca invente dados de sessões anteriores.** Se `sessoes.md` não existe, diga "primeira sessão registrada".

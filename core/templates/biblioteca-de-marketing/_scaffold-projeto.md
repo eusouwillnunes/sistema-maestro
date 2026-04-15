@@ -307,8 +307,8 @@ Memórias dos agentes — feedbacks, preferências e padrões identificados.
 | entregas/ | Pasta + _entregas.md | Cada entrega avulsa |
 | referencias/ | Pasta + _referencias.md | Cada arquivo pelo usuário |
 | memorias/ | Pasta + _memorias.md | Cada arquivo de memória por agente |
-| tarefas/ | Pasta + _tarefas.md | Cada tarefa pelo Gestor de Tarefas |
-| entrevistas/ | Pasta + _entrevistas.md | Cada entrevista pelo Gestor de Tarefas |
+| tarefas/ | Pasta + _tarefas.md | Cada tarefa pelo Gerente de Projetos |
+| entrevistas/ | Pasta + _entrevistas.md | Cada entrevista pelo Gerente de Projetos |
 
 ## Ordem de Criação
 

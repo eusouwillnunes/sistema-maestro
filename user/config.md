@@ -52,7 +52,7 @@ modelos:
   qa: ~                # default: haiku
   revisor: ~           # default: sonnet
   bibliotecario: ~     # default: haiku
-  gestor-tarefas: ~    # default: haiku
+  gerente: ~           # default: haiku
 ```
 
 ## Status Line

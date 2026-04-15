@@ -72,23 +72,24 @@ Análise de campanhas pagas com frameworks de Perry Marshall. Diagnóstico de m�
 
 | Agente | O que faz |
 |--------|-----------|
+| **Gerente de Projetos** | Cria, decompõe e acompanha tarefas com checklists por categoria. Calcula estatísticas e gerencia dependências. Painel visual no Obsidian. |
 | **Pesquisador** | Pesquisa de mercado, concorrência e audiência com fontes verificáveis (WebSearch + Perplexity) |
 | **Entrevistador** | Coleta dados do seu negócio via conversa guiada, uma pergunta por vez |
-| **Gestor de Tarefas** | Cria e acompanha tarefas e entrevistas no vault Obsidian |
 | **Bibliotecário** | Cria e gerencia sua Biblioteca de Marketing (contexto reutilizável) |
-| **QA** | Verificação automática de checklists antes de cada entrega |
-| **Revisor** | Garante que todo texto soe natural e humano (Protocolo de Escrita Natural) |
+| **QA** | Verifica checklists e reporta achados para revisão pelo especialista |
+| **Revisor** | Avalia naturalidade do texto e reporta achados (Protocolo de Escrita Natural) |
 
 ## Como o Maestro trabalha
 
-O sistema decide automaticamente a melhor forma de executar cada tarefa:
+Toda produção que gera documento no vault é rastreada automaticamente como tarefa — com checklist, tempo de execução e estatísticas.
 
-- **Pedidos simples** ("cria uma headline") → delega direto pro agente especialista
-- **Pedidos complexos** ("preenche a identidade") → decompõe em tarefas com dependências, executa em sequência ou paralelo
-- **Quando faltam dados** → cria entrevistas e coleta do usuário antes de produzir
+- **Pedidos simples** ("cria uma headline") → Gerente cria tarefa → especialista executa → QA e Revisor validam → Gerente conclui
+- **Pedidos complexos** ("preenche a identidade") → Gerente decompõe em tarefas com dependências → executa em sequência ou paralelo
+- **Quando faltam dados** → Gerente cria entrevista e bloqueia a tarefa até os dados serem coletados
 - **Quando precisa de pesquisa** → despacha o Pesquisador em paralelo
+- **Quando QA ou Revisor encontram problemas** → Gerente cria tarefa de revisão pro especialista corrigir
 
-Tudo fica registrado no vault Obsidian: tarefas, entrevistas, pesquisas, entregas. Você acompanha o progresso e retoma de onde parou.
+Tudo fica registrado no vault Obsidian com painel de estatísticas: tarefas por agente, por solicitante, tempo médio de execução e progresso de checklists. Você acompanha no Obsidian e retoma de onde parou.
 
 ## Sessões de trabalho
 
@@ -110,13 +111,18 @@ O Maestro registra o que foi feito, o que ficou em andamento e sugere por onde c
 
 ## Funcionalidades
 
-- **12 agentes especializados** trabalhando em conjunto
+- **13 agentes especializados** trabalhando em conjunto
+- **Gestão de tarefas integrada** — toda produção gera tarefa com checklist, tempo e estatísticas
+- **Painel de tarefas no Obsidian** — estatísticas por agente, solicitante e tempo médio de execução
+- **Checklists por categoria** — cada tipo de entrega tem critérios de qualidade específicos
+- **Ciclo de revisão rastreado** — QA e Revisor diagnosticam, especialista corrige, tudo registrado como tarefa
 - **Memória entre sessões** — o sistema aprende suas preferências e contexto
 - **Biblioteca de Marketing** — templates prontos pra identidade, produto, oferta, público
 - **Onboarding guiado** — setup completo em uma conversa
 - **Entregas no Obsidian** — tudo vira Markdown editável no seu vault
 - **Pesquisa integrada** — busca web nativa + Perplexity via OpenRouter
 - **Protocolo de Escrita Natural** — todo texto passa por revisão anti-IA antes da entrega
+- **Rituais de sessão** — abertura com dashboard e fechamento com registro de progresso
 - **Status line** — acompanhe contexto, limites e modelo direto no terminal
 
 ## Comandos
@@ -131,8 +137,10 @@ O Maestro registra o que foi feito, o que ficou em andamento e sugere por onde c
 | `/maestro:performance` | Diagnóstico de campanhas, testes A/B, canais |
 | `/maestro:pesquisador` | Pesquisa de mercado, concorrência, audiência |
 | `/maestro:entrevistador` | Conduzir entrevistas para coleta de dados |
-| `/maestro:gestor-tarefas` | Consultar e gerenciar tarefas no vault |
+| `/maestro:gerente` | Consultar, criar e acompanhar tarefas no vault |
 | `/maestro:bibliotecario` | Criar e gerenciar a Biblioteca de Marketing |
+| `/ola-maestro` | Iniciar sessão com dashboard de estado |
+| `/tchau-maestro` | Encerrar sessão com registro de progresso |
 | `/desligar-maestro` | Desativar o sistema no projeto atual |
 
 ## Atualização
@@ -162,11 +170,11 @@ Criador do Sistema Maestro e da [Comunidade dos Últimos](https://acomunidadedos
 
 ## English
 
-**Sistema Maestro** is a Claude Code plugin that provides a full marketing and sales team powered by AI agents. It includes specialized agents for copywriting, marketing strategy, branding, social media, and paid ads performance — all coordinated by an orchestrator agent with memory across sessions.
+**Sistema Maestro** is a Claude Code plugin that provides a full marketing and sales team powered by AI agents. It includes specialized agents for copywriting, marketing strategy, branding, social media, and paid ads performance — all coordinated by an orchestrator agent with memory across sessions and built-in project management.
 
-**Features:** 12 specialized agents, marketing library with templates, guided onboarding, Obsidian vault integration, web research, natural writing protocol, persistent memory.
+**Features:** 13 specialized agents, integrated task management with checklists and statistics, Obsidian dashboard with per-agent and per-user metrics, automated revision cycle (QA and Reviewer as auditors), marketing library with templates, guided onboarding, Obsidian vault integration, web research, natural writing protocol, session rituals with progress tracking, persistent memory.
 
-**Keywords:** marketing, sales, copywriting, branding, social media, content creation, sales funnel, landing page, email marketing, digital marketing, AI marketing assistant, Claude Code plugin, marketing automation, lead generation, conversion optimization
+**Keywords:** marketing, sales, copywriting, branding, social media, content creation, sales funnel, landing page, email marketing, digital marketing, AI marketing assistant, Claude Code plugin, marketing automation, lead generation, conversion optimization, project management, task tracking, Obsidian
 
 ```bash
 /plugin marketplace add eusouwillnunes/sistema-maestro

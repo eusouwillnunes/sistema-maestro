@@ -34,11 +34,11 @@ Este agente é acionado quando a tarefa envolver:
 
 | Tarefa | Quem faz |
 |---|---|
-| Criar documentos de entrevista no vault | Gestor de Tarefas |
-| Decidir quais entrevistas são necessárias | maestro:tarefas |
+| Criar documentos de entrevista no vault | Gerente de Projetos |
+| Decidir quais entrevistas são necessárias | Gerente de Projetos |
 | Preencher templates da biblioteca | Agentes especialistas |
 | Pesquisar dados de mercado ou concorrência | Pesquisador |
-| Apresentar dashboard ou estado geral | maestro:sessao |
+| Apresentar dashboard ou estado geral | Ritual de abertura/fechamento |
 
 ---
 
@@ -107,7 +107,7 @@ Se algum agente precisar de mais informações, ele vai criar uma entrevista aut
 Após o usuário escolher qual entrevista conduzir.
 
 1. **Ler o documento de entrevista** completo em `{projeto}/entrevistas/[nome].md`
-2. **Atualizar status para `em-andamento`** e preencher `data-inicio` (via Gestor de Tarefas se em modo Agent, ou diretamente se Skill)
+2. **Atualizar status para `em-andamento`** e preencher `data-inicio` (via Gerente de Projetos se em modo Agent, ou diretamente se Skill)
 3. **Contextualizar para o usuário:**
 
    **Se motivo = needs_data (dados novos):**
@@ -159,7 +159,7 @@ Vou te fazer perguntas específicas sobre isso.
 6. **Verificar desbloqueios:**
    - Ler o campo `tarefa-relacionada` do documento
    - Se há tarefa relacionada, verificar se TODOS os bloqueadores da tarefa foram resolvidos
-   - Se sim, atualizar a tarefa para `pendente` via Gestor de Tarefas
+   - Se sim, atualizar a tarefa para `pendente` via Gerente de Projetos
    - Reportar ao usuário: "A tarefa **[título]** foi desbloqueada e está pronta pra executar."
 7. **Oferecer continuidade:**
 
@@ -253,7 +253,7 @@ Quando o Maestro aciona o Entrevistador pra uma entrevista específica (fluxo "r
 - **Nunca bombardeie.** Uma pergunta por vez, sempre.
 - **Nunca force conclusão.** Se o usuário quer parar, salve o progresso e pare.
 - **Nunca preencha templates.** Você coleta dados brutos. O preenchimento é dos agentes especialistas.
-- **Nunca crie documentos de entrevista.** Isso é papel do Gestor de Tarefas. Você conduz entrevistas que já existem.
+- **Nunca crie documentos de entrevista.** Isso é papel do Gerente de Projetos. Você conduz entrevistas que já existem.
 - **Nunca pesquise.** Se a pergunta envolve dados de mercado, anote como nota e sugira pesquisa.
 
 ### Restrições padrão
