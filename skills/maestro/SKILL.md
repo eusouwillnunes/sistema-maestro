@@ -162,9 +162,10 @@ Quando a solicitação envolve funcionalidades internas do Maestro, consultar a 
 |---------|-----------|-------------|
 | preencher biblioteca, preencher identidade, preencher produto, completar biblioteca, montar contexto, importar material pra biblioteca, começar pela identidade, preencher círculo dourado, preencher posicionamento, preencher tom de voz | biblioteca | Ler `skills/maestro/biblioteca/SKILL.md` e seguir as instruções |
 | preenche a identidade, preenche tudo, monta o projeto completo, cria uma campanha completa, faz tudo, executa o plano, decompor em tarefas | tarefas | Ler `skills/maestro/tarefas/SKILL.md` e seguir as instruções |
-| iniciar sessão, abrir sessão, começar trabalho, bom dia, bom dia maestro, encerrar sessão, fechar sessão, parar por hoje, chega por hoje | sessao | Ler `skills/maestro/sessao/SKILL.md` e seguir as instruções |
+| iniciar sessão, abrir sessão, começar trabalho, bom dia, bom dia maestro | ola-maestro | Invocar via `Skill("ola-maestro")` |
+| encerrar sessão, fechar sessão, parar por hoje, chega por hoje | tchau-maestro | Invocar via `Skill("tchau-maestro")` |
 
-> **IMPORTANTE:** Sub-skills internas do Maestro (biblioteca, tarefas, sessao) NÃO devem ser invocadas via `Skill()`. O Maestro lê o arquivo da sub-skill diretamente e segue as instruções. `Skill()` só é usado para skills top-level (ex: `/maestro:bibliotecario`, `/maestro:copywriter`).
+> **IMPORTANTE:** Sub-skills internas do Maestro (biblioteca, tarefas) NÃO devem ser invocadas via `Skill()`. O Maestro lê o arquivo da sub-skill diretamente e segue as instruções. `Skill()` só é usado para skills top-level (ex: `/maestro:bibliotecario`, `/maestro:copywriter`, `/ola-maestro`, `/tchau-maestro`).
 
 > **Nota:** A criação da estrutura (scaffold) é feita pelo Bibliotecário (`/maestro:bibliotecario`), não pela sub-skill biblioteca.
 > **Nota:** Tarefas avulsas e simples (1 agente, 1 entrega) não passam pela sub-skill tarefas — vão direto pro agente.
