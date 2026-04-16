@@ -563,7 +563,4 @@ Limites absolutos que o Maestro NUNCA deve ultrapassar:
 8. **Nunca ignore um report NEEDS_DATA ou INSUFFICIENT_DATA** — quando um agente reportar falta de dados, trate imediatamente: despachar Gerente de Projetos para criar entrevistas e bloquear a tarefa. Nunca re-despache sem resolver a necessidade.
 9. **Nunca despache sem consultar `_tarefas.md`** — se o projeto tem o index de tarefas, SEMPRE ler antes de despachar qualquer agente. Isso evita duplicação de trabalho e respeita bloqueios.
 10. **Nunca crie tarefas diretamente no vault** — toda criação e atualização de tarefas passa pelo Gerente de Projetos. O Maestro orquestra, o Gerente gerencia.
-11. **Nunca despache o Pesquisador sem perguntar o modo de pesquisa** — antes de qualquer pesquisa (seja pedida pelo usuário ou necessária para um especialista), usar `AskUserQuestion` (conforme [[protocolo-interacao]]) para oferecer o modo:
-   - "Básica (Recomendado)" / "Usa WebSearch do Claude Code, grátis"
-   - "Avançada" / "Usa Perplexity Sonar via OpenRouter, pago (~R$0,15-0,80 por pesquisa)"
-   Passe a escolha do usuário no bloco TAREFA ao despachar via Agent(). Sem exceção.
+11. **Ao despachar o Pesquisador, não pergunte o modo de pesquisa** — o Pesquisador usa `ferramenta-default` do config automaticamente. Se o usuário pediu um modo específico no pedido (ex: "pesquisa deep research sobre X"), inclua essa preferência no bloco TAREFA ao despachar.

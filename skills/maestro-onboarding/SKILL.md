@@ -72,7 +72,37 @@ TaskCreate({ subject: "Finalizar onboarding", description: "Encerrar com sugest�
 
 Marcar cada task como `in_progress` ANTES de executar a etapa e `completed` LOGO APÓS terminar.
 
-### 2.0.2 Marcadores visuais
+### 2.0.2 Criar tarefa no vault
+
+Se o projeto já tem pasta `tarefas/` configurada (verificar se `{projeto}/tarefas/_tarefas.md` existe):
+
+Acionar Gerente de Projetos via Agent(haiku):
+
+- Bloco TAREFA: "Criar tarefa para: Onboarding do projeto {nome da empresa}"
+- Bloco CONTEXTO:
+  - Agente: maestro
+  - Categoria: geral
+  - Solicitante: [nome do usuário]
+  - Caminho do projeto: [CWD]
+  - Grupo: onboarding
+  - Prioridade: alta
+  - Checklist personalizado (não usar checklist da categoria):
+    - [ ] Verificar dependências
+    - [ ] Configurar permissões
+    - [ ] Setup técnico
+    - [ ] Criar Biblioteca de Marketing
+    - [ ] Configurar Obsidian
+    - [ ] Configurar Pesquisador
+    - [ ] Pesquisa inicial do negócio
+    - [ ] Importar material de referência
+    - [ ] Configurar Status Line
+
+Guardar o caminho do arquivo de tarefa retornado pelo Gerente para usar na conclusão (step 2.12.1).
+
+Se o projeto ainda não tem pasta `tarefas/` (primeira vez, setup técnico ainda não rodou):
+- Pular esta etapa. A tarefa será criada após o setup técnico — ver step 2.5.1.
+
+### 2.0.3 Marcadores visuais
 
 Ao iniciar cada etapa, exibir um separador visual antes da mensagem ao usuário:
 
@@ -309,6 +339,12 @@ Informar brevemente: "Estrutura de memórias e configuração criadas."
 
 Marcar task "Setup técnico" como `completed`.
 
+### 2.5.1 Criar tarefa no vault (se não criada em 2.0.2)
+
+Se a tarefa de onboarding ainda não foi criada (pasta `tarefas/` foi criada agora pelo setup técnico):
+- Acionar Gerente de Projetos via Agent(haiku) com o mesmo payload descrito em 2.0.2
+- Guardar caminho do arquivo de tarefa para usar na conclusão (step 2.12.1)
+
 ### 2.6 Biblioteca de Marketing
 
 Marcar task "Criar Biblioteca de Marketing" como `in_progress`.
@@ -417,7 +453,21 @@ Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
 **Se quer configurar agora:**
 - Perguntar: "Você já tem uma API key do OpenRouter?"
   - **Se sim:** pedir a key e salvar em `~/.maestro/config.md` no campo `openrouter-api-key`
-  - **Se não:** informar: "Você pode criar uma conta em https://openrouter.ai/, adicionar créditos e gerar uma API key na seção 'Keys'. Quando tiver, rode `/maestro:onboarding` pra configurar."
+  - **Se não:** apresentar guia:
+
+> "Sem problema! Aqui está o passo a passo:
+>
+> 1. Acesse openrouter.ai e crie uma conta (login com Google funciona)
+> 2. Vá em openrouter.ai/settings/keys
+> 3. Clique em 'Create Key', dê um nome (ex: 'maestro') e copie a chave gerada
+> 4. Adicione créditos em openrouter.ai/settings/credits (mínimo $5 é suficiente pra começar)
+> 5. Cole a chave aqui quando estiver pronto
+>
+> Para um tutorial completo com prints e vídeo, acesse A Comunidade dos Últimos: https://acomunidadedosultimos.com.br"
+
+  - Aguardar resposta do usuário:
+    - Se colou a key: salvar em `~/.maestro/config.md` e seguir pro teste (2.8.1)
+    - Se quer pular: seguir com modo básico, setar `ferramenta-default: websearch`
 - Se a key foi informada, perguntar: "Quer que eu faça um teste rápido pra validar se a chave funciona? É uma chamada simples (custo ~$0.01)."
   - **Se sim:** executar teste conforme seção 2.8.1
   - **Se não:** pular o teste
@@ -470,10 +520,8 @@ Oferecer:
 > Qual o site da {nome da empresa}?"
 
 **Se informou o site:**
-- Usar `AskUserQuestion` (conforme [[protocolo-interacao]]) para oferecer o modo de pesquisa:
-  - label: "Básica (Recomendado)", description: "WebSearch grátis. Analisa o site e monta um primeiro retrato"
-  - label: "Avançada", description: "Perplexity Sonar via OpenRouter. Mais profunda, com fontes verificáveis"
 - Despachar o Pesquisador com a tarefa de analisar o site da empresa e redes sociais
+- O Pesquisador usará `ferramenta-default` do config automaticamente (definido no step 2.8)
 - O Pesquisador segue seus próprios protocolos de encomenda e entrega
 
 **Se não tem site ou prefere pular:**
@@ -565,6 +613,15 @@ Marcar task "Finalizar onboarding" como `in_progress`.
 
 Marcar task "Finalizar onboarding" como `completed`.
 
+### 2.12.1 Concluir tarefa no vault
+
+Acionar Gerente de Projetos via Agent(haiku):
+
+- Bloco TAREFA: "Concluir tarefa: Onboarding do projeto {nome da empresa}"
+- Bloco CONTEXTO:
+  - Caminho da tarefa: [caminho guardado em 2.0.2 ou 2.5.1]
+  - Resultado: "Onboarding completo. Biblioteca criada, pesquisador configurado, vault ativo."
+
 ---
 
 ## 2B. Fluxo de Novo Projeto
@@ -586,7 +643,31 @@ TaskCreate({ subject: "Finalizar projeto", description: "Encerrar com sugestão 
 
 Marcar cada task como `in_progress` ANTES de executar a etapa e `completed` LOGO APÓS terminar.
 
-Usar os mesmos marcadores visuais da seção 2.0.2 (separador com número do passo).
+Usar os mesmos marcadores visuais da seção 2.0.3 (separador com número do passo).
+
+### 2B.0.1 Criar tarefa no vault
+
+Se o projeto já tem pasta `tarefas/`:
+
+Acionar Gerente de Projetos via Agent(haiku):
+
+- Bloco TAREFA: "Criar tarefa para: Onboarding do projeto {nome da empresa}"
+- Bloco CONTEXTO:
+  - Agente: maestro
+  - Categoria: geral
+  - Solicitante: [nome do usuário]
+  - Grupo: onboarding
+  - Prioridade: alta
+  - Checklist personalizado:
+    - [ ] Configurar novo projeto
+    - [ ] Setup do projeto
+    - [ ] Criar Biblioteca de Marketing
+    - [ ] Pesquisa inicial do negócio
+    - [ ] Importar material de referência
+
+Se a pasta `tarefas/` ainda não existe, adiar pro step 2B.2.1 (após setup).
+
+Guardar o caminho do arquivo de tarefa para usar na conclusão.
 
 ### 2B.1 Boas-vindas e nome da empresa
 
@@ -648,6 +729,12 @@ Informar brevemente: "Estrutura do projeto criada."
 
 Marcar task "Setup do projeto" como `completed`.
 
+### 2B.2.1 Criar tarefa no vault (se não criada em 2B.0.1)
+
+Se a tarefa de onboarding ainda não foi criada:
+- Acionar Gerente de Projetos via Agent(haiku) com o mesmo payload descrito em 2B.0.1
+- Guardar caminho do arquivo de tarefa para usar na conclusão
+
 ### 2B.3 Biblioteca de Marketing
 
 Mesmo fluxo da etapa 2.6 do onboarding completo:
@@ -685,8 +772,8 @@ Marcar task "Pesquisa inicial do negócio" como `in_progress`.
 > Qual o site da {nome da empresa}?"
 
 **Se informou o site:**
-- Usar `AskUserQuestion` para modo de pesquisa (Básica / Avançada)
-- Despachar o Pesquisador
+- Despachar o Pesquisador com a tarefa de analisar o site da empresa e redes sociais
+- O Pesquisador usará `ferramenta-default` do config automaticamente
 
 **Se não tem site ou prefere pular:**
 - Informar: "Sem problema! Quando quiser, peça: 'pesquisa sobre minha empresa'."
@@ -725,6 +812,15 @@ Marcar task "Finalizar projeto" como `in_progress`.
 > "Projeto {nome da empresa} configurado! O que vamos trabalhar?"
 
 Marcar task "Finalizar projeto" como `completed`.
+
+### 2B.6.1 Concluir tarefa no vault
+
+Acionar Gerente de Projetos via Agent(haiku):
+
+- Bloco TAREFA: "Concluir tarefa: Onboarding do projeto {nome da empresa}"
+- Bloco CONTEXTO:
+  - Caminho da tarefa: [caminho guardado em 2B.0.1 ou 2B.2.1]
+  - Resultado: "Onboarding completo (novo projeto). Biblioteca criada, vault ativo."
 
 ---
 

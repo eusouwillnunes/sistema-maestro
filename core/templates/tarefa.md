@@ -8,10 +8,9 @@ bloqueada-por: []
 grupo: "[PREENCHER]"
 prioridade: media
 solicitante: "[PREENCHER]"
-data-criacao: "[PREENCHER]"
+data-criacao: "[PREENCHER — YYYY-MM-DDTHH:MM:SS]"
 data-inicio: ~
 data-conclusao: ~
-tempo-execucao: ~
 resultado: ~
 tags:
   - "#maestro/tarefa"

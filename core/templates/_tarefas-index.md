@@ -20,7 +20,7 @@ tags:
 | Em andamento | 0 |
 | Pendentes | 0 |
 | Bloqueadas | 0 |
-| Tempo médio de execução | — |
+| Tempo médio | — |
 
 ### Por agente
 

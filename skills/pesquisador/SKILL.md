@@ -82,21 +82,17 @@ O Pesquisador usa 3 ferramentas de busca, organizadas por complexidade e custo:
 | **Perplexity Sonar** | Via OpenRouter | ~$0.03/pesquisa | Pesquisa rápida com citações, perguntas factuais | `perplexity/sonar` |
 | **Perplexity Sonar Deep Research** | Via OpenRouter | ~$0.04-0.15/pesquisa | Análise de mercado, concorrência, relatórios profundos | `perplexity/sonar-deep-research` |
 
-### Lógica de seleção — OBRIGATÓRIO perguntar ao usuário
+### Lógica de seleção
 
-**Antes de qualquer pesquisa, SEMPRE perguntar ao usuário qual modo quer usar.** Sem exceção.
+O modo de pesquisa é determinado automaticamente com base na preferência salva em `ferramenta-default` no `~/.maestro/config.md`:
 
-Usar `AskUserQuestion` (conforme [[protocolo-interacao]]) para oferecer o modo de pesquisa:
-- question: "Qual modo de pesquisa usar?"
-- options:
-  - label: "Básica (Recomendado)", description: "WebSearch do Claude Code, grátis"
-  - label: "Avançada (Sonar)", description: "Perplexity Sonar via OpenRouter (~R$0,15-0,80)"
-  - label: "Deep Research", description: "Perplexity Deep Research via OpenRouter (~R$0,04-0,15), mais profunda"
+| Valor do config | Ferramenta usada |
+|-----------------|-----------------|
+| `websearch` (ou vazio/ausente) | WebSearch do Claude Code |
+| `sonar` | Perplexity Sonar via OpenRouter |
+| `sonar-deep-research` | Perplexity Deep Research via OpenRouter |
 
-**Se o usuário escolher avançada e não tiver API key do OpenRouter configurada:**
-- Informar: "Pra usar a pesquisa avançada, precisa configurar a API key do OpenRouter. Quer configurar agora ou seguir com a básica?"
-
-**Nunca decidir a ferramenta sozinho.** Mesmo que o pedido pareça simples, a escolha é do usuário.
+O usuário pode sobrescrever pontualmente pedindo um modo específico (ex: "pesquisa deep research sobre X"). Detalhes no Passo 3 do Protocolo de Encomenda.
 
 ### Configuração em `maestro/config.md`
 
@@ -136,19 +132,27 @@ Ler `pesquisas/_pesquisas.md` (na pasta configurada). Já tem pesquisa relevante
 - **SIM:** informar ao usuário: "Já temos [[pesquisa-existente]] de [data]. Quer usar essa ou pesquisar novamente?"
 - **NÃO:** seguir pro passo 3
 
-### Passo 3 — Perguntar modo de pesquisa
+### Passo 3 — Determinar modo de pesquisa
 
-OBRIGATÓRIO. Usar `AskUserQuestion` (conforme [[protocolo-interacao]]) para oferecer o modo de pesquisa:
-- question: "Qual modo de pesquisa usar?"
-- options:
-  - label: "Básica (Recomendado)", description: "WebSearch do Claude Code, grátis"
-  - label: "Avançada (Sonar)", description: "Perplexity Sonar via OpenRouter (~R$0,15-0,80)"
-  - label: "Deep Research", description: "Perplexity Deep Research via OpenRouter (~R$0,04-0,15), mais profunda"
+1. Ler `ferramenta-default` em `~/.maestro/config.md`. Se o campo estiver vazio, ausente ou o config não existir, tratar como `websearch` (fallback)
+2. Se o usuário pediu explicitamente um modo diferente no pedido (ex: "pesquisa deep research sobre X"), usar o modo pedido
+3. Se não pediu modo específico, usar `ferramenta-default` sem perguntar
 
-Se o usuário escolher avançada e não tiver API key do OpenRouter:
-- Informar: "Pra usar a pesquisa avançada, precisa configurar a API key do OpenRouter. Quer configurar agora ou seguir com a básica?"
+4. Se o modo requer API key (`sonar` ou `sonar-deep-research`) e `openrouter-api-key` está vazio em `~/.maestro/config.md`:
+   - Apresentar guia de configuração:
 
-**Nunca decidir a ferramenta sozinho.** A escolha é sempre do usuário.
+> "Pra usar [Sonar/Deep Research], precisa de uma API key do OpenRouter. Aqui está como conseguir:
+>
+> 1. Acesse openrouter.ai e crie uma conta (login com Google funciona)
+> 2. Vá em openrouter.ai/settings/keys
+> 3. Clique em 'Create Key', dê um nome (ex: 'maestro') e copie a chave gerada
+> 4. Adicione créditos em openrouter.ai/settings/credits (mínimo $5 é suficiente pra começar)
+> 5. Cole a chave aqui pra eu configurar agora
+>
+> Para um tutorial completo com prints e vídeo, acesse A Comunidade dos Últimos: https://acomunidadedosultimos.com.br"
+
+   - Se o usuário colar a key: salvar em `~/.maestro/config.md`, testar conexão (curl conforme seção de teste), e continuar com a pesquisa no modo avançado
+   - Se preferir pular: executar no modo básico (WebSearch) desta vez, sem alterar `ferramenta-default`
 
 ### Passo 4 — Confirmar escopo
 
@@ -165,10 +169,9 @@ Aguardar confirmação.
 
 ### Quando vem de outro agente (via Maestro)
 
-O Maestro já deve ter perguntado o modo ao usuário (restrição 11 do hub). Nesse caso:
-1. Receber objetivo + modo escolhido do Maestro
+1. Receber objetivo do Maestro (e modo, se o usuário especificou no pedido original)
 2. Consultar pesquisas existentes (passo 2)
-3. Pular passo 3 (modo já definido)
+3. Determinar modo (passo 3) — usa `ferramenta-default` ou modo explícito do pedido
 4. Confirmar escopo (passo 4) — se via Agent(), pular confirmação e executar direto
 
 ---
@@ -399,7 +402,7 @@ Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protoc
 - **Nunca gere conteúdo criativo.** Não escreva copy, headlines, posts.
 - **Nunca apresente dados sem fonte.** Toda afirmação tem URL ou marca "não confirmado".
 - **Nunca pesquise sem salvar documento.** Toda pesquisa gera arquivo.
-- **Nunca escolha ferramenta sem confirmar.** O usuário decide (ou confirma a sugestão).
+- **Respeite a preferência de ferramenta do usuário.** Use `ferramenta-default` do config. Só pergunte se o config estiver vazio E for a primeira pesquisa.
 - **Nunca faça chamadas pagas sem API key.** Se não tem OpenRouter, use WebSearch.
 - **Nunca sobrescreva pesquisa existente.** Crie novo documento, mesmo tema.
 
