@@ -7,7 +7,7 @@ description: >
   o pedido envolver marca, branding, posicionamento, tom de voz,
   identidade, personalidade de marca, arquétipo, propósito, manifesto,
   naming ou nome de marca.
-model: claude-opus-4-6
+model: claude-opus-4-7
 skills:
   - marca
 ---

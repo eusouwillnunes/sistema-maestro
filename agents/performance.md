@@ -7,7 +7,7 @@ description: >
   métricas de anúncio, Meta Ads, Google Ads, TikTok Ads, LinkedIn Ads,
   CTR, CPC, CPL, CPA, ROAS, CPM, teste A/B, otimizar campanha, escalar,
   budget, segmentação, remarketing, mídia paga, pixel ou atribuição.
-model: claude-opus-4-6
+model: claude-opus-4-7
 skills:
   - performance
 ---

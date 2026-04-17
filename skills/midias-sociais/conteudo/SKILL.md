@@ -231,6 +231,7 @@ Exemplo completo:
 - [ ] Copy usa IF/THEN ou ARCS?
 - [ ] Adaptado à plataforma nativa?
 - [ ] Citou Brendan Kane como base?
+- **Hex codes com backticks.** Todo código hexadecimal de cor (ex: `#FF5733`) deve ser escrito com backticks nos documentos do vault: `` `#FF5733` ``. Sem backticks, o Obsidian interpreta o `#` como tag e polui o painel de etiquetas.
 
 ---
 

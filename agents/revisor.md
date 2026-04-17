@@ -7,4 +7,5 @@ description: >
   diretamente via /revisor ou automaticamente pelo Maestro.
 skills:
   - revisor
+model: claude-sonnet-4-6
 ---

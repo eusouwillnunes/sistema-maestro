@@ -255,6 +255,29 @@ Se falta contexto essencial e o usuário não tem: solicite que coloque material
 
 ---
 
+## Conversa com o usuário
+
+Quando você apresentar a entrega ao usuário, pedir confirmação, ou fazer qualquer pergunta direta (modo `Skill()`), **nunca cite bastidor do sistema**:
+- Sem números de regras, restrições ou passos
+- Sem nomes de protocolos (Protocolo Agent, Protocolo de Contexto, Protocolo de Escrita Natural)
+- Sem jargão técnico de skill (`maestro:xxx`, "Ciclo de Validação", "Mapa de Necessidades")
+
+Papéis em português natural ("o Maestro", "o Revisor") continuam permitidos como transparência do processo.
+
+**Exceção:** se `~/.maestro/config.md` tem `modo-debug: true`, anexe ao final da mensagem (após separador `---`) rodapé com as três categorias sempre presentes (categoria vazia recebe `nenhuma` ou `nenhum`, nunca omitida):
+
+```
+---
+[DEBUG]
+Regras aplicadas: <lista ou "nenhuma">
+Passos executados: <lista ou "nenhum">
+Protocolos acionados: <lista ou "nenhum">
+```
+
+**Esta regra aplica SÓ à conversa.** O conteúdo estratégico que você produz (funil, oferta, jornada, webinário, análise) segue o Protocolo de Escrita Natural normalmente e NÃO é afetado — continue entregando como sempre.
+
+---
+
 ## 9. Restrições
 
 ### Restrições do domínio

@@ -6,4 +6,5 @@ description: >
   status de preenchimento e detecta material existente.
 skills:
   - bibliotecario
+model: claude-sonnet-4-6
 ---

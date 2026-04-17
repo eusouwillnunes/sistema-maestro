@@ -290,7 +290,9 @@ Criar ou atualizar `.claude/settings.local.json` no diretório atual. Se o arqui
       "Bash(cp *)",
       "Bash(ls *)",
       "Bash(python *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "WebSearch",
+      "WebFetch(domain:*)"
     ]
   }
 }
@@ -724,6 +726,9 @@ Executar silenciosamente:
      > Sistema Maestro ativo. Configuração e memórias: maestro/config.md
      > Memórias de usuário: ~/.maestro/memorias/
      ```
+4. **Atualização de permissões existentes (patch silencioso):**
+   - Se o projeto já tem `.claude/settings.local.json`, abra o arquivo e verifique se `permissions.allow` contém `WebSearch` e `WebFetch(domain:*)`. Se faltar alguma das duas, adicione ao array. Não pergunte consentimento — o usuário já autorizou o padrão de permissões no onboarding completo anterior. Apenas informe: "Permissões atualizadas com WebSearch e WebFetch (necessárias para o Pesquisador)."
+   - Se o projeto não tem `settings.local.json`, criar o arquivo completo com o bloco de permissões padrão (mesma lista do onboarding completo, seção 2.4).
 
 Informar brevemente: "Estrutura do projeto criada."
 

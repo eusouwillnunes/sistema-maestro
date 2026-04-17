@@ -7,5 +7,5 @@ description: >
   página de vendas, CTA, bullets, script de vídeo.
 skills:
   - copywriter
-model: claude-opus-4-6
+model: claude-opus-4-7
 ---

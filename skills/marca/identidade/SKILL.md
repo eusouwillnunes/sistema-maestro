@@ -161,6 +161,7 @@ Mudança de mentalidade que separa marcas que vendem de marcas que criam pertenc
 - [ ] Tom é estratégico (não vendedor)?
 - [ ] Citou Sinek ou Neumeier como base?
 - [ ] Passa no Teste do WhatsApp? (alguém enviaria isso pra um amigo?)
+- **Hex codes com backticks.** Todo código hexadecimal de cor (ex: `#FF5733`) deve ser escrito com backticks nos documentos do vault: `` `#FF5733` ``. Sem backticks, o Obsidian interpreta o `#` como tag e polui o painel de etiquetas.
 
 ---
 

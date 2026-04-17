@@ -38,6 +38,8 @@ Esta skill é acionada quando:
    - Agentes que rodaram como Agent() vs Skill()
 
 2. **Registrar em `{projeto}/memorias/sessoes.md`** com o formato padrão da seção 3.
+   - Escreva caracteres acentuados de forma nativa (`ç`, `ã`, `é`, `—`). Nunca use notação escapada tipo `\u00e7`, `\u00e3`, `\u2014`. O arquivo deve ser UTF-8 legível por humanos.
+   - Após gravar, releia o conteúdo. Se detectar qualquer ocorrência do padrão `\uXXXX` no texto, reescreva substituindo pela forma nativa. Não aceite o arquivo finalizado com Unicode escapado.
 
 3. **Apresentar resumo visual ao usuário** conforme o template da seção 4.
 
@@ -104,6 +106,8 @@ Sessão encerrada! Resumo:
 - **Não force fechamento.** Se o usuário quer continuar, não insista.
 - **Crie o arquivo `sessoes.md` se não existir.** Usando a estrutura de registro da seção 3.
 - **Registre o modo de execução.** Saber quantas tarefas rodaram como Agent() vs Skill() ajuda a calibrar confiança ao longo do tempo.
+- **UTF-8 nativo sem escape.** Ao gravar `sessoes.md`, escreva `ç`, `ã`, `é`, `—` de forma nativa. Nunca emita `\u00e7`, `\u00e3`, `\u2014`.
+- **Verificação pós-escrita.** Após o `Write`, releia o arquivo. Se encontrar o padrão `\uXXXX`, faça nova `Write` substituindo cada ocorrência pelo caractere nativo correspondente. Não considere o fechamento de sessão concluído enquanto houver Unicode escapado no arquivo.
 
 ---
 

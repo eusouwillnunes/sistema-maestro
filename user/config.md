@@ -20,6 +20,10 @@ maestro-ativo: true
 
 (o sistema preenche automaticamente com base no uso)
 
+```yaml
+modo-debug: false  # true | false — mostra rodapé [DEBUG] na conversa com o usuário (não afeta documentos)
+```
+
 ## Configuração do Pesquisador
 
 ```yaml

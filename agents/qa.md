@@ -6,6 +6,7 @@ description: >
   Chamado pelo Maestro após cada execução de especialista.
 skills:
   - qa
+model: claude-sonnet-4-6
 disallowedTools:
   - Write
   - Edit

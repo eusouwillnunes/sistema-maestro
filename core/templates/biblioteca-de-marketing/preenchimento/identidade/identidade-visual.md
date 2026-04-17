@@ -25,16 +25,16 @@ tags: [identidade, visual, cores, tipografia, logo]
 ### Base (80%)
 | Função | Cor | HEX |
 |---|---|---|
-| Background principal | [PREENCHER] | #[PREENCHER] |
-| Superfície / Cards | [PREENCHER] | #[PREENCHER] |
-| Texto principal | [PREENCHER] | #[PREENCHER] |
-| Texto secundário | [PREENCHER] | #[PREENCHER] |
+| Background principal | [PREENCHER] | `#[PREENCHER]` |
+| Superfície / Cards | [PREENCHER] | `#[PREENCHER]` |
+| Texto principal | [PREENCHER] | `#[PREENCHER]` |
+| Texto secundário | [PREENCHER] | `#[PREENCHER]` |
 
 ### Ação (15%) e Acento (5%)
 | Função | Cor | HEX |
 |---|---|---|
-| Botões, links, CTAs | [PREENCHER] | #[PREENCHER] |
-| Elemento especial, selo | [PREENCHER] | #[PREENCHER] |
+| Botões, links, CTAs | [PREENCHER] | `#[PREENCHER]` |
+| Elemento especial, selo | [PREENCHER] | `#[PREENCHER]` |
 
 **Regras:** Acento raro (max 1/peça) | Cor de ação = só CTAs | Contraste sempre alto
 

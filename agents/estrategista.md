@@ -6,7 +6,7 @@ description: >
   de alto valor, aquisição agressiva). Acionado quando o pedido envolver
   funil, oferta, diagnóstico de negócio, lançamento, webinário, lead magnet,
   aquisição, precificação, CAC, LTV, ROAS ou script de vendas.
-model: claude-opus-4-6
+model: claude-opus-4-7
 skills:
   - estrategista
 ---
