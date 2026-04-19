@@ -3,22 +3,22 @@ titulo: "[PREENCHER]"
 tipo: tarefa
 agente: "[PREENCHER]"
 categoria: "[identidade|copy|estrategia|midias|performance|pesquisa|biblioteca|revisao|geral]"
-status: pendente
+status: em-andamento
 bloqueada-por: []
 grupo: "[PREENCHER]"
 prioridade: media
 solicitante: "[PREENCHER]"
 data-criacao: "[PREENCHER — YYYY-MM-DDTHH:MM:SS]"
-data-inicio: ~
+data-inicio: "[PREENCHER — YYYY-MM-DDTHH:MM:SS]"
 data-conclusao: ~
-resultado: ~
+resultado: "[[caminho-do-artefato]]"
 tags:
   - "#maestro/tarefa"
 ---
 
 ## Descrição
 
-[O que precisa ser feito]
+[Briefing que o especialista vai ler — objetivo, contexto e critérios de sucesso]
 
 ## Checklist
 
@@ -28,7 +28,3 @@ tags:
 
 - **Bloqueada por:** nenhuma
 - **Bloqueia:** nenhuma
-
-## Resultado
-
-[Preenchido após conclusão — caminho do arquivo produzido, observações]

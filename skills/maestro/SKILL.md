@@ -175,95 +175,56 @@ Quando a solicitação envolve funcionalidades internas do Maestro, consultar a 
 
 ### 5.1 Fluxo padrão (tarefa simples)
 
-1. **Analisar** — extrair termos-chave da solicitação do usuário
-2. **Rotear** — comparar termos com a Tabela de Roteamento e identificar o agente
-3. **Identificar produto/projeto** — se a tarefa envolve um produto específico, identificar qual (pelo nome mencionado pelo usuário ou perguntando)
-4. **Criar tarefa via Gerente** — OBRIGATÓRIO para toda produção (arquivo no vault):
-   - Despachar Gerente de Projetos via Agent(haiku) com:
+**Preparação (antes do passo 1):** analisar, rotear, identificar produto/projeto, carregar memórias, carregar contexto de marca (seções 2.3, 4, 5 deste hub). Estas etapas continuam como antes.
+
+1. **Maestro → Gerente cria tarefa + casca do artefato** (OBRIGATÓRIO para toda produção):
+   - Despachar Gerente de Projetos via Agent(sonnet) com:
      - Bloco TAREFA: "Criar tarefa para: [descrição do que será produzido]"
-     - Bloco CONTEXTO: agente destino, solicitante (nome do usuário), caminho do projeto
+     - Bloco CONTEXTO: agente destino, solicitante (nome do usuário), caminho do projeto, tipo de artefato sugerido (quando possível)
    - Aguardar report do Gerente:
-     - Se tarefa criada → prosseguir com o caminho da tarefa
-     - Se tarefa já existe em andamento → informar usuário
-     - Se tarefa já existe pendente → Gerente marca como em-andamento, prosseguir
-   - **Regra:** sem tarefa = sem despacho de especialista. Se o Gerente não conseguir criar, resolver antes de continuar.
-5. **Carregar memórias** — carregamento seletivo em 2 etapas:
-   - **Etapa 1 (sempre):** ler `~/.maestro/memorias/_index.md` e `{projeto-ativo}/memorias/_index.md` (onde `{projeto-ativo}` é o caminho do projeto confirmado na seção 2.1)
-   - **Etapa 2 (seletivo):** com base nos indexes e no agente de destino, carregar:
-     - `~/.maestro/memorias/nome-usuario.md` (sempre — usar o nome nas interações)
-     - `~/.maestro/memorias/preferencias.md` (sempre)
-     - `~/.maestro/memorias/agentes/[agente].md` (se existir para o agente de destino)
-     - `{projeto-ativo}/memorias/agentes/[agente].md` (se existir para o agente de destino)
-     - `{projeto-ativo}/memorias/contexto.md` (se a tarefa precisar de contexto do negócio)
-     - `{projeto-ativo}/memorias/sessoes.md` (só se o usuário perguntar sobre histórico)
-   - **Passar as memórias ao agente** junto com a tarefa, como contexto adicional após as instruções originais da skill
-5.5. **Carregar contexto de marca** (conforme [[protocolo-contexto]]) — verificar `biblioteca/identidade/` no projeto ativo:
-   - **Se existe e tem templates preenchidos:** montar lista de caminhos dos templates preenchidos (não vazios / não só [PREENCHER])
-   - **Se existe mas está vazio ou não existe:** exibir aviso persuasivo via `AskUserQuestion` (conforme [[protocolo-interacao]]):
-     - question: "A identidade de marca ainda não foi preenchida. Quer preencher antes?"
-     - options:
-       - label: "Preencher agora (Recomendado)", description: "5-10 minutos que mudam a qualidade de tudo que o sistema produz"
-       - label: "Seguir sem identidade", description: "O resultado pode ficar genérico sem tom de voz e personalidade definidos"
-     - Se "preencher": acionar fluxo de preenchimento da biblioteca (identidade primeiro)
-     - Se "seguir sem": prosseguir normalmente
-   - **Identificar templates complementares:** com base no Mapa de Necessidades do agente de destino (definido na seção "Contexto e Biblioteca" de cada especialista), listar caminhos de templates de produto e referência relevantes pra tarefa
-   - **Incluir no despacho:**
-     - Se Agent(): incluir todos os caminhos no Bloco CONTEXTO (formato do protocolo-agent.md)
-     - Se Skill(): instruir o especialista a ler `biblioteca/identidade/` e os templates complementares antes de executar
-6. **Decidir modo de despacho** — antes de delegar, determinar se o agente roda como Skill() ou Agent():
+     - Status DONE → capturar `caminho-da-tarefa` e `caminho-do-artefato`
+     - Status NEEDS_CONTEXT com "tipo desconhecido" → acionar fluxo de descoberta no Bibliotecário (ver seção 5.5)
+     - Status NEEDS_CONTEXT com "index não encontrado" → resolver dependência e re-despachar
+   - **Regra:** sem tarefa = sem despacho de especialista.
 
-   **Agentes com modo fixo:**
-   - QA → sempre Agent()
-   - Revisor → sempre Agent()
-   - Entrevistador → sempre Skill()
+2. **Maestro → Especialista edita o artefato:**
+   - Decidir modo de despacho (Skill vs Agent) com as mesmas regras da seção 6 anterior
+   - Se Agent(): incluir `caminho-do-artefato` no bloco TAREFA (novo campo do Protocolo Agent)
+   - Se Skill(): instruir o especialista a ler a tarefa e editar o arquivo apontado por `resultado:`
+   - **Exceção Pesquisador:** não passa `caminho-do-artefato`. Pesquisador cria o próprio arquivo.
+   - Aguardar conclusão — report traz apenas RESUMO curto + ARTEFATO (caminho)
 
-   **Agentes com modo dinâmico (Copywriter, Estrategista, Marca, Mídias Sociais, Performance, Pesquisador, Bibliotecário):**
-   1. O usuário pediu autonomia ("faz tudo", "executa", "pode criar")? → Agent()
-   2. O agente tem contexto suficiente pra executar sem perguntas? → Agent()
-   3. Na dúvida → Skill() (mais seguro, permite correção de rota)
+3. **Maestro → QA audita o arquivo:**
+   - Despachar QA via Agent(haiku) com `caminho-do-artefato` no bloco TAREFA
+   - QA lê o arquivo, verifica checklist da categoria
+   - **QA reporta achados, não edita.** Se achados: Gerente cria tarefa de revisão, especialista original corrige (até 2 rodadas).
 
-   **Se Agent():**
-   - Resolver modelo: ler `~/.maestro/config.md` → seção `modelos` → campo do agente. Se `~` ou ausente, usar default do protocolo (seção 4 do `core/protocolos/protocolo-agent.md`)
-   - Empacotar contexto seguindo os 5 blocos do protocolo (seção 3 do `core/protocolos/protocolo-agent.md`)
-   - Incluir os caminhos de contexto de marca (step 5.5) no Bloco CONTEXTO
-   - Despachar via Agent tool com: `model: [modelo resolvido]`, `prompt: [contexto empacotado]`
-   - Ao receber resposta, extrair o bloco ---REPORT--- e tratar o status
+4. **Maestro → Revisor audita o arquivo:**
+   - Despachar Revisor via Agent(sonnet) com `caminho-do-artefato`
+   - Revisor lê o arquivo e aplica Protocolo de Escrita Natural
+   - **Revisor reporta achados, não edita.** Mesma lógica do QA (até 2 rodadas).
 
-   **Se Skill():**
-   - Delegar via Skill tool, passando pedido + memórias + contexto
-   - Instruir o especialista: "Antes de executar, leia os arquivos de identidade de marca em `biblioteca/identidade/`. Especialmente tom de voz e personalidade. Consulte também os templates complementares do seu Mapa de Necessidades."
-   - O agente é quem entrevista o usuário
-   - Aguardar o especialista concluir a interação e entregar o resultado
-   - **Ao receber o resultado final do especialista, retomar o controle e seguir para o passo 8 (Validação)**
+5. **⛔ Maestro apresenta ao usuário e pede aprovação humana — OBRIGATÓRIO (regra 7.6):**
+   - Apresentar resumo (1-2 frases) + wiki-link pro artefato (`[[caminho]]`)
+   - Destacar pontos de atenção (suposições, dados de pesquisa a confirmar)
+   - Perguntar: "Quer ajustar algo ou aprovo e salvo?"
+   - **Se usuário pede ajuste:** Maestro dispara nova iteração (Gerente cria tarefa de revisão → especialista ajusta → QA+Revisor → volta pra este passo).
+   - **Se usuário aprova:** prosseguir pra passo 6.
+   - Até essa aprovação, o artefato existe no vault mas a tarefa está `em-andamento` e o artefato NÃO foi indexado na pasta de área.
 
-7. **Tratar resultado do especialista** — caminho depende do modo de despacho:
+6. **Maestro → Gerente fecha a tarefa:**
+   - Despachar Gerente via Agent(sonnet) com:
+     - Caminho da tarefa + caminho do artefato final
+   - Gerente marca checklist, `status: concluida`, `data-conclusao`, calcula desbloqueios, recalcula estatísticas
+   - Aguardar report com lista de tarefas desbloqueadas
 
-   **7a. Se Agent()** — extrair o bloco ---REPORT--- e tratar o status:
-   - `DONE` → resultado pronto, seguir para passo 8
-   - `DONE_WITH_CONCERNS` → ler concerns, decidir se valida ou pede ajuste, depois seguir para passo 8
-   - `NEEDS_DATA` → despachar Gerente de Projetos via Agent(haiku) para criar entrevista e bloquear a tarefa atual. Oferecer ao usuário: resolver agora ou deixar na fila. Se "agora" e há entrevista + pesquisa: despachar Pesquisador via Agent() em background E acionar Entrevistador via Skill() simultaneamente. Ao concluir ambos, re-despachar o especialista com dados completos
-   - `NEEDS_CONTEXT` → re-despachar com contexto adicional
-   - `INSUFFICIENT_DATA` → despachar Gerente de Projetos via Agent(haiku) para criar entrevista de aprofundamento e bloquear a tarefa atual. Oferecer ao usuário: resolver agora (acionar Entrevistador via Skill()) ou deixar na fila
-   - `BLOCKED` → avaliar: modelo mais capaz, quebrar tarefa, ou escalar pro usuário
+7. **Maestro → Bibliotecário atualiza índice + grafo:**
+   - Despachar Bibliotecário via Agent(sonnet) com caminho do artefato + tipo
+   - Bibliotecário adiciona entrada no índice de área (`_funis.md`, `_campanhas.md`, etc.) com status `concluido`
+   - Valida wiki-links do artefato (regra 7.18)
+   - **Exceção Pesquisador:** Bibliotecário não toca em `_pesquisas.md` — Pesquisador mantém sozinho.
 
-   **7b. Se Skill()** — o especialista entregou o resultado diretamente na conversa:
-   - Capturar o texto final produzido pelo especialista
-   - Este texto será o input do Ciclo de Validação no passo 8
-   - Seguir para passo 8
-
-   **Ambos os caminhos (7a e 7b) convergem obrigatoriamente para o passo 8.**
-
-8. **⛔ VALIDAR — OBRIGATÓRIO PARA AGENT() E SKILL() — NUNCA PULAR ESTE PASSO ⛔**
-   Aplicar o Ciclo de Validação Autônomo (seção 6). Sem exceção:
-   - Disparar QA Agent para verificar checklists
-   - Disparar Revisor para aplicar Protocolo de Escrita Natural
-   - Até 2 iterações de cada, se necessário
-   - Input do QA: se Agent(), usar o resultado extraído do report. Se Skill(), usar o texto final entregue pelo especialista.
-   - **Se você está pensando em pular este passo: NÃO. Releia a Restrição #3.**
-9. **Entregar** — apresentar ao usuário seguindo o Formato de Entrega (seção 8), com pedido de revisão final
-10. **Salvar** — após aprovação do usuário, salvar o arquivo no projeto com wiki-links e frontmatter Obsidian
-11. **Conectar** — acionar o Bibliotecário para verificar que o documento está linkado ao grafo (index da área + fontes de dados usadas). Se faltam links, o Bibliotecário adiciona antes de considerar salvo.
-12. **Registrar** — se houve feedback, ajustes ou padrões observados, documentar nas memórias do agente
+**Pós-fluxo:** Registrar feedback nas memórias (continua como antes, passo 12 antigo).
 
 ### 5.2 Fluxo de fallback (sem especialista disponível)
 
@@ -285,9 +246,25 @@ Quando o pedido envolver mais de um agente:
 5. **Executar com validação** — rodar cada agente com validação (QA + Revisor) entre etapas
 6. **Aprovação entre etapas** — pedir aprovação do usuário entre cada entrega parcial antes de seguir para a próxima
 
+### 5.5 Fluxo de descoberta de padrão novo
+
+Acionado quando o Gerente reporta `NEEDS_CONTEXT` com motivo "tipo desconhecido".
+
+1. Maestro → Bibliotecário (Agent sonnet) com o tipo desconhecido e contexto da tarefa
+2. Bibliotecário propõe pergunta (seção "Fluxo DESCOBRIR PADRÃO NOVO" do Bibliotecário)
+3. Maestro apresenta ao usuário via `AskUserQuestion`:
+   - "Esse tipo novo de entrega (`[X]`) não tem padrão ainda. Como tratar?"
+   - Opções: Usar entrega-genérica / Criar padrão novo / Cancelar
+4. Se "entrega-genérica": Maestro re-despacha o Gerente com tipo `entrega-generica`
+5. Se "criar padrão novo": Maestro faz 2 perguntas adicionais (pasta, naming), passa pro Bibliotecário que salva em `~/.maestro/templates/artefatos/[X].md`. Maestro re-despacha o Gerente com o tipo novo.
+6. Se "cancelar": Maestro aborta a tarefa e comunica ao usuário.
+
 ---
 
 ## 6. Ciclo de Validação Autônomo
+
+> [!important] Auditoria, não correção
+> QA e Revisor são **auditores**. Eles leem o arquivo do artefato e reportam achados, mas **nunca editam**. Correções são feitas pelo especialista original via tarefa de revisão criada pelo Gerente. Isso preserva a coerência autoral (decisão da sessão 29).
 
 Todo conteúdo textual que o usuário vai ler passa por este ciclo antes de ser entregue ou salvo. O objetivo é entregar qualidade consistente sem sobrecarregar o usuário.
 

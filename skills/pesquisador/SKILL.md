@@ -186,7 +186,7 @@ Montar o Markdown estruturado seguindo o template (seção 6).
 
 ### Passo 2 — Salvar
 
-Salvar na pasta configurada com nome `AAAA-MM-DD-tema-descritivo.md`.
+Salvar na pasta configurada com nome `AAAA-MM-DD-HHMM-tema-descritivo.md`.
 
 ### Passo 3 — Atualizar index
 
@@ -244,7 +244,7 @@ curl -s -w "\n%{http_code}" https://openrouter.ai/api/v1/chat/completions \
 
 4. **Salvar pesquisa de teste (apenas quando HTTP 200):**
    - Ler `pasta-pesquisas` de `~/.maestro/config.md` (padrão: `pesquisas/`)
-   - Criar `{pasta-pesquisas}/AAAA-MM-DD-teste-conexao-openrouter.md` seguindo o template da seção 6, com:
+   - Criar `{pasta-pesquisas}/AAAA-MM-DD-HHMM-teste-conexao-openrouter.md` seguindo o template da seção 6, com:
      - `titulo: Teste de conexão — OpenRouter`
      - `tipo: livre`
      - `ferramenta: sonar`
@@ -265,9 +265,9 @@ curl -s -w "\n%{http_code}" https://openrouter.ai/api/v1/chat/completions \
 
 ### Nome do arquivo
 
-`AAAA-MM-DD-tema-descritivo.md`
+`AAAA-MM-DD-HHMM-tema-descritivo.md`
 
-Exemplo: `2026-04-08-concorrentes-mercado-fitness-sp.md`
+Exemplo: `2026-04-08-1430-concorrentes-mercado-fitness-sp.md`
 
 ### Template padrão
 
@@ -383,7 +383,7 @@ Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protoc
 - [ ] Dados sem fonte estão marcados como "não confirmado"?
 - [ ] Documento segue o template padrão (frontmatter, seções, sources)?
 - [ ] Index de pesquisas foi atualizado?
-- [ ] Nome do arquivo segue o padrão AAAA-MM-DD-tema.md?
+- [ ] Nome do arquivo segue o padrão AAAA-MM-DD-HHMM-tema.md?
 - [ ] Texto usa acentos corretos em português?
 
 ### Critérios Globais
@@ -516,6 +516,8 @@ STATUS: DONE
 RESULTADO:
 [Resumo executivo da pesquisa — achados principais, dados-chave]
 Documento completo salvo em: [caminho do arquivo]
+ARTEFATO: [caminho da pesquisa]
+# O Maestro passa esse caminho pro Gerente atualizar o campo resultado: da tarefa
 
 ARQUIVOS:
   - criado: "[caminho da pesquisa salva]"
@@ -564,6 +566,22 @@ ARQUIVOS:
 - Pode reportar NEEDS_CONTEXT se faltou informação sobre o que pesquisar
 - Pode reportar BLOCKED se a ferramenta não funcionar (API key, erro de conexão)
 - Documento de pesquisa é salvo mesmo quando a pesquisa é parcial (DONE_WITH_CONCERNS)
+
+---
+
+## Protocolo de Artefato — Regra Própria
+
+O Pesquisador é **exceção documentada** ao fluxo padrão do Grupo 2:
+- **Não recebe** `caminho-do-artefato` no bloco TAREFA.
+- **Cria o próprio arquivo** em `{projeto}/pesquisas/YYYY-MM-DD-HHMM-tema.md` (mantém o padrão de naming já documentado na seção 6 deste skill).
+- **Atualiza `_pesquisas.md` sozinho** — Bibliotecário não toca nesse índice.
+
+**Ao concluir, no report:**
+- `RESUMO: [resumo executivo curto]`
+- `ARTEFATO: [caminho da pesquisa]`
+- **Não editar a tarefa.** O Maestro passa o caminho ao Gerente no Fluxo 3 (conclusão), que atualiza `resultado:` da tarefa (Restrição 10 preservada).
+
+**Justificativa:** no Pesquisador, o arquivo *é* a execução (briefing + dados + análise + fontes no mesmo doc). Criar uma "casca" separada fragmentaria o resultado. Autonomia preservada desde a versão v1.0 do skill.
 
 ---
 

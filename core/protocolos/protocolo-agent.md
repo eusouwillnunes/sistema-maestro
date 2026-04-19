@@ -109,6 +109,11 @@ Conteúdo completo da skill relevante (hub + sub-skill quando aplicável). Copia
 ---TAREFA---
 Objetivo: [o que executar]
 Template: [qual template preencher, se aplicável]
+Caminho do artefato: [caminho/absoluto/do/arquivo-a-editar.md]
+  # Opcional. Quando presente, o agente DEVE editar esse arquivo em vez
+  # de retornar texto no RESULTADO. O arquivo já tem frontmatter e
+  # seções-base criadas pelo Gerente. O RESULTADO do report passa a
+  # trazer apenas um resumo curto (1-3 frases) + o caminho.
 Formato de entrega: [Markdown Obsidian-first com frontmatter YAML e wiki-links]
 Protocolo de report: Seguir o formato definido em protocolo-agent.md (seção 2)
 ---END-TAREFA---
@@ -156,6 +161,26 @@ Material de referência:
 - Ao concluir, reporte usando o formato ---REPORT--- definido no protocolo
 ---END-REGRAS---
 ```
+
+### Quando `caminho-do-artefato` está presente no bloco TAREFA
+
+Comportamento do agente:
+
+1. **Ler o arquivo** apontado por `caminho-do-artefato`. Ele já contém frontmatter e seções-base vazias (a "casca").
+2. **Ler a tarefa vinculada** (frontmatter `resultado:` da tarefa aponta pro mesmo arquivo). A seção "Descrição" da tarefa é o briefing real.
+3. **Preencher as seções do artefato** via Edit/Write, mantendo o frontmatter.
+4. **Ao concluir**, atualizar `status: concluido` no frontmatter do artefato.
+5. **No report**, trazer apenas RESUMO (1-3 frases) + ARTEFATO (caminho). O conteúdo vive no arquivo.
+
+Exemplo de RESULTADO quando edita artefato:
+
+```
+RESULTADO:
+Funil de webinar para Curso X criado em 5 etapas (lead magnet → registro → confirmação → webinar → pitch).
+Artefato: {projeto}/funis/funil-webinario-curso-x.md
+```
+
+**Exceção — Pesquisador:** não recebe `caminho-do-artefato`. Cria o próprio arquivo em `pesquisas/` e reporta o caminho. O Gerente atualiza `resultado:` da tarefa no Fluxo 3 (conclusão).
 
 ---
 

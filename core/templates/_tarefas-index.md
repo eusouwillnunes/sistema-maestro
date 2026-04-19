@@ -38,15 +38,15 @@ tags:
 
 ## Em Andamento
 
-| Tarefa | Agente | Solicitante | Início | Checklist |
-|--------|--------|-------------|--------|-----------|
-| (nenhuma) | — | — | — | — |
+| Tarefa | Agente | Solicitante | Resultado | Início | Checklist |
+|--------|--------|-------------|-----------|--------|-----------|
+| (nenhuma) | — | — | — | — | — |
 
 ## Pendentes
 
-| Tarefa | Agente | Solicitante | Prioridade | Criação |
-|--------|--------|-------------|------------|---------|
-| (nenhuma) | — | — | — | — |
+| Tarefa | Agente | Solicitante | Resultado | Prioridade | Criação |
+|--------|--------|-------------|-----------|------------|---------|
+| (nenhuma) | — | — | — | — | — |
 
 ## Bloqueadas
 
@@ -56,6 +56,6 @@ tags:
 
 ## Concluídas (últimas 15)
 
-| Tarefa | Agente | Solicitante | Tempo | Conclusão |
-|--------|--------|-------------|-------|-----------|
-| (nenhuma) | — | — | — | — |
+| Tarefa | Agente | Solicitante | Resultado | Tempo | Conclusão |
+|--------|--------|-------------|-----------|-------|-----------|
+| (nenhuma) | — | — | — | — | — |

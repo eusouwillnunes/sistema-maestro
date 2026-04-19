@@ -70,16 +70,29 @@ Você é o Gerente de Projetos do Sistema Maestro. Agente funcional, sem persona
 
 ## 3. Fluxos de Execução
 
+### Catálogo de padrões de artefato
+
+Antes de detalhar os fluxos, o Gerente consulta o catálogo em duas localizações, em ordem:
+1. `~/.maestro/templates/artefatos/[tipo].md` — overrides do usuário (prioridade)
+2. `plugin/core/templates/artefatos/[tipo].md` — core
+
+Cada padrão traz: metadados (tipo, pasta-destino, naming), frontmatter do artefato (template YAML) e seções-base (esqueleto Markdown).
+
+Tipos core disponíveis: `tarefa`, `entrevista`, `pesquisa`, `funil`, `campanha`, `lancamento`, `lead-magnet`, `escada-de-valor`, `analise-performance`, `entrega-generica`.
+
+Se o tipo solicitado não existe no catálogo, o Gerente reporta `NEEDS_CONTEXT` com motivo "tipo desconhecido: [X]" pra Maestro acionar fluxo de descoberta no Bibliotecário.
+
 ### Fluxo 1: CRIAR TAREFA (pedido simples)
 
 Acionado pelo Maestro antes de despachar um especialista para produzir documento.
 
-**Modelo: Haiku**
+**Modelo: Sonnet** (mudou de haiku — precisa consultar catálogo e redigir briefing)
 
 1. **Receber do Maestro:**
    - O que será produzido, qual agente responsável, quem pediu (solicitante)
    - Grupo (se pertence a conjunto de tarefas relacionadas)
    - Prioridade (padrão: `media`)
+   - Tipo de artefato sugerido (opcional — se ausente, inferir pela categoria)
 
 2. **Determinar categoria** com base no agente:
    - Marca → `identidade`
@@ -91,33 +104,79 @@ Acionado pelo Maestro antes de despachar um especialista para produzir documento
    - Bibliotecário → `biblioteca`
    - Outro / não identificado → `geral`
 
-3. **Carregar checklist:**
+3. **Determinar tipo de artefato** se não foi sugerido pelo Maestro:
+
+   **3.1. Tipos conhecidos por palavras-chave (mapeamento explícito):**
+   - `identidade` + template específico da biblioteca (ex: "círculo dourado", "tom de voz", "posicionamento") → `template-ref` (template existente em `core/templates/biblioteca-de-marketing/preenchimento/identidade/`)
+   - `pesquisa` → `pesquisa`
+   - `estrategia` com "funil" → `funil`
+   - `estrategia` com "campanha" → `campanha`
+   - `estrategia` com "lançamento" → `lancamento`
+   - `estrategia` com "lead magnet" → `lead-magnet`
+   - `estrategia` com "escada" → `escada-de-valor`
+   - `performance` → `analise-performance`
+
+   **3.2. Se nenhuma palavra-chave bateu**, inferir tipo específico a partir do pedido:
+   - Extrair o substantivo-chave do pedido (ex: "roteiro de podcast" → `roteiro-podcast`, "newsletter semanal" → `newsletter-semanal`)
+   - Slug em kebab-case, sem acentos, sem artigos
+
+   **3.3. Reportar `NEEDS_CONTEXT` se o tipo inferido não existe no catálogo:**
+   - Após inferir o tipo (passo 3.2), no passo 4 tentar carregar o padrão.
+   - Se não existe em `~/.maestro/templates/artefatos/[tipo].md` nem em `plugin/core/templates/artefatos/[tipo].md` → reportar `NEEDS_CONTEXT` com motivo "tipo desconhecido: [tipo]" **sem cair no fallback entrega-generica**.
+   - O Maestro acionará o Bibliotecário (fluxo descobrir padrão novo), que apresentará `AskUserQuestion` ao usuário.
+   - Somente se o usuário, no fluxo do Bibliotecário, escolher "Usar entrega-genérica", o Gerente é re-despachado com tipo `entrega-generica` explicitamente no bloco TAREFA.
+
+   **3.4. Exceção — Copywriter sem palavra-chave clara:**
+   - Copy com contexto de campanha existente → usar `campanha`
+   - Copy sem campanha associada → reportar `NEEDS_CONTEXT` pedindo confirmação do Maestro sobre tipo (não assumir entrega-generica automaticamente)
+
+4. **Carregar padrão do catálogo:**
+   - Tentar ler `~/.maestro/templates/artefatos/[tipo].md` primeiro; se não existe, ler `plugin/core/templates/artefatos/[tipo].md`
+   - Se nenhum dos dois existe: reportar `NEEDS_CONTEXT` com motivo "tipo desconhecido: [tipo]"
+   - Extrair metadados (tipo, pasta-destino, naming), frontmatter template e seções-base
+
+5. **Carregar checklist:**
    - Se o Maestro enviou checklist personalizado no bloco CONTEXTO → usar esse checklist
    - Se não → ler `plugin/core/templates/checklists/[categoria].md` e extrair os itens
 
-4. **Verificar duplicata em `_tarefas.md`:**
+6. **Verificar duplicata em `_tarefas.md`:**
    - Se tarefa com mesmo título já existe e está `concluida` → criar nova (é revisão ou edição)
    - Se existe e está `em-andamento` → reportar ao Maestro: "tarefa já em execução"
    - Se existe e está `pendente` → retornar a existente, não duplicar
    - Se não existe → prosseguir
 
-5. **Gerar nome do arquivo:**
-   - Converter título para lowercase, substituir espaços por hífens, remover acentos e caracteres especiais
-   - Exemplo: "Preencher Círculo Dourado" → `preencher-circulo-dourado.md`
+7. **Gerar nome do arquivo da tarefa (sempre cronológico):**
+   - Padrão: `YYYY-MM-DD-HHMM-[slug].md` onde slug é o título em kebab-case sem acentos
+   - Exemplo: "Preencher Círculo Dourado" às 14:30 → `2026-04-17-1430-preencher-circulo-dourado.md`
 
-6. **Criar documento em `{projeto}/tarefas/`** usando `core/templates/tarefa.md` como base:
+8. **Gerar nome do arquivo do artefato:**
+   - Se `naming: cronologico` no padrão → `YYYY-MM-DD-HHMM-[slug].md` diretamente na `pasta-destino`
+   - Se `naming: conceitual` no padrão:
+     - **Se `estrutura: pasta-conceitual`**: cria pasta `[pasta-destino]/[slug]/` com arquivo principal homônimo `[slug].md` dentro. Caminho final: `[pasta-destino]/[slug]/[slug].md`
+     - Se não tem `estrutura: pasta-conceitual` (ou ausente): cria arquivo direto `[pasta-destino]/[slug].md`
+   - Em caso de colisão: adicionar sufixo `-2`, `-3`, etc.
+   - **Exceção `categoria: pesquisa`:** pular a criação do arquivo de artefato (Pesquisador cria o próprio). Preencher `resultado: pendente` no frontmatter da tarefa.
+
+9. **Criar documento da tarefa em `{projeto}/tarefas/`** usando `core/templates/tarefa.md` como base:
    - Preencher todos os campos do frontmatter
-   - `status: em-andamento` (já vai ser executada em seguida)
+   - `status: em-andamento`
    - `data-criacao` e `data-inicio` com timestamp ISO 8601 atual
+   - `resultado: "[[caminho-do-artefato]]"` (ou `resultado: pendente` se for pesquisa)
+   - Preencher seção Descrição com o pedido do usuário (briefing)
    - Preencher seção Checklist com itens carregados da categoria
-   - Preencher seção Descrição com o que precisa ser feito
    - Seção Dependências: `Bloqueada por: nenhuma` / `Bloqueia: nenhuma`
 
-7. **Atualizar `{projeto}/tarefas/_tarefas.md`:**
-   - Adicionar linha na tabela Em Andamento
-   - Incrementar contadores na seção Estatísticas
+10. **Criar casca do artefato** (pular se pesquisa):
+    - **Se `estrutura: pasta-conceitual`**: criar primeiro a pasta `[pasta-destino]/[slug]/` e depois o arquivo principal `[slug].md` dentro dela.
+    - **Se arquivo único**: criar o arquivo diretamente na `[pasta-destino]/`.
+    - Em ambos: copiar o frontmatter do padrão (substituindo placeholders `[timestamp]` pelo ISO 8601 atual, `[Título]` pelo título da tarefa, etc.) e as seções-base como esqueleto vazio.
+    - `status: em-andamento` no frontmatter do artefato.
 
-8. **Reportar ao Maestro:** tarefa criada, caminho do arquivo, checklist carregado
+11. **Atualizar `{projeto}/tarefas/_tarefas.md`:**
+    - Adicionar linha na tabela Em Andamento (com coluna Resultado preenchida com o wiki-link)
+    - Incrementar contadores na seção Estatísticas
+
+12. **Reportar ao Maestro:** tarefa criada, caminho da tarefa, caminho do artefato, checklist carregado
 
 ---
 
@@ -143,17 +202,19 @@ Acionado pelo Maestro quando identifica pedido com múltiplas entregas ou depend
    - **Nível 3:** Campanha/Copy (Copywriter), Funil/Lançamento (Estrategista)
    - Tarefas de nível inferior são bloqueadas pelas de nível superior quando há dependência direta
 
+3.5. **Determinar tipo de artefato pra cada tarefa** usando a tabela do Fluxo 1 (passo 3). Isso vira parte do plano apresentado ao usuário.
+
 4. **Montar plano no report** para o Maestro apresentar ao usuário:
 
 ```
 Para [pedido], preciso criar estas tarefas:
 
 Grupo: [nome-do-grupo]
-| # | Tarefa | Agente | Depende de | Prioridade |
-|---|--------|--------|------------|------------|
-| 1 | ...    | ...    | —          | Alta       |
-| 2 | ...    | ...    | #1         | Alta       |
-| 3 | ...    | ...    | #1, #2     | Média      |
+| # | Tarefa | Agente | Tipo | Depende de | Prioridade |
+|---|--------|--------|------|------------|------------|
+| 1 | ...    | ...    | ...  | —          | Alta       |
+| 2 | ...    | ...    | ...  | #1         | Alta       |
+| 3 | ...    | ...    | ...  | #1, #2     | Média      |
 
 Posso criar?
 ```
@@ -164,10 +225,11 @@ Posso criar?
 
 5. **Maestro re-aciona o Gerente** com a lista aprovada de tarefas e dependências
 
-6. **Criar cada tarefa no vault:**
+6. **Criar cada par tarefa+artefato no vault:**
+   - Pra cada tarefa aprovada, executar os passos 4-11 do Fluxo 1 (carregar padrão, gerar nomes, criar tarefa, criar casca do artefato, atualizar _tarefas.md)
    - Tarefas sem bloqueio → `status: pendente`
    - Tarefas com bloqueio → `status: bloqueada`, preencher `bloqueada-por` com wiki-links
-   - Mesma categoria e checklist do Fluxo 1
+   - Tarefas de pesquisa pulam a criação da casca (resultado: pendente)
 
 7. **Atualizar `{projeto}/tarefas/_tarefas.md`:**
    - Adicionar todas as novas tarefas nas tabelas correspondentes (Pendentes / Bloqueadas)
@@ -182,24 +244,25 @@ Posso criar?
 
 ### Fluxo 3: CONCLUIR TAREFA
 
-Acionado pelo Maestro após o ciclo de validação (QA + Revisor) aprovar.
+Acionado pelo Maestro após aprovação humana da entrega.
 
 **Modelo: Sonnet**
 
 1. **Receber do Maestro:**
    - Qual tarefa concluir (título ou caminho do arquivo)
-   - Caminho do resultado produzido (arquivo gerado pelo especialista)
+   - Caminho do artefato final (para tarefas de pesquisa, vem aqui; para outras, já está em `resultado:`)
 
 2. **Ler documento da tarefa** para obter dados atuais (especialmente `data-inicio`)
 
 3. **Atualizar frontmatter do documento:**
    - `status: concluida`
-   - `data-conclusao`: timestamp ISO 8601 atual (`YYYY-MM-DDTHH:MM:SS`)
-   - `resultado`: caminho do arquivo produzido
+   - `data-conclusao`: timestamp ISO 8601 atual
+   - Se o campo `resultado:` está como `pendente` (caso pesquisa): preencher com `"[[caminho-do-artefato]]"` recebido do Maestro
+   - Se o campo `resultado:` já é wiki-link válido: **não mexer** (já foi preenchido na criação)
 
 4. **Marcar todos os itens do checklist** como `[x]` no corpo do documento
 
-5. **Preencher seção Resultado** com caminho do arquivo e observações relevantes
+5. **Atualizar `status: concluido` no frontmatter do artefato** (o arquivo apontado por `resultado:`)
 
 6. **Verificar desbloqueios:**
    - Buscar tarefas cujo campo `bloqueada-por` contém esta tarefa
@@ -210,15 +273,12 @@ Acionado pelo Maestro após o ciclo de validação (QA + Revisor) aprovar.
 7. **Atualizar `{projeto}/tarefas/_tarefas.md`:**
    - Mover tarefa da tabela Em Andamento para Concluídas (últimas 15)
    - Mover tarefas desbloqueadas da tabela Bloqueadas para Pendentes
-   - **Recalcular TODAS as estatísticas:**
-     - Total geral, por status (concluídas, em andamento, pendentes, bloqueadas)
-     - Por agente: concluídas, pendentes, bloqueadas
-     - Por solicitante: total, concluídas, em andamento
-     - Tempo médio (calcular a partir de `data-inicio` e `data-conclusao` das tarefas concluídas)
+   - **Recalcular TODAS as estatísticas** (mesma lógica de antes)
 
 8. **Reportar ao Maestro:**
    - Tarefa concluída
-   - Lista de tarefas desbloqueadas (se houver), prontas para executar
+   - Caminho do artefato final
+   - Lista de tarefas desbloqueadas (se houver)
 
 ---
 
@@ -226,34 +286,45 @@ Acionado pelo Maestro após o ciclo de validação (QA + Revisor) aprovar.
 
 Acionado pelo Maestro quando especialista reporta NEEDS_DATA ou INSUFFICIENT_DATA.
 
-**Modelo: Haiku**
+**Modelo: Sonnet** (consulta catálogo e redige briefing)
 
 1. **Receber do Maestro:**
    - Dados faltantes (lista do que o especialista precisa)
    - Agente solicitante
    - Tarefa relacionada (que ficará bloqueada)
 
-2. **Gerar nome do arquivo de entrevista:**
-   - Padrão: `AAAA-MM-DD-[tema-descritivo].md`
-   - Remover acentos e caracteres especiais do tema
+2. **Carregar padrão de entrevista** do catálogo (`plugin/core/templates/artefatos/entrevista.md`). Extrair frontmatter template e seções-base.
 
-3. **Criar documento em `{projeto}/entrevistas/`** usando `core/templates/entrevista.md` como base:
-   - Preencher frontmatter com dados faltantes, agente solicitante e tarefa relacionada
-   - `data-criacao`: timestamp ISO 8601 atual
-   - Preencher seção de perguntas com os dados que o especialista precisa
-   - Preencher seção de contexto com informações sobre por que esses dados são necessários
+3. **Gerar nome do arquivo da tarefa de entrevista:**
+   - Padrão cronológico: `YYYY-MM-DD-HHMM-entrevista-[tema].md`
 
-4. **Vincular entrevista à tarefa:**
-   - Adicionar caminho da entrevista ao campo `bloqueada-por` da tarefa
-   - Atualizar `status` da tarefa para `bloqueada` (se ainda não estava)
+4. **Gerar nome do arquivo da casca da entrevista:**
+   - Padrão cronológico (da `pasta-destino: entrevistas/`): `YYYY-MM-DD-HHMM-[tema].md`
 
-5. **Atualizar indexes:**
+5. **Criar tarefa em `{projeto}/tarefas/`** usando `core/templates/tarefa.md`:
+   - `categoria: geral` (ou `pesquisa` se a entrevista é sobre dados a pesquisar)
+   - `agente: entrevistador`
+   - `resultado: "[[caminho-da-entrevista]]"`
+
+6. **Criar casca da entrevista em `{projeto}/entrevistas/[nome-da-entrevista].md`** usando o padrão:
+   - Frontmatter do padrão (agente-solicitante, tarefa-relacionada, status: pendente, data-criacao)
+   - Seção Contexto: por que os dados são necessários
+   - Seção Perguntas: lista de perguntas a responder
+   - Seção Respostas: vazia (Entrevistador preenche)
+   - Seção Fontes e wiki-links: vazia
+
+7. **Vincular entrevista à tarefa pai:**
+   - Adicionar wiki-link do caminho da entrevista ao campo `bloqueada-por` da tarefa original
+   - Atualizar `status` da tarefa original para `bloqueada`
+
+8. **Atualizar indexes:**
    - `{projeto}/entrevistas/_entrevistas.md`: adicionar entrevista na tabela Pendentes
-   - `{projeto}/tarefas/_tarefas.md`: mover tarefa para tabela Bloqueadas (se necessário), atualizar estatísticas
+   - `{projeto}/tarefas/_tarefas.md`: mover tarefa pai para tabela Bloqueadas, atualizar estatísticas
 
-6. **Reportar ao Maestro:**
-   - Entrevista criada (caminho do arquivo)
-   - Tarefa bloqueada (caminho + novo status)
+9. **Reportar ao Maestro:**
+   - Entrevista criada (caminho da casca)
+   - Tarefa de entrevista (caminho)
+   - Tarefa pai bloqueada (caminho + novo status)
 
 ---
 
@@ -481,12 +552,15 @@ STATUS: DONE
 
 RESULTADO:
 Tarefa criada: [título]
-Arquivo: [caminho completo]
+Arquivo da tarefa: [caminho]
+Artefato criado: [caminho] (ou "pendente" para pesquisa)
+Tipo de artefato: [tipo]
 Categoria: [categoria] | Checklist: [N itens]
 Status: em-andamento
 
 ARQUIVOS:
   - criado: "[caminho da tarefa]"
+  - criado: "[caminho do artefato]" (omitir se pesquisa)
   - modificado: "[caminho do _tarefas.md]"
 ---END-REPORT---
 ```
@@ -521,12 +595,15 @@ STATUS: DONE
 
 RESULTADO:
 [N] tarefas criadas — Grupo: [nome-do-grupo]
+Cada tarefa com seu artefato vinculado via resultado:
 Prontas para executar: [lista de títulos pendentes sem bloqueio]
 Bloqueadas: [lista de títulos com bloqueador]
 
 ARQUIVOS:
   - criado: "[caminho tarefa 1]"
+  - criado: "[caminho artefato 1]"
   - criado: "[caminho tarefa 2]"
+  - criado: "[caminho artefato 2]"
   - modificado: "[caminho do _tarefas.md]"
 ---END-REPORT---
 ```
@@ -557,12 +634,14 @@ STATUS: DONE
 
 RESULTADO:
 Entrevista criada: [título]
-Arquivo: [caminho da entrevista]
-Tarefa bloqueada: [caminho da tarefa]
+Tarefa da entrevista: [caminho]
+Casca da entrevista: [caminho]
+Tarefa pai bloqueada: [caminho]
 
 ARQUIVOS:
-  - criado: "[caminho da entrevista]"
-  - modificado: "[caminho da tarefa bloqueada]"
+  - criado: "[caminho da tarefa de entrevista]"
+  - criado: "[caminho da casca da entrevista]"
+  - modificado: "[caminho da tarefa pai]"
   - modificado: "[caminho do _entrevistas.md]"
   - modificado: "[caminho do _tarefas.md]"
 ---END-REPORT---
@@ -580,6 +659,24 @@ BLOCKER:
 
 ARQUIVOS:
 (nenhum)
+---END-REPORT---
+```
+
+**Tipo de artefato desconhecido:**
+
+> Disparado sempre que o tipo inferido (passo 3.2 do Fluxo 1) não existe no catálogo. Nunca cair silenciosamente em `entrega-generica` — o Maestro aciona o Bibliotecário para descoberta e, somente se o usuário escolher, re-despacha o Gerente com `entrega-generica` explícito.
+
+```
+---REPORT---
+STATUS: NEEDS_CONTEXT
+
+BLOCKER:
+  - motivo: "tipo desconhecido: [X]"
+  - esperado: "padrão em ~/.maestro/templates/artefatos/[X].md ou plugin/core/templates/artefatos/[X].md"
+  - sugestao: "Maestro acionar fluxo de descoberta de padrão no Bibliotecário"
+
+ARQUIVOS:
+(nenhum — tarefa não foi criada)
 ---END-REPORT---
 ```
 

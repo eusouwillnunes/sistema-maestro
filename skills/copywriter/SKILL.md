@@ -477,6 +477,21 @@ ARQUIVOS:
 
 ---
 
+## Protocolo de Artefato
+
+Quando o bloco TAREFA incluir o campo `caminho-do-artefato`:
+
+1. **Ler o arquivo apontado.** Ele já tem frontmatter e seções-base vazias (a "casca").
+2. **Ler a tarefa vinculada** (frontmatter `resultado:` da tarefa aponta pro mesmo arquivo). A seção "Descrição" da tarefa é o briefing real — leia com atenção, é aí que está o pedido, o público, o objetivo.
+3. **Preencher as seções** do arquivo via Edit/Write, mantendo o frontmatter intacto.
+4. **Ao concluir**, atualizar `status: concluido` no frontmatter do artefato.
+5. **No report**, trazer apenas:
+   - `RESUMO: [1-3 frases do que foi produzido e lógica principal]`
+   - `ARTEFATO: [caminho-do-artefato]`
+   - **Não trazer o conteúdo produzido no report.** O conteúdo vive no arquivo, não no chat.
+
+---
+
 ## 11. Exemplos
 
 *Exemplos de input/output pra calibrar o comportamento do Copywriter*

@@ -177,6 +177,21 @@ Antes de executar qualquer tarefa, leia o contexto de marca indicado no Bloco CO
 
 Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
 
+### Dependências obrigatórias por tipo de entrega
+
+Antes de produzir qualquer entrega, o Estrategista verifica a existência dos arquivos da biblioteca. **Se dependência obrigatória está ausente, reporta `NEEDS_DATA` pra Gerente criar entrevista de cadastro** (não tenta inferir do contexto existente):
+
+| Entrega | Dependências obrigatórias | Se ausente |
+|---|---|---|
+| Oferta / Oferta irresistível | `produtos/[produto]/dossie.md` preenchido | NEEDS_DATA: cadastrar produto formal primeiro |
+| Funil de vendas | `produtos/[produto]/dossie.md` + `produtos/[produto]/oferta.md` | NEEDS_DATA: produto e oferta precisam existir |
+| Lançamento | `produtos/[produto]/dossie.md` + `produtos/[produto]/oferta.md` + `produtos/[produto]/perfil-prospect.md` | NEEDS_DATA: pacote de produto incompleto |
+| Lead magnet | `produtos/[produto]/dossie.md` (produto destino) | NEEDS_DATA: qual produto o lead magnet vai alimentar? |
+| Escada de valor | pelo menos 1 produto cadastrado em `produtos/[produto]/` | NEEDS_DATA: sem produtos, não há escada |
+| Campanha | `produtos/[produto]/dossie.md` + `produtos/[produto]/oferta.md` | NEEDS_DATA: campanha precisa de produto e oferta |
+
+**Importante:** menções a produtos dentro da identidade de marca (ex: campo "linhas de produtos" no posicionamento) **NÃO substituem** o cadastro formal em `produtos/[produto]/`. A identidade conta o que a marca vende em termos gerais; o produto formal tem dossiê, oferta, perfil de prospect — dados que alimentam a execução.
+
 ---
 
 ## 7. Abordagem de Trabalho
@@ -367,6 +382,21 @@ ARQUIVOS:
 - O campo RESULTADO contém o template preenchido completo ou a estratégia documentada
 - Quando preenche um template no vault, lista no campo ARQUIVOS
 - Se o diagnóstico revela que o problema não é o que o usuário pediu, reporta DONE_WITH_CONCERNS com a recomendação
+
+---
+
+## Protocolo de Artefato
+
+Quando o bloco TAREFA incluir o campo `caminho-do-artefato`:
+
+1. **Ler o arquivo apontado.** Ele já tem frontmatter e seções-base vazias (a "casca").
+2. **Ler a tarefa vinculada** (frontmatter `resultado:` da tarefa aponta pro mesmo arquivo). A seção "Descrição" da tarefa é o briefing real — leia com atenção, é aí que está o pedido, o público, o objetivo.
+3. **Preencher as seções** do arquivo via Edit/Write, mantendo o frontmatter intacto.
+4. **Ao concluir**, atualizar `status: concluido` no frontmatter do artefato.
+5. **No report**, trazer apenas:
+   - `RESUMO: [1-3 frases do que foi produzido e lógica principal]`
+   - `ARTEFATO: [caminho-do-artefato]`
+   - **Não trazer o conteúdo produzido no report.** O conteúdo vive no arquivo, não no chat.
 
 ---
 

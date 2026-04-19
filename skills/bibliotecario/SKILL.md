@@ -114,6 +114,100 @@ Acionado quando o usuário indica que já tem material da empresa.
    >
    > Ele vai ler os documentos, identificar o que pode ser preenchido e delegar pros agentes especialistas."
 
+### Fluxo FECHAR ARTEFATO
+
+Acionado pelo Maestro após conclusão de uma tarefa (passo 7 do fluxo de produção do Grupo 2).
+
+**Modelo: Sonnet** (precisa entender schema dos índices de área)
+
+1. **Receber do Maestro:**
+   - Caminho do artefato concluído
+   - Tipo de artefato (`funil`, `campanha`, `entrega-generica`, etc.)
+   - Caminho da tarefa vinculada
+
+2. **Identificar o índice de área correspondente:**
+   - `funil` → `{projeto}/funis/_funis.md`
+   - `campanha` → `{projeto}/campanhas/_campanhas.md`
+   - `lancamento` → `{projeto}/lancamentos/_lancamentos.md`
+   - `lead-magnet` → `{projeto}/lead-magnets/_lead-magnets.md`
+   - `escada-de-valor` → `{projeto}/escada-de-valor/_escada-de-valor.md`
+   - `entrevista` → `{projeto}/entrevistas/_entrevistas.md`
+   - `analise-performance` ou `entrega-generica` → `{projeto}/entregas/_entregas.md`
+   - `pesquisa` → **não faz nada** (Pesquisador mantém `_pesquisas.md` sozinho)
+   - `identidade/*` → não precisa (templates têm status inline no `_identidade.md`)
+
+3. **Adicionar entrada no índice de área:**
+   - Ler o índice atual
+   - Detectar o schema da tabela principal (colunas variam por tipo)
+   - Adicionar nova linha com wiki-link pro **arquivo principal** do artefato e status `concluido`
+   - **Se o artefato é pasta-conceitual** (funil, campanha, lancamento, lead-magnet, escada-de-valor): o wiki-link aponta pro arquivo principal homônimo dentro da pasta (ex: `[[funil-webinario-curso-x]]`, que o Obsidian resolve pro arquivo `funis/funil-webinario-curso-x/funil-webinario-curso-x.md`)
+   - Se a tabela tem coluna `Status`, preencher com `concluido`
+
+4. **Validar grafo do artefato (regra 7.18):**
+   - Abrir o arquivo principal do artefato (em pasta-conceitual, é o arquivo homônimo dentro da pasta)
+   - Verificar se há wiki-link pro índice da área (ex: `[[_funis]]` num artefato de funil)
+   - Verificar se há wiki-links pras fontes de dados usadas (identidade, produto, pesquisas citadas)
+   - Se faltam: adicionar na seção "Fontes e wiki-links" do arquivo principal
+   - Se a pasta-conceitual tem peças adicionais (ex: email-convite.md), cada peça deve ter wiki-link pro arquivo principal (`[[funil-webinario-curso-x]]`)
+
+5. **Reportar ao Maestro:**
+   - Índice atualizado (caminho + linha adicionada)
+   - Wiki-links adicionados (lista)
+   - Status: DONE
+
+### Fluxo DESCOBRIR PADRÃO NOVO
+
+Acionado pelo Maestro quando o Gerente reportou `NEEDS_CONTEXT` com motivo "tipo desconhecido: [X]".
+
+**Modelo: Sonnet** (interage com usuário via Maestro, estrutura padrão novo)
+
+1. **Receber do Maestro:**
+   - Tipo desconhecido (ex: "newsletter-semanal", "script-podcast")
+   - Contexto da tarefa original (o que ia ser produzido)
+
+2. **Propor ao Maestro apresentar `AskUserQuestion` ao usuário:**
+
+```
+question: "Esse tipo novo de entrega (`[X]`) não tem padrão ainda. Como tratar?"
+options:
+  - label: "Usar entrega-genérica"
+    description: "Vai pra pasta entregas/ com frontmatter neutro. Rápido e reusa padrão existente"
+  - label: "Criar padrão novo agora"
+    description: "Defino pasta destino e frontmatter específico. Padrão fica salvo pra próximas vezes"
+  - label: "Cancelar"
+    description: "Aborta a tarefa"
+```
+
+3. **Se usuário escolher "Usar entrega-genérica":**
+   - Reportar ao Maestro: use o padrão `entrega-generica` pra tarefa atual. Nenhum padrão novo é salvo.
+
+4. **Se usuário escolher "Criar padrão novo agora":**
+   - Pedir ao Maestro apresentar duas perguntas via AskUserQuestion sequenciais:
+     - Pergunta 1: "Em qual pasta esse tipo deve morar?" (opções derivadas: `entregas/`, criar pasta nova, outra conceitual)
+     - Pergunta 2: "Naming: cronológico (com data-hora) ou conceitual (nome do conceito)?"
+   - Com as respostas, montar um arquivo de padrão seguindo a estrutura do catálogo (metadados + frontmatter template + seções-base). Pra seções-base, usar estrutura mínima: `# [Título]`, `## Contexto`, `## Resultado`, `## Fontes e wiki-links`.
+   - Salvar em `~/.maestro/templates/artefatos/[X].md`
+   - Reportar ao Maestro: padrão salvo, agora o Gerente pode usar.
+
+5. **Se usuário escolher "Cancelar":**
+   - Reportar ao Maestro: tarefa abortada.
+
+6. **Formato de report:**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Padrão descoberto:
+  - Tipo: [X]
+  - Acao: "[salvou novo padrao em ~/.maestro/... | usou entrega-generica | cancelado]"
+
+ARQUIVOS:
+  - criado: "~/.maestro/templates/artefatos/[X].md" (se criou padrão novo)
+---END-REPORT---
+```
+
 ---
 
 ## 4. Formato de Entrega
@@ -288,6 +382,51 @@ Peça ao Maestro: "[comando sugerido]"
 
 ---
 
+## 9. Protocolo Agent()
+
+Quando executado como Agent() (sem interação direta com o usuário), siga estas regras adicionais ao protocolo base definido em `core/protocolos/protocolo-agent.md`.
+
+### Diferenças do modo Skill()
+
+- **Não pergunta ao usuário.** Todas as informações necessárias chegam pelo bloco ---TAREFA--- e ---CONTEXTO---.
+- **Executa e reporta.** Sem confirmação intermediária.
+
+### Formato de report específico
+
+**Fechar artefato (Fluxo FECHAR ARTEFATO):**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Artefato indexado em: [caminho do índice de área]
+Wiki-links adicionados: [lista ou "nenhum"]
+Grafo validado conforme regra 7.18
+
+ARQUIVOS:
+  - modificado: "[caminho do índice de área]"
+  - modificado: "[caminho do artefato]" (se wiki-links foram adicionados)
+---END-REPORT---
+```
+
+**Tipo de artefato sem índice de área (ex: pesquisa):**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Tipo de artefato "pesquisa" não requer indexação pelo Bibliotecário.
+Nenhuma alteração realizada.
+
+ARQUIVOS:
+(nenhum)
+---END-REPORT---
+```
+
+---
+
 ## 8. Memórias e Histórico
 
 ## Memórias
@@ -307,3 +446,4 @@ Peça ao Maestro: "[comando sugerido]"
 | Data | Versão | Alteração |
 |------|--------|-----------|
 | 2026-04-09 | v1.0 | Criação do Agente Bibliotecário — scaffold, status, detecção de material |
+| 2026-04-17 | v1.1 | Fluxo FECHAR ARTEFATO (indexação em área + validação de grafo) + Protocolo Agent() |
