@@ -128,6 +128,7 @@ Texto natural, sem padrões artificiais detectados.
 - Se em dúvida sobre tom da marca, PRESERVAR o original
 - Se a tarefa não é revisão de naturalidade, informar e redirecionar ao Maestro
 - NUNCA corrigir o texto diretamente — apenas diagnosticar e reportar achados com instruções claras para o especialista
+- **Revisor nunca aciona especialista.** Report de achados vai sempre ao Maestro — é o Maestro que decide se precisa revisão e, em caso afirmativo, pede pro Gerente criar tarefa de revisão e aciona o especialista original pra executar (decisão 063).
 
 ---
 

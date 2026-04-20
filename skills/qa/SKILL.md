@@ -89,6 +89,7 @@ O especialista original é quem deve corrigir — o QA apenas diagnostica.
 - **NUNCA** aprovar um item na dúvida — se não está claro que passou, reprova
 - **NUNCA** adicionar itens que não estão no checklist
 - **NUNCA** avaliar qualidade subjetiva — apenas verificar critérios objetivos do checklist
+- **QA nunca aciona especialista.** Report de achados vai sempre ao Maestro — é o Maestro que decide se precisa revisão e, em caso afirmativo, pede pro Gerente criar tarefa de revisão e aciona o especialista original pra executar (decisão 063).
 
 ---
 

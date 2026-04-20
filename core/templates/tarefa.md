@@ -2,12 +2,14 @@
 titulo: "[PREENCHER]"
 tipo: tarefa
 agente: "[PREENCHER]"
-categoria: "[identidade|copy|estrategia|midias|performance|pesquisa|biblioteca|revisao|geral]"
+categoria: "[identidade|copy|estrategia|midias|performance|pesquisa|biblioteca|revisao|validacao-plano|geral]"
 status: em-andamento
 bloqueada-por: []
 grupo: "[PREENCHER]"
 prioridade: media
 solicitante: "[PREENCHER]"
+parte-de: ~                           # wiki-link do plano (~ em tarefa atômica)
+adicionada-em: ~                      # timestamp ISO 8601 quando adicionada pós-aprovação do plano; ~ em tarefas criadas junto do plano
 data-criacao: "[PREENCHER — YYYY-MM-DDTHH:MM:SS]"
 data-inicio: "[PREENCHER — YYYY-MM-DDTHH:MM:SS]"
 data-conclusao: ~
@@ -20,9 +22,13 @@ tags:
 
 [Briefing que o especialista vai ler — objetivo, contexto e critérios de sucesso]
 
-## Checklist
+## Sub-tarefas
 
-[Preenchido pelo Gerente com base na categoria]
+[Preenchido pelo especialista no início da execução — dinâmico, específico ao pedido]
+
+## Validações
+
+[Fixo por categoria — carregado pelo Gerente com base na categoria, sem filtro]
 
 ## Dependências
 

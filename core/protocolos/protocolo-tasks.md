@@ -15,6 +15,18 @@ Dar ao usuário feedback visual de progresso durante a execução de qualquer ag
 
 ---
 
+## Coexistência com o Protocolo de Sub-tarefas
+
+Este protocolo cobre **tasks visuais gerais** (ex: Gerente mostrando progresso ao criar um lote de tarefas: "Criar tarefa 1/8, 2/8..."). É um uso **diferente e complementar** ao Protocolo de Sub-tarefas (`protocolo-sub-tarefas.md`), que cobre as **sub-tarefas dinâmicas dos especialistas** durante a execução de uma tarefa.
+
+Os dois usos convivem no mesmo TodoWrite da sessão sem conflito:
+- Tasks visuais gerais: criadas por agentes operacionais (Gerente, Bibliotecário) pra mostrar progresso de operações em lote.
+- Sub-tarefas dinâmicas: criadas pelos especialistas durante a execução, conforme o Protocolo de Sub-tarefas.
+
+Ambos seguem a convenção de higiene ao final (marcar completed ou deleted).
+
+---
+
 ## Regras
 
 ### 1. Sempre criar tasks

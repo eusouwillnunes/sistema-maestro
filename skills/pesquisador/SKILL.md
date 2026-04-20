@@ -352,6 +352,28 @@ Ao iniciar a execução, crie tasks visuais de progresso seguindo o `core/protoc
 2. **Aplique imediatamente** na mesma conversa.
 3. **Confirme ao usuário** o que foi registrado.
 
+### Protocolo de Sub-tarefas
+
+Ao executar qualquer tarefa, siga o protocolo definido em `core/protocolos/protocolo-sub-tarefas.md`. Resumo operacional:
+
+1. Após carregar contexto (Mapa de Necessidades), gere sub-tarefas dinâmicas e específicas (tipicamente 3-8; permitido 1-2 em trabalho indivisível).
+2. Grave as sub-tarefas na seção "Sub-tarefas" do arquivo da tarefa via `Edit` e crie as mesmas entradas no TodoWrite via `TaskCreate`.
+3. Execute marcando em tempo real: `TaskUpdate(in_progress)` → Edit do arquivo marcando `[x]` → `TaskUpdate(completed)`. **Ordem obrigatória:** arquivo antes do TodoWrite.
+4. Anotação opcional ao marcar `[x]` quando houve decisão não-óbvia.
+5. Ao finalizar a tarefa, faça `TaskUpdate(deleted)` nas próprias sub-tarefas (higiene).
+6. Em caso de retomada de sessão ou falha no meio, siga as seções 4 e 5 do protocolo.
+
+**Nota específica pro Pesquisador (integração com decisão 050).**
+
+Sub-tarefas dinâmicas rodam DURANTE o **Protocolo de Entrega**, especificamente na Etapa 2 (gerar documento). Exemplos típicos de sub-tarefas do Pesquisador:
+
+- "Consultar fonte A (livro/artigo/base de dados)"
+- "Consolidar tema B a partir das fontes X, Y, Z"
+- "Verificar fato C com cross-check entre 3 fontes"
+- "Sintetizar insights da seção D"
+
+O **Protocolo de Encomenda** (clarificar objetivo, consultar existentes, perguntar modo básico/avançado se necessário, confirmar escopo) permanece como pré-execução — **não gera sub-tarefas no TodoWrite**. Sub-tarefas só aparecem depois que o escopo está confirmado e a pesquisa efetiva começa.
+
 ---
 
 ## 8. Checklist de Validação

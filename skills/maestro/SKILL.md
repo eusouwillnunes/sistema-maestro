@@ -173,6 +173,15 @@ Quando a solicitação envolve funcionalidades internas do Maestro, consultar a 
 
 ## 5. Fluxo de Execução
 
+### Classificação atômico vs plano
+
+Antes de acionar Gerente, classifique o pedido:
+
+- **Atômico** = 1 documento a produzir, sem dependências entre partes. Exemplos: "me escreve uma headline", "faz um círculo dourado", "crie uma pesquisa sobre X". → Acione Gerente com `FLUXO: criar-tarefa`.
+- **Composto** = 2+ documentos, OU há dependências entre entregas. Exemplos: "monte a campanha completa de X", "preenche minha biblioteca", "prepara meu lançamento". → Acione Gerente com `FLUXO: criar-plano`.
+
+Na dúvida, pergunte ao usuário via `AskUserQuestion` com opções "1 entrega só" / "Várias entregas coordenadas".
+
 ### 5.1 Fluxo padrão (tarefa simples)
 
 **Preparação (antes do passo 1):** analisar, rotear, identificar produto/projeto, carregar memórias, carregar contexto de marca (seções 2.3, 4, 5 deste hub). Estas etapas continuam como antes.
@@ -259,6 +268,90 @@ Acionado quando o Gerente reporta `NEEDS_CONTEXT` com motivo "tipo desconhecido"
 5. Se "criar padrão novo": Maestro faz 2 perguntas adicionais (pasta, naming), passa pro Bibliotecário que salva em `~/.maestro/templates/artefatos/[X].md`. Maestro re-despacha o Gerente com o tipo novo.
 6. Se "cancelar": Maestro aborta a tarefa e comunica ao usuário.
 
+### 5.6 Plan mode nativo (ExitPlanMode)
+
+Só o Maestro (hub) chama `ExitPlanMode`. Gerente, especialistas, QA e Revisor **jamais** chamam.
+
+Três momentos de uso:
+
+1. **Aprovação de plano novo** (Fluxo 4 do Gerente retorna com `PLANO-CRIADO` e `RESUMO-PRO-PLAN-MODE`):
+   - Passe `RESUMO-PRO-PLAN-MODE` direto pro `ExitPlanMode` (já vem formatado).
+   - Se aprovado → acione Gerente com `FLUXO: materializar-plano`.
+   - Se rejeitado → acione Gerente pra marcar plano como `rejeitado` e registrar no Histórico.
+
+2. **Aprovação de plano de correção** (Fluxo 8 do Gerente): idem ao 1.
+
+3. **Aprovação de adição de 2+ tarefas pós-aprovação** (Fluxo 9 fase A do Gerente):
+   - Passe a tabela de tarefas propostas + impactos pro `ExitPlanMode`.
+   - Se aprovado → acione Gerente com `FLUXO: adicionar-pos-aprovacao` fase B.
+   - Se 1 tarefa só, use `AskUserQuestion` em vez de Plan mode.
+
+**Fallback:** se `ExitPlanMode` falhar em alguma versão do Claude Code, substitua por `AskUserQuestion` com opções "Aprovar" / "Rejeitar". Nada mais muda.
+
+### 5.7 Paralelização
+
+Duas regras nativas:
+
+1. **QA + Revisor em paralelo.** Após qualquer entrega de especialista, dispare QA e Revisor no MESMO turn (dois Agent() simultâneos). Aguarde os dois reports. Consolidar depois.
+
+2. **Tarefas independentes em paralelo, em batches de 3-4.** Num plano, identifique tarefas sem dependência comum. Dispare até 4 especialistas no mesmo turn. **Aguarde o batch completo** antes de avançar (especialista rápido fica parado até o mais lento terminar — simplicidade primeiro). Streaming (disparar QA+Revisor assim que um especialista termina) é otimização futura; só se virar gargalo real.
+
+### 5.8 Orquestração da validação final do plano
+
+Quando o Gerente reporta (via fusão A do Fluxo 2) que o plano está `aguardando-validacao` e uma tarefa de validação foi criada:
+
+1. ⛔ **Ponto de decisão obrigatório.** Não pule este passo pra "ganhar velocidade". Pular é antipadrão documentado em `docs/bugs.md` (zona de skip). A decisão pertence exclusivamente ao Maestro — nenhum outro agente decide aqui (decisão 063).
+
+2. Gere o **"resumo de entregas" mecânico**:
+   - Tabela de wiki-links: `| # | Tarefa | Agente | Entrega |`.
+   - Preencha com títulos das tarefas + wiki-links dos artefatos produzidos.
+   - **Zero síntese ou descrição inventada** (respeita decisão 044). Apenas indexação.
+
+3. Apresente ao usuário:
+   - Mensagem: "O plano [X] foi concluído. Entregas:"
+   - Tabela do passo 2.
+   - `AskUserQuestion` com 3 opções: "Aprovar tudo" / "Solicitar ajustes" / "Pedir esclarecimento".
+
+4. ⛔ **Ponto de decisão obrigatório após resposta do usuário.** Não pule este passo pra "ganhar velocidade". Pular é antipadrão documentado em `docs/bugs.md` (zona de skip). A decisão pertence exclusivamente ao Maestro — nenhum outro agente decide aqui (decisão 063).
+
+   a. **Aprovar tudo:** acione Gerente com `FLUXO: concluir-tarefa` pra tarefa de validação. Fusão B do Fluxo 2 conclui o plano automaticamente.
+
+   b. **Solicitar ajustes:**
+      - Abra `AskUserQuestion` com `multiSelect: true`: "Selecione as tarefas que precisam de ajuste:" — opções são os títulos das tarefas do plano.
+      - Pra cada tarefa marcada, pergunte em texto livre: "O que precisa ajustar em [título]?"
+      - Consolide o feedback num documento temporário estruturado (por tarefa).
+      - Acione Gerente com `FLUXO: criar-plano-correcao` passando caminho do plano original e feedback consolidado.
+      - Quando Gerente retorna com `PLANO-CRIADO`, abra `ExitPlanMode` — ciclo normal de plano.
+
+   c. **Pedir esclarecimento:** conversa livre com o usuário até ele decidir aprovar ou ajustar. Depois, volte ao passo 3.
+
+**Ao apresentar "plano de correção" ao usuário**, use termos menos punitivos: "plano de ajustes", "rodada de ajustes", "rodada de refinamento". Internamente (frontmatter, nome de arquivo) mantém "plano-correcao".
+
+### 5.9 Reabertura de planos concluídos
+
+Quando o usuário pede revisão de plano já `concluido`:
+
+1. Calcule o delta entre `data-conclusao` do plano e a data atual.
+
+2. **Se ≤ 30 dias:**
+   - Reabertura automática. Acione Gerente com `FLUXO: criar-plano-correcao`.
+   - Plano original volta pra `aguardando-validacao` temporariamente até o novo ciclo concluir.
+
+3. **Se > 30 dias:**
+   - ⛔ **Ponto de decisão obrigatório.** Não pule este passo pra "ganhar velocidade". Pular é antipadrão documentado em `docs/bugs.md` (zona de skip). A decisão pertence exclusivamente ao Maestro — nenhum outro agente decide aqui (decisão 063).
+   - Abra `AskUserQuestion`: "O plano X foi concluído há N dias. Como prefere seguir?" — opções: "Reabrir com rodada de ajustes" / "Criar tarefa avulsa (sem plano)" / "Cancelar".
+   - Encaminhe conforme a escolha.
+
+### Sugestão após 2ª rejeição consecutiva
+
+Se a cadeia do plano original acumulou **duas rejeições de validação consecutivas** (usuário rejeitou plano de correção 2 vezes):
+
+1. Antes de disparar o 3º plano de correção, abra `AskUserQuestion`:
+   - "Já foram duas rodadas de ajustes rejeitadas. Quer conversar antes da próxima?"
+   - Opções: "Conversar primeiro" / "Criar nova rodada direto".
+
+2. Se "Conversar primeiro": dialogue com o usuário pra entender o que está desalinhado antes de disparar o Gerente. Análogo à regra de "3ª rodada cai pro usuário" do ciclo QA+Revisor.
+
 ---
 
 ## 6. Ciclo de Validação Autônomo
@@ -277,7 +370,7 @@ Todo conteúdo textual que o usuário vai ler passa por este ciclo antes de ser 
    - Bloco TAREFA: o resultado produzido pelo especialista
    - Bloco CONTEXTO: o checklist específico do agente que executou + o checklist global (seção 7 das Regras Globais)
    - Bloco REGRAS: instruções do protocolo
-3. Extrair o report do QA:
+3. ⛔ **Ponto de decisão obrigatório.** Não pule este passo pra "ganhar velocidade". Pular é antipadrão documentado em `docs/bugs.md` (zona de skip). A decisão pertence exclusivamente ao Maestro — nenhum outro agente decide aqui (decisão 063). Extrair o report do QA:
    - `STATUS: DONE` → QA aprovou. Prosseguir para Etapa 2.
    - `STATUS: DONE_WITH_CONCERNS` → QA reprovou. Ler CONCERNS para feedback.
 4. **Se QA reprovou:**

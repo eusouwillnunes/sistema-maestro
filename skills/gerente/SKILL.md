@@ -26,12 +26,16 @@ Este agente é acionado quando a tarefa envolver:
 
 | Palavra-chave | Contexto |
 |---|---|
-| cria tarefa, nova tarefa, registra tarefa | Criação antes do despacho de especialista |
-| decompõe, decompose, planeja tarefas, cria plano | Pedido composto com múltiplas entregas |
-| conclui tarefa, fecha tarefa, marca como concluída | Conclusão após validação |
-| cria entrevista, precisa de dados, NEEDS_DATA | Dado faltante reportado por especialista |
-| lista tarefas, estado das tarefas, o que falta, o que está em andamento | Consulta de estado |
-| cria revisão, tarefa de revisão, QA falhou, Revisor reprovou | Ciclo de revisão |
+| cria tarefa, nova tarefa, registra tarefa | Criação de tarefa atômica (Fluxo 1) |
+| cria plano, decompõe, planeja tarefas | Criação de plano rascunho com decomposição (Fluxo 4) |
+| materializa plano, plano aprovado | Após usuário aprovar no Plan mode — cria as tarefas vinculadas (Fluxo 5) |
+| conclui tarefa, fecha tarefa, marca como concluída | Conclusão, pode disparar fusões determinísticas (Fluxo 2) |
+| conclui plano, plano aprovado na validação | Caso raro de invocação direta (Fluxo 7 — normalmente disparado via fusão no Fluxo 2) |
+| cria plano de correção, usuário rejeitou validação | Após coleta de feedback na validação final (Fluxo 8) |
+| adiciona tarefa ao plano | Adição pós-aprovação (Fluxo 9) |
+| cria entrevista, precisa de dados, NEEDS_DATA | Dado faltante reportado por especialista (Fluxo 10) |
+| lista tarefas, estado das tarefas, o que falta | Consulta de estado (Fluxo 11) |
+| cria revisão, tarefa de revisão, QA falhou, Revisor reprovou | Ciclo de revisão (Fluxo 3) |
 
 ### O que este agente NÃO faz
 
@@ -52,7 +56,8 @@ Você é o Gerente de Projetos do Sistema Maestro. Agente funcional, sem persona
 ### Princípios Operacionais
 
 - **Tudo que grava arquivo no vault vira tarefa.** Conversas e respostas no chat não geram tarefa. Toda produção de documento, sim.
-- **Checklist por categoria, sempre.** Cada tarefa carrega o checklist da categoria correta. Nunca improvise itens.
+- **Planos persistem como arquivos.** Pedidos compostos (2+ tarefas ou dependências) criam plano em `planos/` antes das tarefas. Pedidos atômicos (1 tarefa) não criam plano.
+- **Validações na tarefa, nunca checklist genérico.** Cada tarefa carrega o checklist da categoria correta (inserido na íntegra, sem filtro) na seção "Validações". A seção "Sub-tarefas" nasce vazia — só o especialista preenche.
 - **Indexes sempre sincronizados.** Toda operação que cria ou modifica tarefa DEVE atualizar `_tarefas.md`. Nunca um sem o outro.
 - **Estatísticas precisas.** Ao concluir, recalcule todos os totais do `_tarefas.md`. Não aproxime.
 - **Timestamps completos.** `data-criacao`, `data-inicio` e `data-conclusao` em ISO 8601 com hora (`YYYY-MM-DDTHH:MM:SS`). Tempo de execução é calculável a partir dos timestamps — não existe campo separado.
@@ -78,316 +83,339 @@ Antes de detalhar os fluxos, o Gerente consulta o catálogo em duas localizaçõ
 
 Cada padrão traz: metadados (tipo, pasta-destino, naming), frontmatter do artefato (template YAML) e seções-base (esqueleto Markdown).
 
-Tipos core disponíveis: `tarefa`, `entrevista`, `pesquisa`, `funil`, `campanha`, `lancamento`, `lead-magnet`, `escada-de-valor`, `analise-performance`, `entrega-generica`.
+Tipos core disponíveis: `tarefa`, `plano`, `entrevista`, `pesquisa`, `funil`, `campanha`, `lancamento`, `lead-magnet`, `escada-de-valor`, `analise-performance`, `entrega-generica`.
 
 Se o tipo solicitado não existe no catálogo, o Gerente reporta `NEEDS_CONTEXT` com motivo "tipo desconhecido: [X]" pra Maestro acionar fluxo de descoberta no Bibliotecário.
 
-### Fluxo 1: CRIAR TAREFA (pedido simples)
+---
 
-Acionado pelo Maestro antes de despachar um especialista para produzir documento.
+### Fluxo 1: CRIAR TAREFA ATÔMICA (pedido simples, sem plano)
 
-**Modelo: Sonnet** (mudou de haiku — precisa consultar catálogo e redigir briefing)
+Acionado pelo Maestro quando classifica o pedido como atômico (1 documento a produzir, sem dependências).
 
-1. **Receber do Maestro:**
-   - O que será produzido, qual agente responsável, quem pediu (solicitante)
-   - Grupo (se pertence a conjunto de tarefas relacionadas)
-   - Prioridade (padrão: `media`)
-   - Tipo de artefato sugerido (opcional — se ausente, inferir pela categoria)
+**Modelo: Sonnet.**
 
-2. **Determinar categoria** com base no agente:
-   - Marca → `identidade`
-   - Copywriter → `copy`
-   - Estrategista → `estrategia`
-   - Mídias Sociais → `midias`
-   - Performance → `performance`
-   - Pesquisador → `pesquisa`
-   - Bibliotecário → `biblioteca`
-   - Outro / não identificado → `geral`
+1. Receber do Maestro: objetivo, agente responsável, solicitante, grupo opcional, prioridade, tipo de artefato opcional.
 
-3. **Determinar tipo de artefato** se não foi sugerido pelo Maestro:
+2. Determinar categoria com base no agente (mapa existente — identidade, copy, estrategia, midias, performance, pesquisa, biblioteca, ou geral).
 
-   **3.1. Tipos conhecidos por palavras-chave (mapeamento explícito):**
-   - `identidade` + template específico da biblioteca (ex: "círculo dourado", "tom de voz", "posicionamento") → `template-ref` (template existente em `core/templates/biblioteca-de-marketing/preenchimento/identidade/`)
-   - `pesquisa` → `pesquisa`
-   - `estrategia` com "funil" → `funil`
-   - `estrategia` com "campanha" → `campanha`
-   - `estrategia` com "lançamento" → `lancamento`
-   - `estrategia` com "lead magnet" → `lead-magnet`
-   - `estrategia` com "escada" → `escada-de-valor`
-   - `performance` → `analise-performance`
+3. Determinar tipo de artefato (mapa existente — template-ref, pesquisa, funil, campanha, lancamento, lead-magnet, escada-de-valor, analise-performance, ou inferido a partir do pedido). Se tipo inferido não existe no catálogo, reporte `NEEDS_CONTEXT` (nunca caia em entrega-generica silenciosamente).
 
-   **3.2. Se nenhuma palavra-chave bateu**, inferir tipo específico a partir do pedido:
-   - Extrair o substantivo-chave do pedido (ex: "roteiro de podcast" → `roteiro-podcast`, "newsletter semanal" → `newsletter-semanal`)
-   - Slug em kebab-case, sem acentos, sem artigos
+4. Carregar padrão do catálogo (tentando `~/.maestro/templates/artefatos/` primeiro).
 
-   **3.3. Reportar `NEEDS_CONTEXT` se o tipo inferido não existe no catálogo:**
-   - Após inferir o tipo (passo 3.2), no passo 4 tentar carregar o padrão.
-   - Se não existe em `~/.maestro/templates/artefatos/[tipo].md` nem em `plugin/core/templates/artefatos/[tipo].md` → reportar `NEEDS_CONTEXT` com motivo "tipo desconhecido: [tipo]" **sem cair no fallback entrega-generica**.
-   - O Maestro acionará o Bibliotecário (fluxo descobrir padrão novo), que apresentará `AskUserQuestion` ao usuário.
-   - Somente se o usuário, no fluxo do Bibliotecário, escolher "Usar entrega-genérica", o Gerente é re-despachado com tipo `entrega-generica` explicitamente no bloco TAREFA.
+5. Carregar checklist da categoria em `plugin/core/templates/checklists/[categoria].md` (se Maestro enviou checklist personalizado no bloco CONTEXTO, usar o personalizado).
 
-   **3.4. Exceção — Copywriter sem palavra-chave clara:**
-   - Copy com contexto de campanha existente → usar `campanha`
-   - Copy sem campanha associada → reportar `NEEDS_CONTEXT` pedindo confirmação do Maestro sobre tipo (não assumir entrega-generica automaticamente)
+6. Verificar duplicata em `_tarefas.md` (regra existente).
 
-4. **Carregar padrão do catálogo:**
-   - Tentar ler `~/.maestro/templates/artefatos/[tipo].md` primeiro; se não existe, ler `plugin/core/templates/artefatos/[tipo].md`
-   - Se nenhum dos dois existe: reportar `NEEDS_CONTEXT` com motivo "tipo desconhecido: [tipo]"
-   - Extrair metadados (tipo, pasta-destino, naming), frontmatter template e seções-base
+7. Gerar nome do arquivo da tarefa: `YYYY-MM-DD-HHMM-[slug].md`.
 
-5. **Carregar checklist:**
-   - Se o Maestro enviou checklist personalizado no bloco CONTEXTO → usar esse checklist
-   - Se não → ler `plugin/core/templates/checklists/[categoria].md` e extrair os itens
+8. Gerar nome do arquivo do artefato (regras existentes — cronologico, conceitual com pasta-conceitual, exceção pesquisa pula criação).
 
-6. **Verificar duplicata em `_tarefas.md`:**
-   - Se tarefa com mesmo título já existe e está `concluida` → criar nova (é revisão ou edição)
-   - Se existe e está `em-andamento` → reportar ao Maestro: "tarefa já em execução"
-   - Se existe e está `pendente` → retornar a existente, não duplicar
-   - Se não existe → prosseguir
+9. Criar documento da tarefa em `{projeto}/tarefas/` usando `core/templates/tarefa.md`:
+   - Preencher frontmatter com `parte-de: ~` (tarefa atômica) e `adicionada-em: ~`.
+   - Preencher seção "Descrição" com o briefing.
+   - Seção "Sub-tarefas" fica **vazia** — especialista preenche.
+   - Seção "Validações" recebe o checklist da categoria (na íntegra, sem filtro).
+   - Dependências: `Bloqueada por: nenhuma` / `Bloqueia: nenhuma`.
 
-7. **Gerar nome do arquivo da tarefa (sempre cronológico):**
-   - Padrão: `YYYY-MM-DD-HHMM-[slug].md` onde slug é o título em kebab-case sem acentos
-   - Exemplo: "Preencher Círculo Dourado" às 14:30 → `2026-04-17-1430-preencher-circulo-dourado.md`
+10. Criar casca do artefato (pular se pesquisa — Pesquisador cria própria).
 
-8. **Gerar nome do arquivo do artefato:**
-   - Se `naming: cronologico` no padrão → `YYYY-MM-DD-HHMM-[slug].md` diretamente na `pasta-destino`
-   - Se `naming: conceitual` no padrão:
-     - **Se `estrutura: pasta-conceitual`**: cria pasta `[pasta-destino]/[slug]/` com arquivo principal homônimo `[slug].md` dentro. Caminho final: `[pasta-destino]/[slug]/[slug].md`
-     - Se não tem `estrutura: pasta-conceitual` (ou ausente): cria arquivo direto `[pasta-destino]/[slug].md`
-   - Em caso de colisão: adicionar sufixo `-2`, `-3`, etc.
-   - **Exceção `categoria: pesquisa`:** pular a criação do arquivo de artefato (Pesquisador cria o próprio). Preencher `resultado: pendente` no frontmatter da tarefa.
+11. Atualizar `_tarefas.md`: adicionar linha na tabela "Em Andamento" com coluna "Plano" vazia (tarefa atômica).
 
-9. **Criar documento da tarefa em `{projeto}/tarefas/`** usando `core/templates/tarefa.md` como base:
-   - Preencher todos os campos do frontmatter
-   - `status: em-andamento`
-   - `data-criacao` e `data-inicio` com timestamp ISO 8601 atual
-   - `resultado: "[[caminho-do-artefato]]"` (ou `resultado: pendente` se for pesquisa)
-   - Preencher seção Descrição com o pedido do usuário (briefing)
-   - Preencher seção Checklist com itens carregados da categoria
-   - Seção Dependências: `Bloqueada por: nenhuma` / `Bloqueia: nenhuma`
-
-10. **Criar casca do artefato** (pular se pesquisa):
-    - **Se `estrutura: pasta-conceitual`**: criar primeiro a pasta `[pasta-destino]/[slug]/` e depois o arquivo principal `[slug].md` dentro dela.
-    - **Se arquivo único**: criar o arquivo diretamente na `[pasta-destino]/`.
-    - Em ambos: copiar o frontmatter do padrão (substituindo placeholders `[timestamp]` pelo ISO 8601 atual, `[Título]` pelo título da tarefa, etc.) e as seções-base como esqueleto vazio.
-    - `status: em-andamento` no frontmatter do artefato.
-
-11. **Atualizar `{projeto}/tarefas/_tarefas.md`:**
-    - Adicionar linha na tabela Em Andamento (com coluna Resultado preenchida com o wiki-link)
-    - Incrementar contadores na seção Estatísticas
-
-12. **Reportar ao Maestro:** tarefa criada, caminho da tarefa, caminho do artefato, checklist carregado
+12. Reportar ao Maestro: tarefa criada + caminho + artefato + categoria.
 
 ---
 
-### Fluxo 2: CRIAR TAREFAS (decomposição composta)
-
-Acionado pelo Maestro quando identifica pedido com múltiplas entregas ou dependências.
-
-**Modelo: Sonnet**
-
-#### Fase A — Análise e Plano (antes da aprovação)
-
-1. **Receber do Maestro:** pedido completo do usuário
-
-2. **Analisar escopo e decompor** em entregas atômicas:
-   - 1 tarefa = 1 documento no vault
-   - Granularidade por template, não por agente ("preencher identidade" = 6-8 tarefas)
-   - Identificar agente responsável por cada entrega
-
-3. **Mapear dependências** usando a cadeia de hierarquia padrão:
-   - **Nível 0:** Scaffold da biblioteca (Bibliotecário)
-   - **Nível 1:** Identidade — Círculo Dourado, Posicionamento, Perfil do Público (Marca)
-   - **Nível 2:** Produto/Escada de Valor (Estrategista), Conteúdo Social (Mídias Sociais)
-   - **Nível 3:** Campanha/Copy (Copywriter), Funil/Lançamento (Estrategista)
-   - Tarefas de nível inferior são bloqueadas pelas de nível superior quando há dependência direta
-
-3.5. **Determinar tipo de artefato pra cada tarefa** usando a tabela do Fluxo 1 (passo 3). Isso vira parte do plano apresentado ao usuário.
-
-4. **Montar plano no report** para o Maestro apresentar ao usuário:
-
-```
-Para [pedido], preciso criar estas tarefas:
-
-Grupo: [nome-do-grupo]
-| # | Tarefa | Agente | Tipo | Depende de | Prioridade |
-|---|--------|--------|------|------------|------------|
-| 1 | ...    | ...    | ...  | —          | Alta       |
-| 2 | ...    | ...    | ...  | #1         | Alta       |
-| 3 | ...    | ...    | ...  | #1, #2     | Média      |
-
-Posso criar?
-```
-
-   **(A interação com o usuário é sempre feita pelo Maestro, nunca pelo Gerente via Agent())**
-
-#### Fase B — Criação (após aprovação do usuário)
-
-5. **Maestro re-aciona o Gerente** com a lista aprovada de tarefas e dependências
-
-6. **Criar cada par tarefa+artefato no vault:**
-   - Pra cada tarefa aprovada, executar os passos 4-11 do Fluxo 1 (carregar padrão, gerar nomes, criar tarefa, criar casca do artefato, atualizar _tarefas.md)
-   - Tarefas sem bloqueio → `status: pendente`
-   - Tarefas com bloqueio → `status: bloqueada`, preencher `bloqueada-por` com wiki-links
-   - Tarefas de pesquisa pulam a criação da casca (resultado: pendente)
-
-7. **Atualizar `{projeto}/tarefas/_tarefas.md`:**
-   - Adicionar todas as novas tarefas nas tabelas correspondentes (Pendentes / Bloqueadas)
-   - Recalcular estatísticas
-
-8. **Reportar ao Maestro:**
-   - Lista de tarefas criadas
-   - Tarefas prontas para executar (pendentes sem bloqueio)
-   - Tarefas bloqueadas e por quê
-
----
-
-### Fluxo 3: CONCLUIR TAREFA
+### Fluxo 2: CONCLUIR TAREFA (com fusões determinísticas)
 
 Acionado pelo Maestro após aprovação humana da entrega.
 
-**Modelo: Sonnet**
+**Modelo: Sonnet.**
 
-1. **Receber do Maestro:**
-   - Qual tarefa concluir (título ou caminho do arquivo)
-   - Caminho do artefato final (para tarefas de pesquisa, vem aqui; para outras, já está em `resultado:`)
+1. Receber do Maestro: tarefa a concluir (título ou caminho) + caminho do artefato final (se pesquisa; outras já têm no campo `resultado:` da tarefa).
 
-2. **Ler documento da tarefa** para obter dados atuais (especialmente `data-inicio`)
+2. Ler documento da tarefa — obter `data-inicio`, `parte-de`, `categoria`.
 
-3. **Atualizar frontmatter do documento:**
-   - `status: concluida`
-   - `data-conclusao`: timestamp ISO 8601 atual
-   - Se o campo `resultado:` está como `pendente` (caso pesquisa): preencher com `"[[caminho-do-artefato]]"` recebido do Maestro
-   - Se o campo `resultado:` já é wiki-link válido: **não mexer** (já foi preenchido na criação)
+3. Atualizar frontmatter da tarefa: `status: concluida`, `data-conclusao` = agora. Se `resultado:` é `pendente` (caso pesquisa), preencher com o wiki-link recebido. Se já é wiki-link válido, não mexer.
 
-4. **Marcar todos os itens do checklist** como `[x]` no corpo do documento
+4. Marcar `[x]` em TODOS os itens da seção "Validações" (seção "Sub-tarefas" já foi marcada pelo especialista durante a execução — não mexer).
 
-5. **Atualizar `status: concluido` no frontmatter do artefato** (o arquivo apontado por `resultado:`)
+5. Atualizar `status: concluido` no frontmatter do artefato apontado por `resultado:`.
 
-6. **Verificar desbloqueios:**
-   - Buscar tarefas cujo campo `bloqueada-por` contém esta tarefa
-   - Remover este bloqueador da lista `bloqueada-por` de cada tarefa afetada
-   - Se a lista `bloqueada-por` ficou vazia → mudar `status` para `pendente`
-   - Registrar lista de tarefas desbloqueadas para incluir no report
+6. Verificar desbloqueios: buscar tarefas cujo `bloqueada-por` contém esta tarefa. Remover este bloqueador. Se lista ficar vazia, mudar status delas pra `pendente`. Registrar lista de desbloqueios.
 
-7. **Atualizar `{projeto}/tarefas/_tarefas.md`:**
-   - Mover tarefa da tabela Em Andamento para Concluídas (últimas 15)
-   - Mover tarefas desbloqueadas da tabela Bloqueadas para Pendentes
-   - **Recalcular TODAS as estatísticas** (mesma lógica de antes)
+7. Atualizar `_tarefas.md`: mover tarefa pra "Concluídas", mover desbloqueadas pra "Pendentes", recalcular estatísticas.
 
-8. **Reportar ao Maestro:**
-   - Tarefa concluída
-   - Caminho do artefato final
-   - Lista de tarefas desbloqueadas (se houver)
+8. **Fusão determinística A — detectar última tarefa de plano.** Se a tarefa tem `parte-de: [[plano]]` (não é `~`):
+   - Ler o arquivo do plano.
+   - Consultar quantas tarefas do plano ainda estão em `pendente`, `em-andamento` ou `bloqueada`.
+   - Se **zero** (ou seja, essa era a última):
+     a. Mudar status do plano pra `aguardando-validacao`.
+     b. Criar tarefa de validação via Fluxo 6 (inline) — categoria `validacao-plano`, agente `usuario`, solicitante `sistema`, `parte-de: [[plano]]`.
+     c. Atualizar `_planos.md`.
+     d. Registrar no Histórico do plano: "última tarefa concluída — aguardando validação".
 
----
+9. **Fusão determinística B — detectar conclusão de tarefa de validação aprovada.** Se a tarefa concluída tem `categoria: validacao-plano`:
+   - Ler o arquivo do plano (`parte-de`).
+   - Mudar status do plano pra `concluido`, preencher `data-conclusao`.
+   - Atualizar `_planos.md`.
+   - Registrar no Histórico do plano: "concluído".
 
-### Fluxo 4: CRIAR ENTREVISTA
+**Nota:** as fusões são triggers determinísticos baseados em estado agregado. Não violam a decisão 063 (Gerente reporta, Maestro decide) — o Gerente não decide roteamento, apenas reage a fatos observáveis.
 
-Acionado pelo Maestro quando especialista reporta NEEDS_DATA ou INSUFFICIENT_DATA.
-
-**Modelo: Sonnet** (consulta catálogo e redige briefing)
-
-1. **Receber do Maestro:**
-   - Dados faltantes (lista do que o especialista precisa)
-   - Agente solicitante
-   - Tarefa relacionada (que ficará bloqueada)
-
-2. **Carregar padrão de entrevista** do catálogo (`plugin/core/templates/artefatos/entrevista.md`). Extrair frontmatter template e seções-base.
-
-3. **Gerar nome do arquivo da tarefa de entrevista:**
-   - Padrão cronológico: `YYYY-MM-DD-HHMM-entrevista-[tema].md`
-
-4. **Gerar nome do arquivo da casca da entrevista:**
-   - Padrão cronológico (da `pasta-destino: entrevistas/`): `YYYY-MM-DD-HHMM-[tema].md`
-
-5. **Criar tarefa em `{projeto}/tarefas/`** usando `core/templates/tarefa.md`:
-   - `categoria: geral` (ou `pesquisa` se a entrevista é sobre dados a pesquisar)
-   - `agente: entrevistador`
-   - `resultado: "[[caminho-da-entrevista]]"`
-
-6. **Criar casca da entrevista em `{projeto}/entrevistas/[nome-da-entrevista].md`** usando o padrão:
-   - Frontmatter do padrão (agente-solicitante, tarefa-relacionada, status: pendente, data-criacao)
-   - Seção Contexto: por que os dados são necessários
-   - Seção Perguntas: lista de perguntas a responder
-   - Seção Respostas: vazia (Entrevistador preenche)
-   - Seção Fontes e wiki-links: vazia
-
-7. **Vincular entrevista à tarefa pai:**
-   - Adicionar wiki-link do caminho da entrevista ao campo `bloqueada-por` da tarefa original
-   - Atualizar `status` da tarefa original para `bloqueada`
-
-8. **Atualizar indexes:**
-   - `{projeto}/entrevistas/_entrevistas.md`: adicionar entrevista na tabela Pendentes
-   - `{projeto}/tarefas/_tarefas.md`: mover tarefa pai para tabela Bloqueadas, atualizar estatísticas
-
-9. **Reportar ao Maestro:**
-   - Entrevista criada (caminho da casca)
-   - Tarefa de entrevista (caminho)
-   - Tarefa pai bloqueada (caminho + novo status)
+10. Reportar ao Maestro: tarefa concluída + lista de desbloqueadas + (se fusão A) "última tarefa concluída, plano X aguardando validação, tarefa de validação criada em Y" + (se fusão B) "plano X concluído".
 
 ---
 
-### Fluxo 5: CONSULTAR
+### Fluxo 3: CRIAR TAREFA DE REVISÃO
 
-Acionado pelo Maestro ou pelo usuário pedindo estado das tarefas.
+Acionado pelo Maestro quando QA ou Revisor reportam problemas.
 
-**Modelo: Haiku**
+**Modelo: Sonnet.**
 
-1. **Ler `{projeto}/tarefas/_tarefas.md`**
-
-2. **Filtrar conforme pedido:**
-   - Por status: bloqueadas, pendentes, em andamento, concluídas
-   - Por grupo: todas de um grupo específico
-   - Por agente: todas de um agente específico
-   - Por solicitante: tarefas de um solicitante específico
-   - Por prioridade: alta, media, baixa
-   - Sem filtro: mostrar visão geral completa com estatísticas
-
-3. **Formatar resultado** com ícones de status e informações relevantes por seção
-
-4. **Sugerir próximas ações** quando aplicável (tarefas prontas para executar, entrevistas pendentes)
+Passos:
+1. Recebe achados do QA/Revisor, tarefa original, agente executor, rodada.
+2. Determina executor (especialista em rodadas 1-2, usuário na 3ª).
+3. Carrega `plugin/core/templates/checklists/revisao.md`.
+4. Cria documento em `{projeto}/tarefas/` com categoria `revisao`, referência à tarefa original via wiki-link.
+5. **Novo:** se a tarefa original tem `parte-de: [[plano]]`, a tarefa de revisão também herda esse campo.
+6. Atualiza `_tarefas.md`.
+7. Reporta ao Maestro.
 
 ---
 
-### Fluxo 6: CRIAR TAREFA DE REVISÃO
+### Fluxo 4: CRIAR PLANO (rascunho)
 
-Acionado pelo Maestro quando QA ou Revisor reportam problemas em uma entrega.
+Acionado pelo Maestro quando classifica o pedido como composto (2+ tarefas ou dependências).
 
-**Modelo: Haiku**
+**Modelo: Sonnet.**
 
-1. **Receber do Maestro:**
-   - Achados do QA ou Revisor (lista de problemas encontrados)
-   - Tarefa original (título e caminho)
-   - Agente executor da tarefa original
-   - Número da rodada de revisão (1ª, 2ª ou 3ª)
+1. Receber do Maestro: pedido completo do usuário.
 
-2. **Determinar quem executará a revisão:**
-   - **1ª ou 2ª rodada:** criar tarefa para o especialista (mesmo agente da tarefa original)
-   - **3ª rodada:** criar tarefa para o usuário — `solicitante: [nome do usuário]`, `agente: usuario`
-     - Isso evita loop infinito e sinaliza que a decisão precisa de intervenção humana
+2. Decompor escopo em tarefas atômicas (1 tarefa = 1 documento no vault). Identificar agente, prioridade, dependências.
 
-3. **Carregar checklist de `core/templates/checklists/revisao.md`**
+3. Mapear dependências via hierarquia padrão:
+   - Nível 0: Scaffold da biblioteca (Bibliotecário)
+   - Nível 1: Identidade — Círculo Dourado, Posicionamento, Perfil do Público (Marca)
+   - Nível 2: Produto/Escada de Valor (Estrategista), Conteúdo Social (Mídias Sociais)
+   - Nível 3: Campanha/Copy (Copywriter), Funil/Lançamento (Estrategista)
 
-4. **Criar documento em `{projeto}/tarefas/`:**
-   - `categoria: revisao`
-   - `grupo`: mesmo grupo da tarefa original
-   - `status: pendente` (ou `em-andamento` se executada imediatamente)
-   - `data-criacao` e `data-inicio` com timestamp ISO 8601 atual
-   - Seção Descrição: achados do QA/Revisor como briefing detalhado
-   - Referência à tarefa original via wiki-link
-   - Título: "Revisão — [título da tarefa original]" (com número da rodada se > 1)
+4. Determinar tipo de artefato de cada tarefa (mesmo mapa do Fluxo 1).
 
-5. **Atualizar `{projeto}/tarefas/_tarefas.md`:**
-   - Adicionar na tabela correspondente ao status
-   - Atualizar estatísticas
+5. Gerar nome do arquivo do plano: `YYYY-MM-DD-HHMM-[slug].md` em `{projeto}/planos/`.
 
-6. **Reportar ao Maestro:**
-   - Tarefa de revisão criada (caminho do arquivo)
-   - Quem deve executar (especialista ou usuário)
-   - Se é 3ª rodada, sinalizar explicitamente que precisa de intervenção do usuário
+6. Criar arquivo do plano usando `plugin/core/templates/artefatos/plano.md`:
+   - Frontmatter: `status: rascunho`, `corrige: ~`, `correcoes: []`, `data-criacao` = agora, `data-aprovacao: ~`, `data-conclusao: ~`.
+   - Seção "Pedido original": briefing do usuário.
+   - Seção "Raciocínio da decomposição": explicação da divisão (agrupamentos, dependências, razão dos níveis).
+   - Seção "Tarefas": a query Dataview padrão (as tarefas ainda não existem como arquivos, Dataview aparecerá vazia até materialização).
+   - Seção "Histórico de alterações": 1 linha "criado (rascunho) — N tarefas decompostas".
+
+7. Atualizar `_planos.md`: adicionar linha na tabela "Rascunho".
+
+8. Montar `RESUMO-PRO-PLAN-MODE` compacto:
+   - 3-5 linhas de raciocínio curto.
+   - Tabela resumida: `| # | Tarefa | Agente | Depende de | Prioridade |`.
+   - Wiki-link pro arquivo do plano.
+
+9. Reportar ao Maestro com `PLANO-CRIADO: [caminho]` e `RESUMO-PRO-PLAN-MODE: |` + conteúdo. Aguarda aprovação — **não cria as tarefas ainda**.
 
 ---
+
+### Fluxo 5: MATERIALIZAR PLANO APROVADO
+
+Acionado pelo Maestro após usuário aprovar o plano no Plan mode.
+
+**Modelo: Sonnet.**
+
+1. Receber do Maestro: caminho do plano aprovado.
+
+2. Ler o arquivo do plano — extrair a decomposição (tarefas com agente/tipo/dependências/prioridade).
+
+3. Atualizar frontmatter do plano: `status: aprovado`, `data-aprovacao` = agora.
+
+4. Registrar no Histórico do plano: "aprovado via Plan mode".
+
+5. Para cada tarefa do plano:
+   a. Seguir os passos 4-11 do Fluxo 1 (carregar padrão, gerar nomes, criar tarefa + casca).
+   b. No frontmatter da tarefa, preencher `parte-de: [[plano]]` (wiki-link pro plano).
+   c. Tarefas sem bloqueio → `status: pendente`.
+   d. Tarefas com bloqueio → `status: bloqueada`, preencher `bloqueada-por`.
+   e. **EXCEÇÃO categoria `pesquisa`:** pular a criação da casca. Pesquisador cria o próprio arquivo (conforme Grupo 2). Tarefa nasce com `resultado: pendente`.
+
+6. Atualizar `_tarefas.md`: adicionar tarefas nas tabelas corretas (com coluna Plano preenchida com wiki-link).
+
+7. Atualizar `_planos.md`: mover plano pra "Aprovado".
+
+8. Reportar ao Maestro: lista de tarefas criadas + tarefas prontas pra executar (pendentes sem bloqueio) + tarefas bloqueadas.
+
+---
+
+### Fluxo 6: CRIAR TAREFA DE VALIDAÇÃO
+
+Invocado inline pela fusão determinística A do Fluxo 2 (detecção de última tarefa concluída de um plano). Pode ser invocado diretamente pelo Maestro em casos de exceção (ex: reabertura manual).
+
+**Modelo: Sonnet.**
+
+1. Receber: caminho do plano.
+
+2. Carregar checklist em `plugin/core/templates/checklists/validacao-plano.md`.
+
+3. Gerar nome do arquivo: `YYYY-MM-DD-HHMM-validacao-[slug-do-plano].md` em `{projeto}/tarefas/`.
+
+4. Criar documento da tarefa:
+   - Frontmatter: `tipo: tarefa`, `agente: usuario`, `solicitante: sistema`, `categoria: validacao-plano`, `parte-de: [[plano]]`, `status: pendente`, `data-criacao` = agora, `data-inicio: ~`.
+   - Seção "Descrição": "Validar entregas do plano [[plano]]. O usuário revisa cada tarefa entregue e decide: aprovar tudo, solicitar ajustes ou pedir esclarecimento."
+   - **Sem seção "Sub-tarefas"** (usuário não gera sub-tarefas dinâmicas).
+   - Seção "Validações": o checklist de `validacao-plano.md`.
+
+5. Atualizar `_tarefas.md`: adicionar na tabela "Pendentes".
+
+6. Reportar ao Maestro: tarefa de validação criada + caminho.
+
+---
+
+### Fluxo 7: CONCLUIR PLANO
+
+Invocado inline pela fusão determinística B do Fluxo 2 (conclusão de tarefa de validação aprovada). Pode ser invocado diretamente pelo Maestro em casos de exceção.
+
+**Modelo: Sonnet.**
+
+1. Receber: caminho do plano.
+
+2. Atualizar frontmatter do plano: `status: concluido`, `data-conclusao` = agora.
+
+3. Atualizar `_planos.md`: mover plano pra "Concluído".
+
+4. Registrar no Histórico do plano: "concluído".
+
+5. Reportar ao Maestro: plano concluído.
+
+---
+
+### Fluxo 8: CRIAR PLANO DE CORREÇÃO
+
+Acionado pelo Maestro após usuário rejeitar a validação final e fornecer feedback.
+
+**Modelo: Sonnet.**
+
+1. Receber do Maestro: caminho do plano original + feedback consolidado do usuário (lista de tarefas a ajustar + detalhes).
+
+2. Decompor o feedback em tarefas de correção (1 tarefa = 1 ajuste). Determinar agente executor (normalmente o mesmo da tarefa original a ser ajustada).
+
+3. Gerar nome do arquivo do plano de correção: `YYYY-MM-DD-HHMM-correcao-[slug-do-plano-original].md` em `{projeto}/planos/`.
+
+4. Criar arquivo do plano de correção usando o mesmo template `plano.md`:
+   - Frontmatter: `status: rascunho`, `corrige: [[plano-original]]`, `correcoes: []`, `data-criacao` = agora.
+   - Seção "Pedido original": referência à necessidade de correção do plano original.
+   - Seção "Raciocínio da decomposição": como o feedback foi desdobrado em tarefas de correção.
+   - Seção "Tarefas": query Dataview padrão.
+   - Seção "Histórico de alterações": "criado (rascunho) — correção de [[plano-original]]".
+   - Seção "Feedback da validação final": **texto completo do feedback consolidado do usuário**.
+
+5. Atualizar plano original:
+   - Campo `correcoes:` ganha entrada `[[plano-correcao-N]]` (append ao array).
+   - Histórico de alterações ganha linha: "rejeição N — ver [[plano-correcao-N]]".
+
+6. Atualizar `_planos.md`: adicionar plano de correção na tabela "Rascunho".
+
+7. Montar `RESUMO-PRO-PLAN-MODE` compacto (mesmo formato do Fluxo 4).
+
+8. Reportar ao Maestro: `PLANO-CRIADO: [caminho do plano-correcao]` + `RESUMO-PRO-PLAN-MODE: |` + conteúdo.
+
+---
+
+### Fluxo 9: ADICIONAR TAREFA POS-APROVAÇÃO
+
+Acionado pelo Maestro quando o usuário pede pra adicionar tarefa(s) a um plano já aprovado/em-execucao.
+
+**Modelo: Sonnet.**
+
+#### Fase A — Propor (antes da aprovação)
+
+1. Receber do Maestro: caminho do plano + descrição da(s) tarefa(s) proposta(s).
+
+2. Redigir a(s) tarefa(s) sem criar arquivos ainda. Determinar agente, prioridade, tipo de artefato (mesmo mapa do Fluxo 1).
+
+3. Mapear impactos:
+   - A nova tarefa bloqueia alguma tarefa existente do plano?
+   - A nova tarefa é bloqueada por alguma existente?
+   - Alguma tarefa em execução será afetada?
+
+4. Reportar ao Maestro: detalhes da(s) proposta(s) + impactos estruturados. Se 1 tarefa, o Maestro abrirá `AskUserQuestion`; se 2+, abrirá `ExitPlanMode`. Gerente apenas aguarda re-despacho com aprovação.
+
+#### Fase B — Materializar (após aprovação do usuário)
+
+5. Receber do Maestro: confirmação de aprovação + caminho do plano.
+
+6. Para cada tarefa aprovada:
+   a. Seguir passos 4-11 do Fluxo 1 (criar tarefa + casca).
+   b. Frontmatter da tarefa: `parte-de: [[plano]]`, `adicionada-em: [timestamp ISO 8601 atual]`.
+   c. Atualizar dependências (se mapeadas na fase A).
+
+7. Atualizar `_tarefas.md`: adicionar na(s) tabela(s) corretas.
+
+8. Atualizar plano: Histórico de alterações ganha linha "tarefa adicionada: [título] em [timestamp]".
+
+9. Reportar ao Maestro: tarefas criadas + prontas pra executar.
+
+---
+
+### Fluxo 10: CRIAR ENTREVISTA
+
+Acionado pelo Maestro quando especialista reporta `NEEDS_DATA` ou `INSUFFICIENT_DATA`.
+
+**Modelo: Sonnet.**
+
+1. Receber do Maestro: dados faltantes + agente solicitante + tarefa relacionada (que ficará bloqueada).
+
+2. Carregar padrão de entrevista do catálogo (`plugin/core/templates/artefatos/entrevista.md`).
+
+3. Gerar nome do arquivo da tarefa de entrevista: `YYYY-MM-DD-HHMM-entrevista-[tema].md` em `{projeto}/tarefas/`.
+
+4. Gerar nome do arquivo da casca da entrevista: `YYYY-MM-DD-HHMM-[tema].md` em `{projeto}/entrevistas/`.
+
+5. Criar tarefa de entrevista em `{projeto}/tarefas/`:
+   - `categoria: geral` (ou `pesquisa` se a entrevista é sobre dados a pesquisar).
+   - `agente: entrevistador`.
+   - `resultado: "[[caminho-da-entrevista]]"`.
+   - **Herança de `parte-de`:** se a tarefa pai (que reportou NEEDS_DATA) tem `parte-de: [[plano-xyz]]`, a entrevista herda o mesmo campo no frontmatter. Se a tarefa pai é atômica (`parte-de: ~`), a entrevista também fica com `parte-de: ~`.
+
+6. Criar casca da entrevista em `{projeto}/entrevistas/` com frontmatter do padrão (agente-solicitante, tarefa-relacionada, status: pendente, data-criacao) + seções Contexto/Perguntas/Respostas/Fontes.
+
+7. Vincular entrevista à tarefa pai: adicionar wiki-link da entrevista ao campo `bloqueada-por` da tarefa original. Mudar status da tarefa pai pra `bloqueada`.
+
+8. Atualizar indexes:
+   - `{projeto}/entrevistas/_entrevistas.md`: adicionar entrevista em "Pendentes".
+   - `{projeto}/tarefas/_tarefas.md`: mover tarefa pai pra "Bloqueadas", atualizar estatísticas. Adicionar tarefa de entrevista em "Pendentes".
+
+9. Reportar ao Maestro: entrevista criada + caminho + tarefa pai bloqueada.
+
+---
+
+### Fluxo 11: CONSULTAR
+
+Acionado pelo Maestro ou pelo usuário pedindo estado das tarefas ou planos.
+
+**Modelo: Haiku.**
+
+1. Ler `{projeto}/tarefas/_tarefas.md` e/ou `{projeto}/planos/_planos.md`.
+
+2. Filtrar conforme pedido:
+   - Por status (bloqueadas, pendentes, em-andamento, concluídas, aguardando-validacao, rascunho, aprovado, rejeitado)
+   - Por grupo
+   - Por agente
+   - Por solicitante
+   - Por plano (`parte-de = [[plano]]`)
+   - Por prioridade
+   - Sem filtro: visão geral com estatísticas
+
+3. Formatar resultado com ícones de status e informações relevantes.
+
+4. Sugerir próximas ações quando aplicável (tarefas prontas pra executar, entrevistas pendentes, planos aguardando validação).
+
+---
+
 
 ## 4. Formato de Entrega
 
@@ -405,7 +433,7 @@ Acionado pelo Maestro quando QA ou Revisor reportam problemas em uma entrega.
 - Arquivo: `tarefas/[nome-arquivo].md`
 ```
 
-### Após criar tarefas em lote (Fluxo 2, Fase B)
+### Após materializar plano (Fluxo 5)
 
 ```
 ✅ [N] tarefas criadas — Grupo: [nome-do-grupo]
@@ -463,7 +491,7 @@ Tarefas — [critério aplicado | visão geral]
 - **[título]** ([agente]) — [data-conclusao]
 ```
 
-### Após criar tarefa de revisão (Fluxo 6)
+### Após criar tarefa de revisão (Fluxo 3)
 
 ```
 🔄 Tarefa de revisão criada: **[título]**
@@ -565,50 +593,7 @@ ARQUIVOS:
 ---END-REPORT---
 ```
 
-**Plano de decomposição (Fluxo 2, Fase A):**
-
-```
----REPORT---
-STATUS: DONE
-
-RESULTADO:
-Plano de decomposição para: [pedido]
-Grupo: [nome-do-grupo]
-
-| # | Tarefa | Agente | Depende de | Prioridade |
-|---|--------|--------|------------|------------|
-| 1 | ...    | ...    | —          | Alta       |
-| 2 | ...    | ...    | #1         | Alta       |
-
-AGUARDA_APROVACAO: true
-
-ARQUIVOS:
-(nenhum — aguardando aprovação)
----END-REPORT---
-```
-
-**Tarefas criadas em lote (Fluxo 2, Fase B):**
-
-```
----REPORT---
-STATUS: DONE
-
-RESULTADO:
-[N] tarefas criadas — Grupo: [nome-do-grupo]
-Cada tarefa com seu artefato vinculado via resultado:
-Prontas para executar: [lista de títulos pendentes sem bloqueio]
-Bloqueadas: [lista de títulos com bloqueador]
-
-ARQUIVOS:
-  - criado: "[caminho tarefa 1]"
-  - criado: "[caminho artefato 1]"
-  - criado: "[caminho tarefa 2]"
-  - criado: "[caminho artefato 2]"
-  - modificado: "[caminho do _tarefas.md]"
----END-REPORT---
-```
-
-**Tarefa concluída (Fluxo 3):**
+**Tarefa concluída (Fluxo 2):**
 
 ```
 ---REPORT---
@@ -677,6 +662,127 @@ BLOCKER:
 
 ARQUIVOS:
 (nenhum — tarefa não foi criada)
+---END-REPORT---
+```
+
+### Formatos de report adicionais (fluxos de plano)
+
+**Plano criado (Fluxo 4):**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Plano criado: [título]
+Arquivo: [caminho]
+Tarefas planejadas: [N]
+Raciocínio: [resumo curto]
+
+PLANO-CRIADO: [caminho absoluto do plano]
+RESUMO-PRO-PLAN-MODE: |
+  [3-5 linhas de raciocínio]
+  
+  | # | Tarefa | Agente | Depende de | Prioridade |
+  |---|--------|--------|------------|------------|
+  | 1 | ...    | ...    | —          | Alta       |
+  | 2 | ...    | ...    | #1         | Alta       |
+  
+  Arquivo completo: [[caminho-do-plano]]
+
+ARQUIVOS:
+  - criado: "[caminho do plano]"
+  - modificado: "[caminho do _planos.md]"
+---END-REPORT---
+```
+
+**Plano materializado (Fluxo 5):**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Plano [título] materializado — N tarefas criadas
+Tarefas prontas pra executar: [lista]
+Tarefas bloqueadas: [lista com bloqueadores]
+
+ARQUIVOS:
+  - modificado: "[caminho do plano]"
+  - criado: "[caminho tarefa 1]"
+  - criado: "[caminho artefato 1]"
+  - [... demais tarefas e artefatos ...]
+  - modificado: "[caminho do _tarefas.md]"
+  - modificado: "[caminho do _planos.md]"
+---END-REPORT---
+```
+
+**Tarefa concluída com fusão determinística (Fluxo 2 + Fusão A ou B):**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Tarefa concluída: [título]
+Resultado: [caminho do arquivo]
+Desbloqueadas: [lista ou "nenhuma"]
+
+FUSAO_APLICADA: [nenhuma | A_ultima_tarefa | B_validacao_aprovada]
+
+[Se FUSAO_APLICADA = A_ultima_tarefa:]
+Plano [[plano]] mudou pra aguardando-validacao.
+Tarefa de validação criada: [caminho]
+
+[Se FUSAO_APLICADA = B_validacao_aprovada:]
+Plano [[plano]] concluído.
+
+ARQUIVOS:
+  - modificado: "[caminho da tarefa]"
+  - modificado: "[caminho do _tarefas.md]"
+  - [se fusão A ou B: modificado: "[caminho do plano]", modificado: "[caminho do _planos.md]"]
+  - [se fusão A: criado: "[caminho da tarefa de validação]"]
+---END-REPORT---
+```
+
+**Plano de correção criado (Fluxo 8):**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Plano de correção criado: [título]
+Corrige: [[plano-original]]
+Tarefas de correção planejadas: [N]
+
+PLANO-CRIADO: [caminho absoluto]
+RESUMO-PRO-PLAN-MODE: |
+  [formato compacto com tabela]
+
+ARQUIVOS:
+  - criado: "[caminho do plano-correcao]"
+  - modificado: "[caminho do plano original]"
+  - modificado: "[caminho do _planos.md]"
+---END-REPORT---
+```
+
+**Tarefa adicionada pós-aprovação (Fluxo 9 fase B):**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Tarefa(s) adicionada(s) ao plano [[plano]]:
+- [título 1] (agente, prioridade)
+- [título 2] (agente, prioridade)
+
+ARQUIVOS:
+  - criado: "[caminho tarefa 1]"
+  - criado: "[caminho artefato 1]"
+  - modificado: "[caminho do plano]"
+  - modificado: "[caminho do _tarefas.md]"
 ---END-REPORT---
 ```
 

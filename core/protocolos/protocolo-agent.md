@@ -107,6 +107,11 @@ Conteúdo completo da skill relevante (hub + sub-skill quando aplicável). Copia
 
 ```
 ---TAREFA---
+FLUXO: [Apenas para o Gerente de Projetos — identifica qual dos 11 fluxos executar:
+        criar-tarefa | concluir-tarefa | criar-revisao |
+        criar-plano | materializar-plano | criar-tarefa-validacao |
+        concluir-plano | criar-plano-correcao | adicionar-pos-aprovacao |
+        criar-entrevista | consultar]
 Objetivo: [o que executar]
 Template: [qual template preencher, se aplicável]
 Caminho do artefato: [caminho/absoluto/do/arquivo-a-editar.md]
@@ -118,6 +123,19 @@ Formato de entrega: [Markdown Obsidian-first com frontmatter YAML e wiki-links]
 Protocolo de report: Seguir o formato definido em protocolo-agent.md (seção 2)
 ---END-TAREFA---
 ```
+
+### Campos adicionais no REPORT do Gerente (fluxos criar-plano e criar-plano-correcao)
+
+Nos fluxos `criar-plano` (Fluxo 4) e `criar-plano-correcao` (Fluxo 8), o REPORT do Gerente inclui dois campos adicionais:
+
+```
+PLANO-CRIADO: [caminho absoluto do arquivo do plano criado]
+RESUMO-PRO-PLAN-MODE: |
+  [conteúdo compacto pré-formatado pronto pro Maestro passar ao ExitPlanMode.
+   Inclui: 3-5 linhas de raciocínio + tabela resumida das tarefas + wiki-link pro arquivo completo.]
+```
+
+O Maestro lê `RESUMO-PRO-PLAN-MODE` e passa diretamente pro `ExitPlanMode` nativo — sem reprocessar.
 
 ### Bloco 3 — Contexto coletado
 
@@ -131,6 +149,8 @@ Contexto complementar (leia se relevante pra tarefa):
 
 Entrevistas concluídas:
 - [caminhos das entrevistas relevantes]
+
+PARTE-DE-PLANO: [[plano-xyz]]  # opcional — preenchido quando a tarefa faz parte de plano; ausente quando atômica
 
 Pesquisas disponíveis:
 - [caminhos das pesquisas relevantes]
