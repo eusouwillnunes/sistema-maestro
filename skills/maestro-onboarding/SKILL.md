@@ -318,7 +318,7 @@ Executar silenciosamente (sem mensagens detalhadas para cada item):
 2. **Memórias de projeto:** criar `maestro/memorias/` usando templates de `core/templates/_memorias-projeto-template.md`:
    - `maestro/memorias/_index.md`
    - `maestro/memorias/contexto.md`
-   - `maestro/memorias/sessoes.md`
+   - `maestro/memorias/sessoes/` (pasta vazia; `_sessoes.md` é criado pelo /tchau-maestro na primeira sessão)
    - `maestro/memorias/decisoes.md`
    - `maestro/memorias/agentes/` (pasta vazia)
 3. **Config do projeto:** criar `maestro/config.md` usando `core/templates/_maestro-config-template.md`:
@@ -714,7 +714,7 @@ Executar silenciosamente:
 2. **Memórias de projeto:** criar `maestro/memorias/` usando templates de `core/templates/_memorias-projeto-template.md`:
    - `maestro/memorias/_index.md`
    - `maestro/memorias/contexto.md`
-   - `maestro/memorias/sessoes.md`
+   - `maestro/memorias/sessoes/` (pasta vazia; `_sessoes.md` é criado pelo /tchau-maestro na primeira sessão)
    - `maestro/memorias/decisoes.md`
    - `maestro/memorias/agentes/` (pasta vazia)
 3. **CLAUDE.md do projeto:** verificar se o CLAUDE.md do projeto tem seção `## Maestro`:

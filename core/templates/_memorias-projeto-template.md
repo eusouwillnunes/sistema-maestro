@@ -39,13 +39,17 @@ Referência usada pelo Maestro no setup de um novo projeto. Cada seção abaixo 
 
 ---
 
-## sessoes.md
+## sessoes/ (pasta)
 
-```
-# Histórico de Sessões
+Criar pasta vazia `sessoes/` dentro de `memorias/`. Arquivos individuais por sessão são criados dinamicamente pelo `/tchau-maestro`, no formato `YYYY-MM-DD-HHMM-foco.md`.
 
-(registrado automaticamente ao final de cada sessão)
-```
+O índice `_sessoes.md` (com queries Dataview) é criado pelo `/tchau-maestro` na primeira sessão do projeto. Não precisa ser criado no setup inicial.
+
+Ver template do arquivo de sessão em `plugin/core/templates/_sessao-template.md` e template do índice em `plugin/core/templates/_sessoes-index-template.md`.
+
+### Compatibilidade com `sessoes.md` legado
+
+Projetos antigos podem ter `memorias/sessoes.md` (arquivo único). O sistema preserva o arquivo intocado e, no primeiro `/tchau-maestro` pós-update, oferece migração opt-in das últimas entradas para a pasta nova.
 
 ---
 

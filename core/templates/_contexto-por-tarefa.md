@@ -30,7 +30,7 @@ Além dos documentos da Biblioteca de Marketing, o sistema carrega memórias rel
 | `~/.maestro/memorias/agentes/[agente].md` | Quando o agente de destino tem ajustes | Usuário |
 | `maestro/memorias/contexto.md` | Quando a tarefa precisa de contexto do negócio | Projeto |
 | `maestro/memorias/agentes/[agente].md` | Quando o agente tem feedbacks do projeto | Projeto |
-| `maestro/memorias/sessoes.md` | Só quando o usuário perguntar sobre histórico | Projeto |
+| `maestro/memorias/sessoes/` (glob) | Só quando o usuário perguntar sobre histórico | Projeto |
 | `maestro/memorias/decisoes.md` | Quando a tarefa envolve decisões já tomadas | Projeto |
 
 > **Regra:** indexes (`_index.md` para memórias, ou `.md` com `tipo: index` para bibliotecas) são SEMPRE lidos primeiro. Só depois carregar os arquivos relevantes.

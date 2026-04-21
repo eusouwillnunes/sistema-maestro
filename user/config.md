@@ -32,6 +32,18 @@ openrouter-api-key:            # configurar para usar Perplexity
 pasta-pesquisas: pesquisas/    # caminho relativo no vault do projeto
 ```
 
+## Sessões
+
+```yaml
+sessoes-ao-iniciar: 1  # inteiro >= 0. Quantas sessões o /ola-maestro carrega por default. O intervalo adaptativo pode forçar mais quando faz > 7 dias desde a última sessão.
+```
+
+Valores válidos:
+- `1` (padrão) — lê só a última sessão; intervalo > 7 dias força até 3
+- `3` — lê as 3 últimas sempre
+- `0` — desativa o piso; só o intervalo adaptativo decide
+- Valor inválido (não-inteiro ou negativo diferente de 0) — sistema avisa no dashboard e usa default `1`
+
 ## Memórias
 
 ```yaml

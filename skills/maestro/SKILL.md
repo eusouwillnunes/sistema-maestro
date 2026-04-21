@@ -109,7 +109,7 @@ No passo 4 do Fluxo de Execução (seção 5.1), as referências a `{vault}/maes
 - `{projeto-ativo}/memorias/_index.md` em vez de `{vault}/maestro/memorias/_index.md`
 - `{projeto-ativo}/memorias/contexto.md` em vez de `{vault}/maestro/memorias/contexto.md`
 - `{projeto-ativo}/memorias/agentes/[agente].md` em vez de `{vault}/maestro/memorias/agentes/[agente].md`
-- `{projeto-ativo}/memorias/sessoes.md` em vez de `{vault}/maestro/memorias/sessoes.md`
+- `{projeto-ativo}/memorias/sessoes/` em vez de `{vault}/maestro/memorias/sessoes/`
 
 ---
 

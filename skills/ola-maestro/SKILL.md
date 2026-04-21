@@ -35,37 +35,91 @@ Antes de montar o dashboard, calcular quantos dias se passaram desde a última s
 
 ### Como calcular
 
-1. Ler `{projeto}/memorias/sessoes.md`
-2. Encontrar a data da entrada mais recente no formato `### [AAAA-MM-DD]`
-3. Calcular a diferença em dias entre essa data e a data atual
-4. Aplicar a tabela abaixo
+1. Obter lista de arquivos em `{projeto}/memorias/sessoes/` (ver seção 3)
+2. Se há arquivos, pegar o mais recente (primeiro da lista ordenada descendente)
+3. Ler o frontmatter do arquivo — extrair `data`
+4. Calcular a diferença em dias entre `data` e a data atual
+5. Aplicar a tabela abaixo
+6. Se não há arquivos novos mas há `sessoes.md` legado, extrair a data do cabeçalho mais recente (`### [AAAA-MM-DD]`) e calcular igual
+7. Se não há nenhuma fonte, primeira sessão
 
 ### Tabela de comportamento
 
-| Intervalo | Frase no topo do dashboard | Comportamento da seção "Última sessão" |
-|-----------|---------------------------|----------------------------------------|
-| Primeira sessão (sem `sessoes.md` ou arquivo vazio) | "Primeira sessão registrada!" | Omitir a seção "Última sessão" |
-| 0–2 dias | "Última sessão: hoje / ontem / anteontem" | Resumo enxuto: 1–2 linhas, só "onde parou" |
-| 3–7 dias | "Faz [X] dias desde a última sessão" | Resumo padrão: concluído + onde parou + observações |
-| Mais de 7 dias | "Faz [X] dias desde a última sessão — aqui vai um resumo mais completo" | Resumo expandido: últimas 2–3 sessões, mudanças na biblioteca, recap do estado geral |
+| Intervalo | Frase no topo do dashboard | Quantidade carregada | Seção "Última sessão" |
+|-----------|---------------------------|----------------------|------------------------|
+| Primeira sessão | "Primeira sessão registrada!" | 0 | Omitir |
+| 0-2 dias | "Última sessão: hoje / ontem / anteontem" | `max(N, 1)` | Resumo enxuto (1-2 linhas, só "parou em") |
+| 3-7 dias | "Faz [X] dias desde a última sessão" | `max(N, 1)` | Resumo padrão (concluído + parou em + observações) |
+| > 7 dias | "Faz [X] dias desde a última sessão — resumo mais completo" | `max(N, 3)` | Resumo expandido (últimas 2-3 sessões + recap geral) |
+
+`N` = valor de `sessoes-ao-iniciar` no `~/.maestro/config.md` (default 1).
 
 ---
 
-## 3. Fluxo
+## 3. Leitura de sessões
+
+### Descoberta de arquivos
+
+1. **Ler `~/.maestro/config.md`** — extrair valor de `sessoes-ao-iniciar`.
+   - Se ausente ou inválido (não-inteiro, ou negativo diferente de zero), avisar no dashboard ("config `sessoes-ao-iniciar` inválida, usando default `1`") e usar `1`.
+   - Chamar o valor final de **N**.
+
+2. **Listar arquivos em `{projeto}/memorias/sessoes/`** — glob `*.md`, excluir `_sessoes.md`.
+   - Ordenar descendente por nome (prefixo `YYYY-MM-DD-HHMM` garante ordem cronológica natural).
+   - Chamar a lista de **arquivos-novos**.
+
+3. **Verificar existência de `{projeto}/memorias/sessoes.md` legado.**
+   - Se existe, chamar de **legado-existe = true**.
+
+### Decisão de fonte
+
+| Situação | Fonte do dashboard |
+|----------|---------------------|
+| `arquivos-novos` >= 3 | Só arquivos-novos |
+| `arquivos-novos` 1-2 + `legado-existe` | Híbrido: arquivos-novos + últimas 2-3 entradas do legado |
+| `arquivos-novos` 1-2 + não há legado | Só arquivos-novos |
+| `arquivos-novos` == 0 + `legado-existe` | Só legado (parser antigo) |
+| `arquivos-novos` == 0 + não há legado | Primeira sessão registrada |
+
+### Quantas sessões carregar
+
+Depende do intervalo adaptativo (ver seção 2):
+
+| Intervalo | Quantidade |
+|-----------|------------|
+| 0-2 dias | `max(N, 1)` |
+| 3-7 dias | `max(N, 1)` |
+| > 7 dias | `max(N, 3)` |
+
+### Detecção de backup de emergência
+
+Antes de montar o dashboard, verificar se `~/.maestro/sessoes-emergencia/` existe e tem arquivos. Se sim, avisar:
+
+> "Detectei sessão(ões) em backup de emergência: [lista]. Quer copiar pra `{projeto}/memorias/sessoes/`? [Sim / Não agora]"
+
+Se sim, copiar e remover do backup. Se não, continuar normalmente.
+
+---
+
+## 4. Fluxo
 
 1. **Detectar projeto ativo** — usar a lógica de detecção do Maestro hub (protocolo-ativacao)
 2. **Ler indexes:**
    - `{projeto}/tarefas/_tarefas.md`
    - `{projeto}/entrevistas/_entrevistas.md`
-3. **Ler memórias de sessão:** `{projeto}/memorias/sessoes.md` (se existir)
+3. **Executar leitura de sessões** — conforme seção 3 (Leitura de sessões):
+   - Carregar config
+   - Descobrir arquivos-novos via glob
+   - Decidir fonte (só-novo / híbrido / só-legado / primeira-sessão)
+   - Detectar backup de emergência e oferecer recuperação se houver
 4. **Calcular intervalo adaptativo** — conforme seção 2
 5. **Ler status da biblioteca** — verificar quantos templates estão preenchidos vs. vazios
-6. **Apresentar dashboard** — conforme seção 4, usando o intervalo calculado
+6. **Apresentar dashboard** — conforme seção 5, usando o intervalo calculado
 7. **Oferecer opções** via `AskUserQuestion` — conforme [[protocolo-interacao]]
 
 ---
 
-## 4. Dashboard
+## 5. Dashboard
 
 ### Dashboard com tarefas
 
@@ -103,24 +157,24 @@ Quer resolver agora? Posso acionar o Entrevistador.
 [Lista de tarefas bloqueadas com motivo específico]
 - **[Título]** — bloqueada por: [[bloqueador]] ([status do bloqueador])
 
-## Última sessão ([data])
+## Última sessão ([data] [hora])
 [Conteúdo varia conforme intervalo adaptativo — ver seção 2:]
 
-[0–2 dias — resumo enxuto:]
-- **Parou em:** [detalhe específico — ex: "entrevista X (3 de 5 perguntas respondidas)"]
+[0-2 dias — resumo enxuto:]
+- **Parou em:** [ler `parou-em` do frontmatter do arquivo mais recente]
 
-[3–7 dias — resumo padrão:]
-- **Concluído:** [lista de tarefas/entregas concluídas]
-- **Parou em:** [detalhe específico]
-- **Observações:** [padrões ou preferências notadas]
+[3-7 dias — resumo padrão:]
+- **Foco:** [foco do frontmatter]
+- **Concluído:** [lista de tarefas/entregas concluídas — ler da seção "Concluído" do corpo]
+- **Parou em:** [`parou-em` do frontmatter]
+- **Observações:** [última seção "Observações" do corpo]
 
-[Mais de 7 dias — resumo expandido: mostrar as últimas 2–3 entradas de sessoes.md]
+[Mais de 7 dias — resumo expandido: mostrar as últimas 2-3 entradas carregadas]
 ## Últimas sessões
-- **[data-1]:** [concluído, onde parou]
-- **[data-2]:** [concluído, onde parou]
-- **[data-3]:** [concluído, onde parou]
-- **Mudanças na biblioteca desde a última sessão:** [templates preenchidos, modificados ou criados]
-- **Recap geral:** [estado atual do projeto em 2–3 frases]
+- **[data-1] ([foco-1]):** [parou-em]
+- **[data-2] ([foco-2]):** [parou-em]
+- **[data-3] ([foco-3]):** [parou-em]
+- **Recap geral:** [estado atual do projeto em 2-3 frases]
 ```
 
 Após apresentar o dashboard, usar `AskUserQuestion` (conforme [[protocolo-interacao]]) com opções baseadas no estado atual. Montar as opções dinamicamente:
@@ -165,21 +219,24 @@ Ou se já tem um projeto, me diz o nome da empresa.
 
 ---
 
-## 5. Regras do dashboard
+## 6. Regras do dashboard
 
 - **Priorize o que o usuário pode resolver.** Entrevistas pendentes e tarefas prontas aparecem primeiro.
 - **Mostre o que pode rodar autônomo.** Tarefas pendentes sem bloqueio que poderiam ser despachadas via Agent().
 - **Ofereça ações concretas.** Quando há entrevistas pendentes, ofereça acionar o Entrevistador. Quando há tarefas prontas, ofereça executar.
-- **Recupere contexto.** Use a última sessão registrada pra dar continuidade. Inclua progresso detalhado (ex: "3 de 5 perguntas respondidas").
-- **Seja conciso.** Não liste tarefas concluídas antigas. Só o que mudou na última sessão.
+- **Recupere contexto.** Use o `parou-em` do frontmatter da última sessão pra dar continuidade. Se ausente, use a primeira linha da seção "Em andamento" do corpo.
+- **Seja conciso.** Não liste tarefas concluídas antigas. Só o que mudou no intervalo carregado.
 - **Seções vazias podem ser omitidas.** Se não há nada rodando em background, omita "O que está rodando". Se não há bloqueios, omita "O que está bloqueado".
 - **Adapte o nível de detalhe ao intervalo.** Quem voltou ontem não precisa do mesmo contexto de quem sumiu por 2 semanas.
+- **Use wiki-links do corpo da sessão pra popular links do dashboard.** Tarefas, planos, entrevistas listados na sessão já são `[[wiki-link]]` — basta repetir.
 
 ---
 
-## 6. Restrições
+## 7. Restrições
 
 - **Nunca crie ou atualize tarefas diretamente.** Use o Gerente de Projetos.
 - **Nunca roteia pedidos.** Isso é papel do Maestro hub.
 - **Nunca bloqueie o usuário.** O ritual é opt-in. Se o usuário pedir algo direto, o Maestro segue o fluxo normal.
-- **Nunca invente dados de sessões anteriores.** Se `sessoes.md` não existe, diga "Primeira sessão registrada!".
+- **Nunca invente dados de sessões anteriores.** Se `sessoes/` está vazio e `sessoes.md` legado não existe, diga "Primeira sessão registrada!".
+- **Nunca modifique arquivos de sessão.** Leitura apenas. A escrita é papel do `/tchau-maestro`.
+- **Nunca toque em `sessoes.md` legado.** Apenas leitura com parser antigo quando necessário.
