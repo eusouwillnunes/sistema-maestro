@@ -15,8 +15,10 @@ tags:
 
 | Métrica | Valor |
 |---------|-------|
-| Total | 0 |
+| Total (histórico) | 0 |
+| Ativas | 0 |
 | Concluídas | 0 |
+| Canceladas | 0 |
 | Em andamento | 0 |
 | Pendentes | 0 |
 | Bloqueadas | 0 |
@@ -24,15 +26,15 @@ tags:
 
 ### Por agente
 
-| Agente | Concluídas | Pendentes | Bloqueadas |
-|--------|-----------|-----------|------------|
-| (nenhum) | — | — | — |
+| Agente | Concluídas | Pendentes | Bloqueadas | Canceladas |
+|--------|-----------|-----------|------------|------------|
+| (nenhum) | — | — | — | — |
 
 ### Por solicitante
 
-| Solicitante | Total | Concluídas | Em andamento |
-|-------------|-------|-----------|--------------|
-| (nenhum) | — | — | — |
+| Solicitante | Total | Concluídas | Em andamento | Canceladas |
+|-------------|-------|-----------|--------------|------------|
+| (nenhum) | — | — | — | — |
 
 ---
 
@@ -59,3 +61,9 @@ tags:
 | Tarefa | Agente | Solicitante | Plano | Resultado | Tempo | Conclusão |
 |--------|--------|-------------|-------|-----------|-------|-----------|
 | (nenhuma) | — | — | — | — | — | — |
+
+## Canceladas (últimas 15)
+
+| Tarefa | Agente | Solicitante | Plano | Motivo | Cancelamento |
+|--------|--------|-------------|-------|--------|--------------|
+| (nenhuma) | — | — | — | — | — |

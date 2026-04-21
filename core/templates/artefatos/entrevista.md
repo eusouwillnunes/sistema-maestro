@@ -15,6 +15,8 @@ tarefa-relacionada: "[[tarefa]]"
 status: pendente
 data-criacao: "[timestamp]"
 data-conclusao: ~
+data-cancelamento: ~
+motivo-cancelamento: ~
 tags:
   - "#maestro/entrevista"
 ```

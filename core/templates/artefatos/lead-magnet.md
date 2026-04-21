@@ -15,6 +15,8 @@ formato: "[ebook|checklist|video|template|mini-curso]"
 produto-destino: "[[produto]]"
 status: em-andamento
 data-criacao: "[timestamp]"
+data-cancelamento: ~
+motivo-cancelamento: ~
 tags:
   - "#maestro/entrega"
   - lead-magnet

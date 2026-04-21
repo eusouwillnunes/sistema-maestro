@@ -23,6 +23,7 @@ Todo agente rodando como Agent() DEVE reportar um destes status ao final da exec
 |--------|-------------|-----------------|
 | `DONE` | Tarefa concluída com sucesso | Segue pro Ciclo de Validação (QA → Revisor) |
 | `DONE_WITH_CONCERNS` | Concluído mas com ressalvas | Lê as ressalvas, decide se valida ou ajusta antes do Ciclo |
+| `PARTIAL` | Operação executada com sucesso em parte das escritas planejadas, falhou antes de concluir o resto | Arquivos escritos seguem contrato normal; pendentes não foram tocados. Maestro instrui usuário a repetir o pedido pra finalizar. Em modo recuperação, agente completa só o que falta |
 | `NEEDS_DATA` | Faltam dados que não existem em lugar nenhum | Cria entrevista(s) e/ou pesquisa(s), bloqueia a tarefa |
 | `NEEDS_CONTEXT` | Precisa de informação que existe mas não foi passada | Re-despacha com mais contexto (sem criar entrevista) |
 | `INSUFFICIENT_DATA` | Dado foi passado mas é insuficiente pra produzir com qualidade | Cria entrevista de aprofundamento e/ou pesquisa complementar |
@@ -33,6 +34,7 @@ Todo agente rodando como Agent() DEVE reportar um destes status ao final da exec
 - **NEEDS_DATA** → o dado **não existe em lugar nenhum** — precisa ser coletado do usuário ou pesquisado
 - **NEEDS_CONTEXT** → o dado **provavelmente existe** (num template, memória ou arquivo) mas o agente não recebeu
 - **INSUFFICIENT_DATA** → o dado **foi passado** mas não tem profundidade ou qualidade suficiente
+- **PARTIAL** → a execução **começou**, mas não terminou. Parte das escritas foi feita; o resto não. Diferente de `NEEDS_CONTEXT`: `PARTIAL` reporta estado parcial após executar; `NEEDS_CONTEXT` reporta antes de executar, pedindo input
 
 ---
 
@@ -42,7 +44,7 @@ Todo agente DEVE encerrar sua execução com um bloco de report neste formato:
 
 ```
 ---REPORT---
-STATUS: [um dos 6 status da tabela acima]
+STATUS: [um dos 7 status da tabela acima]
 
 RESULTADO:
 [Conteúdo completo produzido, se houver. Se DONE ou DONE_WITH_CONCERNS, o resultado vai aqui.]
@@ -107,11 +109,11 @@ Conteúdo completo da skill relevante (hub + sub-skill quando aplicável). Copia
 
 ```
 ---TAREFA---
-FLUXO: [Apenas para o Gerente de Projetos — identifica qual dos 11 fluxos executar:
+FLUXO: [Apenas para o Gerente de Projetos — identifica qual dos 13 fluxos executar:
         criar-tarefa | concluir-tarefa | criar-revisao |
         criar-plano | materializar-plano | criar-tarefa-validacao |
         concluir-plano | criar-plano-correcao | adicionar-pos-aprovacao |
-        criar-entrevista | consultar]
+        criar-entrevista | consultar | cancelar-tarefa | cancelar-plano]
 Objetivo: [o que executar]
 Template: [qual template preencher, se aplicável]
 Caminho do artefato: [caminho/absoluto/do/arquivo-a-editar.md]

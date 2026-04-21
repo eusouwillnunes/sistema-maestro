@@ -129,7 +129,7 @@ Se sim, copiar e remover do backup. Se não, continuar normalmente.
 Bom dia! Aqui o estado do projeto **[Nome da Empresa]**:
 
 ## Resumo
-- Tarefas: [N] concluídas, [N] em andamento, [N] bloqueadas, [N] pendentes
+- Tarefas: [N] concluídas, [N] em andamento, [N] bloqueadas, [N] pendentes, [N] canceladas
 - Entrevistas: [N] pendentes, [N] em andamento, [N] concluídas
 - Biblioteca: [N] templates preenchidos de [M] total
 

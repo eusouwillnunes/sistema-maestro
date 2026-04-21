@@ -11,7 +11,10 @@ descricao: Fallback universal para entregas que não se encaixam em outro padrã
 titulo: "[Título]"
 tipo: entrega-generica
 agente: "[agente]"
+status: em-andamento
 data-criacao: "[timestamp]"
+data-cancelamento: ~
+motivo-cancelamento: ~
 tags:
   - "#maestro/entrega"
 ```

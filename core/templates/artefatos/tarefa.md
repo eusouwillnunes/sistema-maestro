@@ -22,6 +22,8 @@ adicionada-em: ~
 data-criacao: "[timestamp]"
 data-inicio: "[timestamp]"
 data-conclusao: ~
+data-cancelamento: ~
+motivo-cancelamento: ~
 resultado: "[[caminho-do-artefato]]"
 tags:
   - "#maestro/tarefa"

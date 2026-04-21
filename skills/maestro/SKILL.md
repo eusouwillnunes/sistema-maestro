@@ -164,6 +164,8 @@ Quando a solicitação envolve funcionalidades internas do Maestro, consultar a 
 | preenche a identidade, preenche tudo, monta o projeto completo, cria uma campanha completa, faz tudo, executa o plano, decompor em tarefas | gerente | Despachar Gerente de Projetos via Agent(sonnet) para decompor o pedido em tarefas |
 | iniciar sessão, abrir sessão, começar trabalho, bom dia, bom dia maestro | ola-maestro | Invocar via `Skill("ola-maestro")` |
 | encerrar sessão, fechar sessão, parar por hoje, chega por hoje | tchau-maestro | Invocar via `Skill("tchau-maestro")` |
+| cancela tarefa, descarta tarefa, desiste da tarefa | gerente | Executar Fluxo 5.10 (Cancelamento) — coordenação M1-M5 |
+| cancela plano, desiste do plano, mata o plano | gerente | Executar Fluxo 5.10 (Cancelamento) — coordenação M1'-M5' |
 
 > **IMPORTANTE:** Sub-skills internas do Maestro (biblioteca, tarefas) NÃO devem ser invocadas via `Skill()`. O Maestro lê o arquivo da sub-skill diretamente e segue as instruções. `Skill()` só é usado para skills top-level (ex: `/maestro:bibliotecario`, `/maestro:copywriter`, `/ola-maestro`, `/tchau-maestro`).
 
@@ -351,6 +353,97 @@ Se a cadeia do plano original acumulou **duas rejeições de validação consecu
    - Opções: "Conversar primeiro" / "Criar nova rodada direto".
 
 2. Se "Conversar primeiro": dialogue com o usuário pra entender o que está desalinhado antes de disparar o Gerente. Análogo à regra de "3ª rodada cai pro usuário" do ciclo QA+Revisor.
+
+### 5.10 Cancelamento de tarefa ou plano
+
+Acionado por gatilhos "cancela tarefa", "cancela plano" (e variantes). O Maestro coordena a identificação, confirmação de impacto e despacho. O Gerente executa via Fluxos 12/13. Gatilhos só via chat — sem slash command dedicado.
+
+#### Coordenação — Cancelar tarefa (M1 a M5)
+
+**M1 — Identificar tarefa.** Buscar em `{projeto}/tarefas/_tarefas.md` por título/slug informado:
+- Matching: **case-insensitive** e **accent-insensitive**, substring no título. Ex: "Copy" bate com "copy da oferta"; "Estratégia" com "estrategia-x".
+- Se >4 matches: abrir `AskUserQuestion` com as 4 mais recentes (por `data-criacao`) como opções + instrução "se nenhuma, seja mais específico".
+- Se 0 matches: responder "não achei tarefa com esse nome" sem despachar.
+
+**M2 — Ler arquivo real + diagnóstico:**
+- Confirmar que o arquivo apontado pelo índice existe fisicamente. Se não: mensagem "tarefa no painel mas arquivo perdido — rode `/maestro-revisar-memorias` pra diagnosticar". **Sem despachar.**
+- Verificar `status: concluida` → responder direto ao usuário (mencionar quando foi finalizada).
+- Verificar `status: cancelada` → rodar **check de consistência** antes de responder:
+  - Seção "## Motivo do cancelamento" existe no corpo da tarefa?
+  - Tarefa aparece na tabela "Canceladas (últimas 15)" do `_tarefas.md`?
+  - Artefato apontado por `resultado:` tem `status: cancelado` (se não-pesquisa)?
+  - Se **tudo consistente** → responder "tarefa X já foi cancelada em [data]. Nada a fazer."
+  - Se **algum item inconsistente** → despachar Gerente com `FLUXO: cancelar-tarefa` e motivo original preservado (ler do frontmatter), pra rodar modo recuperação. Cabeçalho da mensagem: "detectada inconsistência no cancelamento anterior — rodando recuperação."
+- Verificar `categoria: validacao-plano` → responder "tarefa de validação não pode ser cancelada diretamente; use aprovar ou rejeitar".
+- Buscar em `_tarefas.md` (tabela "Bloqueadas") por dependentes cujo `bloqueada-por` contém esta tarefa. Listar até 3 nomes.
+- Verificar se os dependentes são de outro plano (coluna "Plano" do índice).
+
+**M3 — Coletar motivo + ação em um `AskUserQuestion`.** Uma chamada, 1-2 perguntas. O cabeçalho mostra o impacto:
+
+```
+Vou cancelar a tarefa "[título]" [do plano [[X]] | sem plano].
+
+Impacto:
+- [N] tarefas dependem dessa: [até 3 nomes] [...e mais Y]
+- [se cruza planos: "Z dessas pertencem a outro plano ([[plano-Y]])"]
+- [se inclui entrevistas: "inclui W entrevistas"]
+
+Pergunta 1 — Motivo (obrigatório):
+  duplicada | obsoleta | mudanca-de-prioridade | erro | substituida | outro
+
+[Se há dependentes:]
+Pergunta 2 — Ação nas [N] dependentes:
+  cancelar junto — todas viram canceladas com mesmo motivo
+  desvincular — remove o vínculo; dependentes voltam a pendente ou ficam bloqueadas por outras
+```
+
+Escolher o motivo = confirmação. Aborto (sem resposta) = zero escritas.
+
+**M4 — Despachar Gerente.** Agent(sonnet) com `FLUXO: cancelar-tarefa` e bloco `---TAREFA---` contendo `caminho-da-tarefa`, `motivo-cancelamento`, `acao-dependentes` (`cascata` | `desvincular` | `n/a`).
+
+**M5 — Comunicar resultado.** Ler `---REPORT---`:
+- `STATUS: DONE`: "Tarefa X cancelada. Motivo: Y. [Se cascata: Z tarefas cascateadas.] [Se desvinculou: W liberadas.] [Se Fusão C1: 'plano Q aguarda validação'. Se C2: 'plano Q cancelado automaticamente'.]"
+- `STATUS: PARTIAL`: "Operação parcial. K canceladas, falhou em L. [Lista até 5 nomes + '...e mais X'.] Peça o cancelamento de [nome-pendente] de novo pra finalizar."
+- `STATUS: NEEDS_CONTEXT`: traduzir o motivo pro usuário ("a tarefa já foi concluída em [data]", etc.).
+
+**Regra de volume:** ≤3 nomes lista direto; >3 usa contagem + "ver painel".
+
+#### Coordenação — Cancelar plano (M1' a M5')
+
+**M1' — Identificar plano.** Buscar em `{projeto}/planos/_planos.md`. Mesmas regras de desambiguação do M1 (matching case-insensitive, accent-insensitive, substring).
+
+**M2' — Ler arquivo + diagnóstico:**
+- `status: concluido` ou `status: cancelado` → rejeitar direto.
+- `status: rascunho` → caminho curto (só motivo, sem cascata no cabeçalho).
+- Outros (`aprovado`, `em-execucao`, `aguardando-validacao`, `rejeitado`): ler `_tarefas.md`, contar filhas ativas e concluídas. Listar externas órfãs potenciais. Detectar se há tarefa de validação pendente.
+- **Plano de correção (`corrige:` preenchido):** identificar plano original referenciado. Original NÃO é alterado pelo cancelamento da correção.
+- **Plano com correções vinculadas (`correcoes:` não-vazio):** identificar planos de correção. Eles NÃO cascateiam (ciclo próprio).
+
+**M3' — Coletar motivo + confirmar impacto:**
+
+```
+Vou cancelar o plano "[título]" ([N] tarefas ativas serão cascateadas).
+
+Tarefas a cascatear: [até 5 nomes + "...e mais X"]
+  [se inclui: W entrevistas]
+Dependentes externos a liberar: [M nomes até 5 + "...e mais X"]
+[Se status=aguardando-validacao: "Tarefa pendente de validação também cascata"]
+[Se é plano de correção: "O plano original [[X]] permanecerá em [estado] — crie outro plano de correção depois ou aceite o estado atual."]
+[Se tem correções vinculadas: "Planos de correção vinculados [[Y]], [[Z]] NÃO serão cancelados automaticamente — ciclo próprio."]
+
+Pergunta 1 — Motivo (obrigatório): [mesmo enum da coordenação de tarefa]
+```
+
+**M4' — Despachar Gerente (Fluxo 13).** Agent(sonnet) com `FLUXO: cancelar-plano` e bloco TAREFA contendo `caminho-do-plano` e `motivo-cancelamento`.
+
+**M5' — Comunicar.** Mesmo padrão do M5 (tratando DONE, PARTIAL, NEEDS_CONTEXT).
+
+#### Transparência
+
+- **Cruzamento de planos** na cascata: sempre no cabeçalho do `AskUserQuestion`.
+- **Entrevistas**: sempre explicitadas ("inclui X entrevistas").
+- **Lista >5**: truncar com "...e mais X".
+- Campo `Validação leve` do report: auditoria interna. O Maestro **não repete** ao usuário — serve só pra detectar divergência e, se houver, tratar como falha silenciosa (registrar nas memórias e, em casos graves, reportar via PARTIAL na próxima operação).
 
 ---
 
@@ -648,3 +741,4 @@ Limites absolutos que o Maestro NUNCA deve ultrapassar:
     ```
 
     As três categorias são **sempre presentes** — categoria sem itens aplicados recebe `nenhuma` (para "Regras aplicadas") ou `nenhum` (para "Passos executados" e "Protocolos acionados"). A linha nunca é omitida. Liste APENAS itens que efetivamente governaram aquela resposta. **Esta restrição aplica só à camada conversacional.** Documentos, templates e entregas salvas no vault NÃO são afetados: o Protocolo de Escrita Natural continua governando a qualidade editorial das entregas exatamente como antes.
+13. **Nunca ignore um report `STATUS: PARTIAL`** — quando um agente reportar execução parcial, traduza pro usuário qual parte foi feita, qual pendente, e instrua como finalizar (normalmente: "peça o cancelamento de [nome] de novo"). Nunca entregar silenciosamente — falha parcial precisa de ciência humana.

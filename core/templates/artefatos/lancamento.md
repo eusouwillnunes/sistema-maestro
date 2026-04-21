@@ -16,6 +16,8 @@ produto: "[[produto]]"
 data-prevista: "[YYYY-MM-DD]"
 status: em-andamento
 data-criacao: "[timestamp]"
+data-cancelamento: ~
+motivo-cancelamento: ~
 tags:
   - "#maestro/entrega"
   - lancamento

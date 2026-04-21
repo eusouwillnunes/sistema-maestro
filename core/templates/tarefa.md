@@ -13,6 +13,8 @@ adicionada-em: ~                      # timestamp ISO 8601 quando adicionada pó
 data-criacao: "[PREENCHER — YYYY-MM-DDTHH:MM:SS]"
 data-inicio: "[PREENCHER — YYYY-MM-DDTHH:MM:SS]"
 data-conclusao: ~
+data-cancelamento: ~                  # timestamp ISO 8601 | ~ (preenchido só em status=cancelada)
+motivo-cancelamento: ~                # enum: duplicada|obsoleta|mudanca-de-prioridade|erro|substituida|outro|cascata-automatica | ~
 resultado: "[[caminho-do-artefato]]"
 tags:
   - "#maestro/tarefa"

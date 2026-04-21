@@ -15,6 +15,8 @@ campanha: "[[campanha]]"
 periodo: "[YYYY-MM-DD a YYYY-MM-DD]"
 status: em-andamento
 data-criacao: "[timestamp]"
+data-cancelamento: ~
+motivo-cancelamento: ~
 tags:
   - "#maestro/entrega"
   - analise-performance

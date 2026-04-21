@@ -36,6 +36,8 @@ Este agente é acionado quando a tarefa envolver:
 | cria entrevista, precisa de dados, NEEDS_DATA | Dado faltante reportado por especialista (Fluxo 10) |
 | lista tarefas, estado das tarefas, o que falta | Consulta de estado (Fluxo 11) |
 | cria revisão, tarefa de revisão, QA falhou, Revisor reprovou | Ciclo de revisão (Fluxo 3) |
+| cancela tarefa, descarta tarefa, desiste da tarefa | Cancelamento de 1 tarefa (Fluxo 12) |
+| cancela plano, desiste do plano, mata o plano | Cancelamento top-down (Fluxo 13) |
 
 ### O que este agente NÃO faz
 
@@ -416,6 +418,173 @@ Acionado pelo Maestro ou pelo usuário pedindo estado das tarefas ou planos.
 
 ---
 
+### Fluxo 12: CANCELAR TAREFA
+
+Acionado pelo Maestro quando o usuário pede cancelamento de uma tarefa específica.
+
+**Modelo: Sonnet.**
+
+**Input esperado (bloco ---TAREFA---):**
+- `caminho-da-tarefa`: path absoluto da tarefa a cancelar.
+- `motivo-cancelamento`: enum (`duplicada`, `obsoleta`, `mudanca-de-prioridade`, `erro`, `substituida`, `outro`).
+- `acao-dependentes`: `cascata` | `desvincular` | `n/a`.
+
+**Visibilidade de progresso:** no início da execução, crie lista TodoWrite conforme `core/protocolos/protocolo-tasks.md`:
+
+```
+[ ] Ler tarefa e diagnosticar dependentes
+[ ] Atualizar frontmatter + corpo + artefato
+[ ] Processar cascata/desvincular dependentes (se houver)
+[ ] Atualizar índices
+[ ] Verificar Fusão C (plano pai)
+```
+
+Atualize cada item conforme avança — sem TodoWrite o cancelamento parece travamento pro usuário.
+
+**Passos:**
+
+1. Ler documento da tarefa — obter `status`, `resultado`, `bloqueada-por`, `parte-de`, `categoria`, `agente`.
+
+2. **Pré-validação:**
+   - Se `status == concluida`: reportar `NEEDS_CONTEXT` com motivo "tarefa em estado terminal (concluida) em [data-conclusao]". Sem escritas.
+   - Se `categoria == validacao-plano`: reportar `NEEDS_CONTEXT` com motivo "tarefa de validação não pode ser cancelada; use aprovar ou rejeitar". Sem escritas.
+   - Se `status == cancelada`: entrar em **modo recuperação** (nunca reportar NEEDS_CONTEXT). O próprio modo descobre se já está tudo consistente (nenhum write) ou se falta completar algo.
+
+   **Modo recuperação — semântica idempotente:** cada passo abaixo é idempotente em si mesmo. Se tudo já está correto, nenhum passo faz write e o report sai como `DONE` com mensagem implícita "operação já completa".
+   - Passo 3 (frontmatter): lê campos atuais. Se `status`, `motivo-cancelamento`, `data-cancelamento` já corretos, pula write. Se algum falta/divergente, completa.
+   - Passo 4 (corpo da tarefa): verifica se seção "Motivo do cancelamento" existe. Se sim, pula. Se não, insere.
+   - Passo 5 (artefato): mesma lógica.
+   - Passos 6-8 executam normalmente — índices e fusão C podem estar em qualquer estado; Gerente re-verifica e ajusta.
+   - **Re-descoberta do contador pós-falha:** ao retomar cascata, re-ler o status atual de todas as tarefas coletadas no passo 3. Já-canceladas contam como "realizadas anteriormente"; não-canceladas entram na fila pendente. Operação continua do ponto onde parou, sem perder o track do total esperado.
+
+3. Atualizar frontmatter da tarefa:
+   - `status: cancelada`
+   - `motivo-cancelamento: [motivo]`
+   - `data-cancelamento: [timestamp ISO 8601 agora]`
+   - `data-conclusao` continua `~`.
+
+4. Acrescentar seção "Motivo do cancelamento" como **última seção** do corpo da tarefa (check de duplicata antes):
+
+   ```markdown
+   ## Motivo do cancelamento
+
+   - **Motivo:** [enum]
+   - **Data:** [YYYY-MM-DDTHH:MM:SS]
+   - **Contexto:** [cancelado diretamente | cascata da tarefa [[X]] | cascata do plano [[Y]]]
+   ```
+
+5. Atualizar artefato apontado por `resultado:`:
+   - Frontmatter: `status: cancelado`, `motivo-cancelamento`, `data-cancelamento`.
+   - Corpo: acrescentar seção "Motivo do cancelamento" como última seção (check de duplicata).
+   - **Exceção pesquisa:** se `resultado:` vale `pendente` (Pesquisador nunca criou arquivo), pular este passo.
+
+6. **Processar dependentes** (tarefas cujo `bloqueada-por` contém esta):
+   - `cascata`: pra cada dependente, executar recursivamente os passos 3-6 (herda o mesmo `motivo-cancelamento`). Manter set de paths visitados — proteção contra ciclos.
+   - `desvincular`: remover esta tarefa de cada `bloqueada-por`. Se lista fica vazia, mudar status da dependente pra `pendente`.
+   - `n/a`: nada a fazer.
+
+7. Atualizar `_tarefas.md`:
+   - Remover tarefa das tabelas ativas (Em Andamento / Pendentes / Bloqueadas).
+   - Adicionar linha na tabela "Canceladas (últimas 15)".
+   - Se tarefas foram movidas de "Bloqueadas" pra "Pendentes" (ação `desvincular`), mover as linhas.
+   - Recalcular estatísticas (Total histórico, Ativas, Canceladas, Em andamento, Pendentes, Bloqueadas).
+   - Atualizar colunas "Canceladas" de "Por agente" e "Por solicitante".
+   - Se tarefa era entrevista (agente `entrevistador`), atualizar também `_entrevistas.md`.
+
+8. **Fusão determinística C — detectar plano totalmente finalizado.** Só dispara uma vez por plano afetado, ao final da cascata (coletar antes, processar depois). Se a tarefa (ou qualquer cascateada) tem `parte-de: [[plano]]` (não `~`):
+   - Ler arquivo do plano.
+   - Contar tarefas filhas por status. `ativas` = pendente ∪ em-andamento ∪ bloqueada.
+   - Se `ativas == 0`:
+     - **Caso C1** — existe ≥1 `concluida`: disparar Fluxo 6 inline (criar tarefa de validação), mudar plano pra `aguardando-validacao`. Idêntico à Fusão A do Fluxo 2.
+     - **Caso C2** — todas filhas são `cancelada` (zero concluída): mudar plano pra `cancelado`, `motivo-cancelamento: cascata-automatica` (valor reservado do sistema), `data-cancelamento` = agora. Atualizar `_planos.md`. Registrar no Histórico: "todas as tarefas canceladas — plano cancelado automaticamente".
+   - Se `ativas > 0`: não faz nada.
+
+9. **Validação leve pós-operação:**
+   - **Critério de "realizada":** tarefa conta como realizada quando `status: cancelada` + `data-cancelamento` foram escritos no frontmatter **e** a operação Write retornou sem erro. Incrementar contador em memória após cada write.
+   - **Em modo recuperação (ver passo 2):** contador é re-descoberto lendo status atual das tarefas coletadas no passo 3 (já-canceladas contam como "realizadas anteriormente"). Não requer re-escrita.
+   - Ao terminar a cascata, comparar `esperadas == realizadas`. Divergência entra no report no campo `Validação leve`.
+
+10. Reportar via `---REPORT---` (formato na seção 7 — "Formatos de report").
+
+**Notas de robustez:**
+- **Cascata recursiva atravessa planos.** Se X do plano A bloqueia Y do plano B, `cascata` afeta Y e pode disparar Fusão C em B também (independente de A). Maestro sinaliza isso ao usuário antes de confirmar.
+- **Fusão C executada uma vez por plano.** Coletar set de planos afetados, rodar fusão 1x por plano.
+
+---
+
+### Fluxo 13: CANCELAR PLANO
+
+Acionado pelo Maestro quando o usuário pede cancelamento de um plano inteiro (top-down).
+
+**Modelo: Sonnet.**
+
+**Input esperado:**
+- `caminho-do-plano`: path absoluto.
+- `motivo-cancelamento`: enum.
+
+**Visibilidade de progresso:** no início da execução, crie lista TodoWrite conforme `core/protocolos/protocolo-tasks.md`:
+
+```
+[ ] Ler plano e coletar tarefas filhas
+[ ] Cascata interna (N tarefas)
+[ ] Desvincular dependentes externos (M tarefas)
+[ ] Atualizar plano
+[ ] Atualizar índices
+[ ] Validação leve (contadores)
+```
+
+Atualize cada item conforme avança. Em plano com 15-20 tarefas, 3-5s sem sinal parece travamento.
+
+**Passos:**
+
+1. Ler arquivo do plano — obter `status`. Ler `_tarefas.md` e filtrar filhas via coluna "Plano" (wiki-link == este plano). **Não usar glob em `tarefas/`** — índice é mais barato.
+
+2. **Pré-validação por estado:**
+   - `concluido`: rejeitar via `NEEDS_CONTEXT` — já terminal.
+   - `cancelado`: entrar em **modo recuperação** (mesma semântica idempotente do Fluxo 12 passo 2). Nunca reportar NEEDS_CONTEXT — o modo descobre se tudo já está consistente (nenhum write) ou se falta completar cascata/índices.
+   - `rascunho`: caminho curto — pular pro passo 5. Não há tarefas materializadas.
+   - `aprovado`, `em-execucao`, `aguardando-validacao`, `rejeitado`: cascata completa (3-4).
+   - **Nota `rejeitado`:** planos de correção vinculados (campo `correcoes:`) NÃO cascateiam — ciclo próprio. Maestro sinaliza no cabeçalho.
+   - **Nota plano de correção (`corrige:` preenchido):** cancelar NÃO afeta plano original. Original permanece no estado anterior.
+
+3. **Coletar tarefas a cascatear:** filhas com `status ∈ {pendente, em-andamento, bloqueada}`. Concluídas e já-canceladas ficam intactas.
+
+4. **Cascata em lote:**
+
+   **4a.** Pra cada tarefa a cascatear, atualizar:
+   - Frontmatter: `status: cancelada`, herda `motivo-cancelamento` do plano, `data-cancelamento` = agora.
+   - Corpo da tarefa: acrescentar seção "Motivo do cancelamento" com contexto `cascata do plano [[Y]]` (check de duplicata).
+   - Artefato apontado por `resultado:`: frontmatter + seção (mesma lógica).
+   - **Sem processamento de dependentes internos** — tudo do plano será cascateado.
+
+   **4b.** Coletar tarefas **externas órfãs**: tarefas (fora do plano) cujo `bloqueada-por` contém alguma recém-cancelada.
+
+   **4c.** Pra cada externa, aplicar `desvincular`: remover referência. Se `bloqueada-por` fica vazio, status → `pendente`.
+
+   **4d.** Fusão C **não dispara** neste fluxo — plano já está sendo cancelado explicitamente.
+
+5. Atualizar frontmatter do plano:
+   - `status: cancelado`
+   - `motivo-cancelamento: [motivo]`
+   - `data-cancelamento: [timestamp ISO 8601 agora]`.
+
+6. Atualizar corpo do plano:
+   - Acrescentar linha em "Histórico de alterações": `| [timestamp] | cancelado | motivo: [X] — N tarefas cascateadas |`.
+   - Acrescentar seção "Motivo do cancelamento" **imediatamente após** "Histórico de alterações" (check de duplicata). Posição determinística evita conflito com "Feedback da validação final".
+
+7. Atualizar índices:
+   - `_tarefas.md`: cascateadas → tabela "Canceladas (últimas 15)"; externas desvinculadas movidas de "Bloqueadas" pra "Pendentes"; recalcular estatísticas e colunas "Canceladas".
+   - `_planos.md`: plano → tabela "Cancelado".
+   - `_entrevistas.md`: se alguma cascateada for entrevista, atualizar.
+
+8. Validação leve + report via `---REPORT---` (formato na seção 7).
+
+**Ordem pra recuperação de falha parcial:**
+- Falha no passo 4a: plano segue `em-execucao`. Retry idempotente completa só o que falta.
+- Falha entre 4 e 5: tarefas canceladas mas plano não. Retry do Fluxo 13 em **modo recuperação**: se todas as filhas coletadas no passo 3 já estão `cancelada`, pular 4a-4c e ir direto pra 5-7.
+- Falha no passo 7 (índices): arquivos reais estão corretos; painel desatualizado. Próxima operação do Gerente que toca o mesmo índice recalcula.
+
+---
 
 ## 4. Formato de Entrega
 
@@ -518,6 +687,7 @@ Tarefas — [critério aplicado | visão geral]
 5. **Desbloqueios verificados?** Ao concluir, buscou tarefas cujo `bloqueada-por` contém esta tarefa?
 6. **Nada sobrescrito?** Documentos existentes do usuário foram preservados ou o usuário foi avisado?
 7. **Acentos corretos?** Todo conteúdo gerado usa acentuação correta em português do Brasil?
+8. **Cancelamento completo?** Se a operação foi cancelamento: `data-cancelamento` + `motivo-cancelamento` preenchidos no frontmatter? Seção "Motivo do cancelamento" inserida em tarefa/artefato/plano (sem duplicar)? Índices `_tarefas.md`/`_planos.md`/`_entrevistas.md` refletem o novo estado?
 
 ---
 
@@ -783,6 +953,98 @@ ARQUIVOS:
   - criado: "[caminho artefato 1]"
   - modificado: "[caminho do plano]"
   - modificado: "[caminho do _tarefas.md]"
+---END-REPORT---
+```
+
+**Tarefa cancelada (Fluxo 12):**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Tarefa cancelada: [título]
+Motivo: [enum]
+Arquivo: [caminho]
+Artefato: [caminho | "n/a — pesquisa pendente"]
+
+Dependentes:
+  Cascateadas (N): [até 5 nomes] [...e mais X]
+  Desvinculadas (M): [até 5 nomes] [...e mais X]
+
+Fusão C: [nenhuma | C1_validacao_criada | C2_plano_cancelado]
+[Se C1: Tarefa de validação criada em: <path>]
+[Se C2: Plano cancelado automaticamente: <path>]
+
+Validação leve: esperadas=N realizadas=N (OK) | divergência detectada: esperadas=N realizadas=X
+
+ARQUIVOS:
+  - modificado: "[caminho da tarefa]"
+  - modificado: "[caminho do artefato]"
+  - modificado: "[caminho do _tarefas.md]"
+  - [cascata: modificado cada tarefa + cada artefato]
+  - [desvinculadas: modificado cada tarefa]
+  - [se C1: criado <validação>, modificado <plano>, modificado _planos.md]
+  - [se C2: modificado <plano>, modificado _planos.md]
+---END-REPORT---
+```
+
+**Plano cancelado (Fluxo 13):**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Plano cancelado: [título]
+Motivo: [enum]
+Arquivo: [caminho]
+
+Cascata interna (N): [até 5 nomes] [...e mais X]
+  [se houver: Inclui K entrevistas]
+Desvinculadas externas (M): [até 5 nomes] [...e mais X]
+
+Validação leve: esperadas=N realizadas=N (OK) | divergência: esperadas=N realizadas=X
+
+ARQUIVOS:
+  - modificado: "[plano]"
+  - [cada tarefa cascateada + cada artefato]
+  - [cada desvinculada]
+  - modificado: "[_tarefas.md]"
+  - modificado: "[_planos.md]"
+  - [_entrevistas.md se aplicável]
+---END-REPORT---
+```
+
+**Falha parcial (Fluxos 12 ou 13):**
+
+```
+---REPORT---
+STATUS: PARTIAL
+
+RESULTADO:
+Operação interrompida.
+Processadas (K): [até 5 nomes] [...e mais X]
+Falhou em: [nome] — motivo: [mensagem de erro]
+Pendentes (P): [até 5 nomes] [...e mais X]
+
+ARQUIVOS:
+[lista completa do que foi escrito até o ponto de falha]
+---END-REPORT---
+```
+
+**Bloqueio de cancelamento (Fluxos 12 ou 13):**
+
+```
+---REPORT---
+STATUS: NEEDS_CONTEXT
+
+BLOCKER:
+  - motivo: "[tarefa em estado terminal em [data] | tarefa de validação não pode ser cancelada | plano em estado terminal | tarefa ou plano não encontrado no path fornecido]"
+  - sugestao: "[ação equivalente pro usuário]"
+
+ARQUIVOS:
+(nenhum — nada foi escrito)
 ---END-REPORT---
 ```
 

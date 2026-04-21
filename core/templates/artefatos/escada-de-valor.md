@@ -13,6 +13,8 @@ titulo: "[Nome da escada]"
 tipo: escada-de-valor
 status: em-andamento
 data-criacao: "[timestamp]"
+data-cancelamento: ~
+motivo-cancelamento: ~
 tags:
   - "#maestro/entrega"
   - escada-de-valor

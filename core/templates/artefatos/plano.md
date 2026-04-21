@@ -10,13 +10,14 @@ descricao: Plano agregador de tarefas relacionadas. Cobre plano normal (campo co
 ```yaml
 titulo: "[Título do plano]"
 tipo: plano
-status: rascunho                      # rascunho | aprovado | em-execucao | aguardando-validacao | concluido | rejeitado
-                                      # 'cancelado' é reservado para spec futuro (item 4 do Grupo 3) — não use ainda
+status: rascunho                      # rascunho | aprovado | em-execucao | aguardando-validacao | concluido | rejeitado | cancelado
 grupo: "[slug-do-grupo]"
 solicitante: "[nome]"
 data-criacao: "[timestamp ISO 8601]"
 data-aprovacao: ~
 data-conclusao: ~
+data-cancelamento: ~                  # timestamp ISO 8601 | ~ (preenchido só em status=cancelado)
+motivo-cancelamento: ~                # enum (mesmo da tarefa) | ~
 corrige: ~                            # wiki-link do plano original quando é correção; ~ em plano normal
 correcoes: []                         # lista de wiki-links de planos de correção vinculados
 tags:

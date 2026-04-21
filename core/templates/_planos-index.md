@@ -58,6 +58,12 @@ GROUP BY status
 |-------|-------------|------|
 | (nenhum) | — | — |
 
+## Cancelado
+
+| Plano | Solicitante | Motivo | Cancelamento |
+|-------|-------------|--------|--------------|
+| (nenhum) | — | — | — |
+
 ---
 
 ## Planos de correção vinculados

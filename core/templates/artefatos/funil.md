@@ -14,6 +14,8 @@ tipo: funil
 produto: "[[produto]]"
 status: em-andamento
 data-criacao: "[timestamp]"
+data-cancelamento: ~
+motivo-cancelamento: ~
 tags:
   - "#maestro/entrega"
   - funil

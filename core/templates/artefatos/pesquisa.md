@@ -14,6 +14,8 @@ projeto: "[nome]"
 ferramenta: "[websearch | sonar | sonar-deep-research]"
 data: "[YYYY-MM-DD]"
 status: atual
+data-cancelamento: ~
+motivo-cancelamento: ~
 tags:
   - "#maestro/pesquisa"
 ```
