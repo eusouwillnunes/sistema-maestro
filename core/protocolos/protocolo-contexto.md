@@ -44,6 +44,9 @@ Antes de delegar qualquer tarefa pra um agente que produz conteúdo, o Maestro v
 
     Entrevistas e pesquisas:
     - [caminhos se houver]
+
+    Memória de decisões estratégicas (somente para especialistas criativos, se arquivo existe):
+    - {projeto}/memorias/decisoes.md
     ---END-CONTEXTO---
 
 **Modo Skill():** instruir o especialista:
@@ -119,5 +122,6 @@ Antes de despachar um especialista:
 - [ ] Identidade vazia? → Aviso persuasivo, seguir se usuário quiser
 - [ ] Tarefa envolve produto específico? → Incluir dossiê do produto no CONTEXTO
 - [ ] Agente tem Mapa de Necessidades? → Incluir templates complementares
+- [ ] Especialista criativo (`estrategista`, `marca`, `copywriter`, `midias-sociais`, `performance`)? → Incluir `{projeto}/memorias/decisoes.md` no CONTEXTO (se arquivo existe). Vale tanto no despacho do especialista quanto no despacho do Revisor.
 - [ ] Modo Agent()? → Caminhos no Bloco CONTEXTO
 - [ ] Modo Skill()? → Instruir leitura de biblioteca/identidade/

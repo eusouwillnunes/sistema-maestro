@@ -184,6 +184,25 @@ Se falta contexto essencial e o usuário não tem: solicite que coloque material
 
 ---
 
+## 6.5. Pontos de Decisão Estratégica
+
+> Aplica: [[protocolo-decisoes-estrategicas]]
+
+Sempre avaliar estes pontos **antes de escrever o artefato** (Camada 1). Se ambíguo, pergunte (Skill) ou reporte `NEEDS_DECISION` (Agent). Se contexto é claro, infere. Se já registrado em `memorias/decisoes.md` com escopo aplicável, reusa silenciosa.
+
+| ID | Sub-skill | Ponto | Opções | Escopo |
+|---|---|---|---|---|
+| `arquetipo-central` | `identidade` | Arquétipo central | 12 arquétipos em 4 categorias (Self/Order/World/Freedom) | projeto |
+| `tom-voz` | `identidade` | Tom de voz dominante | Autoridade direta · Mentor empático · Provocador · Cúmplice · Técnico | projeto |
+| `maturidade-marca` | `identidade` | Maturidade (5 Pillars Neumeier) | Diferenciação · Colaboração · Inovação · Validação · Cultivo | projeto |
+| `estrategia-posicionamento` | `posicionamento` | Estratégia de posicionamento | Líder · Challenger · Nicho · Disruptor | projeto |
+| `segmento-difusao` | `posicionamento` | Segmento de difusão | Innovators · Early Adopters · Early Majority · Late Majority | projeto |
+| `tipo-nome` | `naming` | Tipo de nome | Descritivo · Inventado · Metafórico · Abstrato · Composto · Fundador | projeto |
+
+Enums com 5+ opções seguem agrupamento em 2 perguntas (ver protocolo seção 6). Ao final da execução, grave a escolha na seção `## Decisões estratégicas` do artefato **E** em `memorias/decisoes.md` (escopo `projeto`).
+
+---
+
 ## 7. Abordagem de Trabalho
 
 ### Protocolo de Sub-tarefas

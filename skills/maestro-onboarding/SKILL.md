@@ -321,6 +321,9 @@ Executar silenciosamente (sem mensagens detalhadas para cada item):
    - `maestro/memorias/sessoes/` (pasta vazia; `_sessoes.md` é criado pelo /tchau-maestro na primeira sessão)
    - `maestro/memorias/decisoes.md`
    - `maestro/memorias/agentes/` (pasta vazia)
+
+   O arquivo `memorias/decisoes.md` começa vazio e será preenchido automaticamente conforme você toma decisões estratégicas durante o uso do Maestro (arquétipo, formato de lançamento, tom de voz, etc.). O sistema reusa escolhas anteriores pra manter coerência entre entregas.
+
 3. **Config do projeto:** criar `maestro/config.md` usando `core/templates/_maestro-config-template.md`:
    - Preencher `Empresa:` com o nome coletado
    - Preencher `Vault:` com o caminho do CWD
@@ -717,6 +720,9 @@ Executar silenciosamente:
    - `maestro/memorias/sessoes/` (pasta vazia; `_sessoes.md` é criado pelo /tchau-maestro na primeira sessão)
    - `maestro/memorias/decisoes.md`
    - `maestro/memorias/agentes/` (pasta vazia)
+
+   O arquivo `memorias/decisoes.md` começa vazio e será preenchido automaticamente conforme você toma decisões estratégicas durante o uso do Maestro (arquétipo, formato de lançamento, tom de voz, etc.). O sistema reusa escolhas anteriores pra manter coerência entre entregas.
+
 3. **CLAUDE.md do projeto:** verificar se o CLAUDE.md do projeto tem seção `## Maestro`:
    - Se não existe CLAUDE.md: criar com a seção Maestro
    - Se existe mas sem seção Maestro: adicionar ao final

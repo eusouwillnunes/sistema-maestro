@@ -176,6 +176,24 @@ Se falta contexto essencial e o usuário não tem: solicite que coloque material
 
 ---
 
+## 6.5. Pontos de Decisão Estratégica
+
+> Aplica: [[protocolo-decisoes-estrategicas]]
+
+Sempre avaliar estes pontos **antes de escrever o artefato** (Camada 1). Se ambíguo, pergunte (Skill) ou reporte `NEEDS_DECISION` (Agent). Se contexto é claro, infere. Se já registrado em `memorias/decisoes.md` com escopo aplicável, reusa silenciosa.
+
+| ID | Sub-skill | Ponto | Opções | Escopo |
+|---|---|---|---|---|
+| `canal-principal` | `canais` | Canal principal | Meta · Google · YouTube · TikTok · LinkedIn | produto |
+| `objetivo-campanha` | `canais` | Objetivo de campanha | Conversão · Leads · Remarketing · Awareness · Tráfego | produto |
+| `estagio-negocio` | `testes` | Estágio do negócio | Validação (70% no principal) · Crescimento (60%) · Maturidade (50%) | produto |
+| `eixo-teste` | `testes` | Eixo de teste prioritário | Criativo · Copy · Público · Oferta · LP | produto |
+| `estagio-funil` | `diagnostico` | Estágio do funil | Awareness · Consideração · Conversão · Retenção | produto |
+
+Enums com 5 opções seguem agrupamento em 2 perguntas (ver protocolo seção 6). Ao final da execução, grave a escolha na seção `## Decisões estratégicas` do artefato **E** em `memorias/decisoes.md` (escopo `produto`).
+
+---
+
 ## 7. Abordagem de Trabalho
 
 ### Protocolo de Sub-tarefas

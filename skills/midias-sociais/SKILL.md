@@ -203,6 +203,23 @@ Se falta contexto essencial e o usuário não tem: solicite que coloque material
 
 ---
 
+## 6.5. Pontos de Decisão Estratégica
+
+> Aplica: [[protocolo-decisoes-estrategicas]]
+
+Sempre avaliar estes pontos **antes de escrever o artefato** (Camada 1). Se ambíguo, pergunte (Skill) ou reporte `NEEDS_DECISION` (Agent). Se contexto é claro, infere. Se já registrado em `memorias/decisoes.md` com escopo `projeto`, reusa silenciosa.
+
+| ID | Sub-skill | Ponto | Opções | Escopo |
+|---|---|---|---|---|
+| `pillar-content` | `estrategia` | Pillar Content Model | Pillar único semanal · Múltiplos pillars · Story-driven · Autoridade pura | projeto |
+| `plataforma-ancora` | `estrategia` | Plataforma-âncora | IG · TikTok · YouTube · LinkedIn · X | projeto |
+| `estagio-criador` | `estrategia` | Estágio do criador | Iniciante · Crescimento · Maturidade | projeto |
+| `performance-driver` | `conteudo` | Performance driver prioritário (Kane) | Hook/Pattern-interrupt · Storytelling · Pacing · Conexão/Empatia | projeto |
+
+`plataforma-ancora` tem 5 opções e segue agrupamento em 2 perguntas (ver protocolo seção 6). Ao final da execução, grave a escolha na seção `## Decisões estratégicas` do artefato **E** em `memorias/decisoes.md` (escopo `projeto`).
+
+---
+
 ## 7. Abordagem de Trabalho
 
 ### Protocolo de Sub-tarefas

@@ -8,3 +8,4 @@
 - [ ] QA aprovado
 - [ ] Revisor aprovado
 - [ ] Arquivo salvo na biblioteca
+- [ ] **Decisões estratégicas registradas:** a seção `## Decisões estratégicas` existe no artefato? Se toca algum ponto canônico (24 IDs listados no protocolo-decisoes-estrategicas.md seção 9), está preenchida com escolha + origem? Se escopo ≠ `tarefa`, também foi gravada em `memorias/decisoes.md`?

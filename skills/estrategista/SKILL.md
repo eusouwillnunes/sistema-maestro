@@ -194,6 +194,25 @@ Antes de produzir qualquer entrega, o Estrategista verifica a existência dos ar
 
 ---
 
+## 6.5. Pontos de Decisão Estratégica
+
+> Aplica: [[protocolo-decisoes-estrategicas]]
+
+Sempre avaliar estes pontos **antes de escrever o artefato** (Camada 1). Se ambíguo, pergunte (Skill) ou reporte `NEEDS_DECISION` (Agent). Se contexto é claro, infere. Se já registrado em `memorias/decisoes.md` com escopo aplicável, reusa silenciosa.
+
+| ID | Sub-skill | Ponto | Opções | Escopo |
+|---|---|---|---|---|
+| `lente-diagnostico` | `diagnostico` | Lente de diagnóstico | Secret Formula · Value Equation · 80/20 Marshall · Combinadas | produto |
+| `estrutura-oferta` | `oferta` | Estrutura (4 Core Offers) | Free content · Lead magnet · Low ticket · Evento/core | produto |
+| `ancora-preco` | `oferta` | Âncora de preço | Premium · Mercado · Escada (tripwire→core→maximizer) | produto |
+| `arquitetura-funil` | `funil` | Arquitetura de funil | Webinar · VSL · Tripwire · Challenge · Application | produto |
+| `canal-aquisicao` | `aquisicao` | Canal principal | Orgânico · Pago · Parcerias · Comunidade · Outbound | produto |
+| `formato-lancamento` | `webinario` | Formato de lançamento | Ao vivo · Evergreen · VSL · PLF · Challenge | produto |
+
+Enums com 5 opções seguem agrupamento em 2 perguntas (ver protocolo seção 6). Ao final da execução, grave a escolha na seção `## Decisões estratégicas` do artefato **E** em `memorias/decisoes.md` (escopo ≠ `tarefa`).
+
+---
+
 ## 7. Abordagem de Trabalho
 
 ### Protocolo de Sub-tarefas

@@ -201,6 +201,9 @@ Na dúvida, pergunte ao usuário via `AskUserQuestion` com opções "1 entrega s
 2. **Maestro → Especialista edita o artefato:**
    - Decidir modo de despacho (Skill vs Agent) com as mesmas regras da seção 6 anterior
    - Se Agent(): incluir `caminho-do-artefato` no bloco TAREFA (novo campo do Protocolo Agent)
+   - Se especialista é criativo (`estrategista`, `marca`, `copywriter`, `midias-sociais`, `performance`) e Agent(): incluir no Bloco CONTEXTO:
+     - Contexto de marca (caminhos de `biblioteca/identidade/`)
+     - Memória de decisões estratégicas (se arquivo existe): `{projeto}/memorias/decisoes.md`
    - Se Skill(): instruir o especialista a ler a tarefa e editar o arquivo apontado por `resultado:`
    - **Exceção Pesquisador:** não passa `caminho-do-artefato`. Pesquisador cria o próprio arquivo.
    - Aguardar conclusão — report traz apenas RESUMO curto + ARTEFATO (caminho)
@@ -298,6 +301,8 @@ Duas regras nativas:
 
 2. **Tarefas independentes em paralelo, em batches de 3-4.** Num plano, identifique tarefas sem dependência comum. Dispare até 4 especialistas no mesmo turn. **Aguarde o batch completo** antes de avançar (especialista rápido fica parado até o mais lento terminar — simplicidade primeiro). Streaming (disparar QA+Revisor assim que um especialista termina) é otimização futura; só se virar gargalo real.
 
+**Interação com Fluxo 5.11:** se especialistas paralelos reportam `NEEDS_DECISION`, acione Fluxo 5.11 pra cada um. Perguntas ao usuário são serializadas em lotes de 4 quando o total excede o teto. Re-despacho de cada especialista é independente — os que já tiveram decisões resolvidas seguem executando enquanto outros ainda aguardam resposta.
+
 ### 5.8 Orquestração da validação final do plano
 
 Quando o Gerente reporta (via fusão A do Fluxo 2) que o plano está `aguardando-validacao` e uma tarefa de validação foi criada:
@@ -377,6 +382,9 @@ Acionado por gatilhos "cancela tarefa", "cancela plano" (e variantes). O Maestro
 - Verificar `categoria: validacao-plano` → responder "tarefa de validação não pode ser cancelada diretamente; use aprovar ou rejeitar".
 - Buscar em `_tarefas.md` (tabela "Bloqueadas") por dependentes cujo `bloqueada-por` contém esta tarefa. Listar até 3 nomes.
 - Verificar se os dependentes são de outro plano (coluna "Plano" do índice).
+- Se `aguardando-decisoes` não está vazio, informar ao usuário no diálogo de confirmação: "Essa tarefa estava em decisão pendente (`<ids>`). Cancelar interrompe o round-trip atual."
+
+   Ao prosseguir com o cancelamento, limpar os 3 campos: `aguardando-decisoes: []`, `decisoes-pendentes-report: ~`, `decisoes-resolvidas: {}`.
 
 **M3 — Coletar motivo + ação em um `AskUserQuestion`.** Uma chamada, 1-2 perguntas. O cabeçalho mostra o impacto:
 
@@ -447,6 +455,57 @@ Pergunta 1 — Motivo (obrigatório): [mesmo enum da coordenação de tarefa]
 
 ---
 
+### 5.11 DECISÃO ESTRATÉGICA (tratamento de NEEDS_DECISION)
+
+> Aplica: [[protocolo-decisoes-estrategicas]] seção 5
+
+Acionado quando um especialista em Agent() reporta `STATUS: NEEDS_DECISION`. Round-trip de até 3 rodadas para resolver pontos de decisão estratégica ambíguos antes de produzir o artefato.
+
+**Passo a passo:**
+
+1. **Ler `DECISOES_PENDENTES`** do report do especialista (bloco entre `---DECISOES-PENDENTES---` e `---END-DECISOES-PENDENTES---`).
+
+2. **Validar blindagem anti-gaming.** Para cada `[decisao]`:
+   - Comparar `id` com a lista canônica (protocolo-decisoes-estrategicas.md seção 9 — 24 IDs fixos).
+   - Se `id` bate com canônico **e** `emergente: true` → **rejeitar**: re-despachar o especialista com bloco TAREFA acrescido de "O ponto `<id>` é canônico e deve ser avaliado na Camada 1 antes de escrever. Reporte como `emergente: false` ou resolva antes da escrita." Conta como 1 rodada.
+   - Caso contrário → aceitar.
+
+3. **Gravar persistência no frontmatter da tarefa:**
+   - `aguardando-decisoes: [<ids>]` — lista de IDs pendentes
+   - `decisoes-pendentes-report: |` — report completo como string multi-linha
+
+4. **Filtrar decisões independentes** (sem `depende-de`). Decisões dependentes ficam pra próxima rodada.
+
+5. **Montar `AskUserQuestion`:**
+   - Cada decisão independente vira uma pergunta.
+   - Teto de 4 perguntas por chamada. Se total >4, fazer lotes sequenciais.
+   - Opção marcada `recomendado: true` vira primeira da lista com `(Recomendado)` no label.
+   - Enums com 5+ opções seguem agrupamento em 2 perguntas (protocolo seção 6 — tabela de agrupamento).
+
+6. **Aguardar resposta do usuário.** Atualizar frontmatter da tarefa com `decisoes-resolvidas: {id: escolha}`.
+
+7. **Montar bloco `---DECISOES---`** no formato flat:
+   ```
+   ---DECISOES---
+   <id>: <valor>
+   <id>-custom: <string|null>
+   ---END-DECISOES---
+   ```
+
+8. **Re-despachar o mesmo especialista** com:
+   - TAREFA igual
+   - CONTEXTO **idêntico** ao da rodada anterior (pra prompt caching — corta ~80% do custo)
+   - Bloco `---DECISOES---` adicional no final
+   - Bloco MEMORIAS e REGRAS iguais
+
+9. **Ler novo report.** Se `DONE` → limpar frontmatter (`aguardando-decisoes: []`, `decisoes-pendentes-report: ~`, `decisoes-resolvidas: {}`) e seguir pra QA/Revisor normalmente. Se novo `NEEDS_DECISION` (decisões dependentes desbloqueadas) → voltar ao passo 1. Se `BLOCKED` → escalar pro usuário.
+
+10. **Limite hard:** 3 rodadas. Ultrapassou → reportar ao usuário e escalar.
+
+**Paralelização durante decisões (cruza com Fluxo 5.7):** se 2+ especialistas em paralelo reportam `NEEDS_DECISION` com total >4 perguntas, Maestro serializa em lotes sequenciais de 4. Usuário responde lote 1, lote 2, etc. Re-despacho acontece por especialista de forma independente assim que suas decisões são resolvidas.
+
+---
+
 ## 6. Ciclo de Validação Autônomo
 
 > [!important] Auditoria, não correção
@@ -480,6 +539,7 @@ Todo conteúdo textual que o usuário vai ler passa por este ciclo antes de ser 
 2. Disparar o Revisor via Agent tool com `model: [modelo resolvido]`, passando no prompt empacotado:
    - Bloco TAREFA: o resultado aprovado pelo QA
    - Bloco CONTEXTO: caminhos dos templates de identidade de marca do projeto
+     - Se tarefa é de especialista criativo (`estrategista`, `marca`, `copywriter`, `midias-sociais`, `performance`), incluir também `{projeto}/memorias/decisoes.md` (se arquivo existe)
    - Bloco REGRAS: instruções do protocolo
 3. Extrair o report do Revisor:
    - `STATUS: DONE` com "APROVADO" → texto aprovado. Prosseguir para Etapa 3.

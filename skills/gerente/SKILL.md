@@ -124,6 +124,15 @@ Acionado pelo Maestro quando classifica o pedido como atômico (1 documento a pr
 
 11. Atualizar `_tarefas.md`: adicionar linha na tabela "Em Andamento" com coluna "Plano" vazia (tarefa atômica).
 
+11.5. **Garantir `memorias/decisoes.md` (apenas para especialistas criativos)** — se o agente-destino é `estrategista`, `marca`, `copywriter`, `midias-sociais` ou `performance`:
+   - Verificar se `{projeto}/memorias/decisoes.md` existe.
+   - Se **não existe**:
+     - Ler o template `plugin/core/templates/decisoes-template.md`
+     - Criar `{projeto}/memorias/decisoes.md` copiando o conteúdo
+     - Preencher frontmatter: `empresa: <nome do projeto lido do _identidade.md ou config>` e `criado-em: <ISO 8601 agora>`
+   - Se **já existe**: não tocar, deixar como está.
+   - Esta operação é idempotente — roda em todo Fluxo 1 de criativo sem efeito colateral.
+
 12. Reportar ao Maestro: tarefa criada + caminho + artefato + categoria.
 
 ---

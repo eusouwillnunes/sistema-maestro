@@ -27,6 +27,7 @@ Todo agente rodando como Agent() DEVE reportar um destes status ao final da exec
 | `NEEDS_DATA` | Faltam dados que não existem em lugar nenhum | Cria entrevista(s) e/ou pesquisa(s), bloqueia a tarefa |
 | `NEEDS_CONTEXT` | Precisa de informação que existe mas não foi passada | Re-despacha com mais contexto (sem criar entrevista) |
 | `INSUFFICIENT_DATA` | Dado foi passado mas é insuficiente pra produzir com qualidade | Cria entrevista de aprofundamento e/ou pesquisa complementar |
+| `NEEDS_DECISION` | Há ponto(s) de decisão estratégica ambíguo(s) que exigem escolha do usuário | Executa Fluxo 5.11 — monta AskUserQuestion com opções, re-despacha com bloco DECISOES |
 | `BLOCKED` | Não consegue executar por outro motivo | Avalia: re-despacha com modelo mais capaz, quebra a tarefa, ou escala pro usuário |
 
 ### Diferenças-chave
@@ -35,6 +36,15 @@ Todo agente rodando como Agent() DEVE reportar um destes status ao final da exec
 - **NEEDS_CONTEXT** → o dado **provavelmente existe** (num template, memória ou arquivo) mas o agente não recebeu
 - **INSUFFICIENT_DATA** → o dado **foi passado** mas não tem profundidade ou qualidade suficiente
 - **PARTIAL** → a execução **começou**, mas não terminou. Parte das escritas foi feita; o resto não. Diferente de `NEEDS_CONTEXT`: `PARTIAL` reporta estado parcial após executar; `NEEDS_CONTEXT` reporta antes de executar, pedindo input
+- **NEEDS_DECISION** → há ambiguidade **estratégica** em ponto canônico (formato de lançamento, arquétipo, etc.). Diferente de `NEEDS_DATA`/`NEEDS_CONTEXT`: contexto está completo, mas múltiplos caminhos são válidos — o usuário precisa escolher. Ver `protocolo-decisoes-estrategicas.md`
+
+### Precedência de status
+
+Se o agente detecta múltiplos problemas simultâneos, reporta **apenas um** status, obedecendo esta ordem:
+
+`NEEDS_DATA` > `INSUFFICIENT_DATA` > `NEEDS_CONTEXT` > `NEEDS_DECISION`
+
+Racional: dado objetivo faltando (entrevista/pesquisa) bloqueia tudo. Decisão estratégica só faz sentido com contexto completo. Ex: não adianta perguntar formato de lançamento se o ticket do produto é desconhecido.
 
 ---
 
@@ -74,6 +84,27 @@ CONCERNS:
 [Apenas se STATUS = DONE_WITH_CONCERNS. Ressalvas sobre o trabalho produzido.]
   - "[ressalva 1]"
   - "[ressalva 2]"
+
+DECISOES_PENDENTES:
+[Apenas se STATUS = NEEDS_DECISION. Formato delimitado por marcadores explícitos —
+ ver seção 5 do protocolo-decisoes-estrategicas.md pra estrutura completa.]
+
+---DECISOES-PENDENTES---
+[decisao]
+id: <id-canonico-ou-emergente>
+ponto: <texto legível>
+contexto: <1-2 frases justificando ambiguidade>
+emergente: true|false
+
+[opcao]
+label: <nome curto>
+description: <explicação>
+recomendado: true|false
+
+[fim-opcoes]
+recomendacao: <label>
+justificativa: <por que>
+---END-DECISOES-PENDENTES---
 
 BLOCKER:
 [Apenas se STATUS = BLOCKED. Descrição do bloqueio.]
@@ -275,3 +306,9 @@ Quando executado como Agent() (sem interação direta com o usuário), siga esta
 ```
 
 A seção específica de cada agente pode adicionar itens ao "Antes de executar" conforme suas necessidades (ex: Pesquisador verifica index de pesquisas, QA verifica checklists).
+
+### Regra de invocação Agent() entre especialistas
+
+Especialistas **criativos** em modo Skill() (Estrategista, Marca, Copywriter, Mídias Sociais, Performance) **NÃO invocam Agent() de outros especialistas criativos**. Se a sub-tarefa precisa de outro especialista criativo, retorna controle ao usuário com sugestão ("esse pedaço é da Marca, quer que eu te redirecione?").
+
+Invocação de agentes **operacionais** (Gerente, Bibliotecário, Pesquisador, Entrevistador, QA, Revisor) via Agent() continua permitida — esses não reportam `NEEDS_DECISION`.

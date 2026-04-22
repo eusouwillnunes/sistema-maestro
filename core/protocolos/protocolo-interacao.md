@@ -36,6 +36,24 @@ O sistema oferece opções. O usuário escolhe. Simples.
 
 ---
 
+## Decisões estratégicas emergentes em modo Skill()
+
+Especialistas criativos em Skill() podem chamar `AskUserQuestion` **durante a escrita** quando surge ambiguidade não-canônica. Pausa produção, pergunta, retoma. Exemplo: ao estruturar webinário PLF, descobre que o mecanismo do produto tem duas abordagens válidas pro Segredo #2.
+
+**Em modo Agent(), não use AskUserQuestion** — reporte `NEEDS_DECISION` com flag `emergente: true` e aguarde re-despacho do Maestro com a resposta.
+
+Decisões **canônicas** (as 24 listadas no protocolo-decisoes-estrategicas.md, seção 9) DEVEM ser avaliadas antes de começar a escrever (Camada 1). Classificar uma canônica como emergente é antipadrão documentado — o Maestro rejeita.
+
+---
+
+## Teto de perguntas por chamada
+
+O teto de 4 opções do `AskUserQuestion` é **por chamada**, não por tarefa. Especialista pode fazer múltiplas chamadas sequenciais ao longo da execução (ex: 3 chamadas seguidas, cada uma com 3-4 opções).
+
+Quando uma decisão canônica tem 5+ opções (ver `protocolo-decisoes-estrategicas.md`, seção 6), o agrupamento em 2 perguntas sequenciais é feito automaticamente pelo especialista — P1 escolhe categoria, P2 refina.
+
+---
+
 ## Agrupamento (mais de 4 opções)
 
 Quando as opções passam de 4:

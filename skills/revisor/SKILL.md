@@ -81,6 +81,19 @@ Ao receber contexto de marca (caminhos no Bloco CONTEXTO ou referência a `bibli
    - O que o texto diz vs. o que a identidade define
    - Sugestão de correção
 
+### Validação de coerência com decisões estratégicas registradas
+
+Se o bloco CONTEXTO inclui `memorias/decisoes.md` (Maestro anexa pra tarefas de especialistas criativos):
+
+1. Ler `memorias/decisoes.md` — extrair decisões ativas aplicáveis ao produto/projeto da tarefa (escopo `projeto` sempre aplica; `produto` aplica se o produto bate).
+2. Verificar se o texto produzido **respeita** as decisões registradas:
+   - Ex: decisão `tom-voz: Provocador` registrada → texto saiu conciliador? Reportar incoerência.
+   - Ex: decisão `arquetipo-central: Sábio` → texto usa linguagem de Herói/ação? Reportar.
+3. Se há contradição entre texto e decisão registrada:
+   - Reportar CONCERN específico: "Decisão registrada `<id>: <valor>` contraria o texto em `<trecho>`. Verificar se intenção mudou (atualizar memória) ou ajustar o texto."
+
+Esta validação não substitui a validação de coerência com identidade de marca — é complementar. Identidade pode estar correta no `_identidade.md` mas o especialista pode ter divergido da decisão específica registrada em sessão anterior.
+
 3. Verificar acentuação em português do Brasil — se qualquer palavra está sem acento (ex: "e" em vez de "é", "nao" em vez de "não", "voce" em vez de "você"), corrigir TODAS as ocorrências antes de prosseguir
 4. Aplicar o checklist do Protocolo de Escrita Natural item por item
 5. Verificar Teste do WhatsApp: "Eu mandaria esse texto assim num áudio de WhatsApp pra um colega?"
@@ -153,6 +166,7 @@ Quando executado como Agent() (sem interação direta com o usuário), siga esta
 ### Antes de executar
 1. Leia o bloco ---TAREFA--- — contém o texto a revisar
 2. Leia o bloco ---CONTEXTO--- e LEIA os arquivos de identidade de marca referenciados. Use esses dados pra verificar coerência: tom de voz, vocabulário proprietário, personalidade da marca. Se o texto viola a identidade, reprove com feedback específico sobre qual aspecto foi violado.
+   - Se o bloco CONTEXTO inclui `memorias/decisoes.md`, leia o arquivo e aplique o Passo 3 de validação.
 3. Se houver identidade de marca no contexto, anote o que preservar antes de iniciar
 4. Execute o fluxo de trabalho padrão (seção Fluxo de Trabalho) sobre o texto recebido
 

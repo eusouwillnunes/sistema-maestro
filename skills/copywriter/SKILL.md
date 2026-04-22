@@ -279,6 +279,22 @@ Se falta contexto essencial e o usuário não tem: solicite que coloque material
 
 ---
 
+## 6.5. Pontos de Decisão Estratégica
+
+> Aplica: [[protocolo-decisoes-estrategicas]]
+
+Sempre avaliar estes pontos **antes de escrever o artefato** (Camada 1). Se ambíguo, pergunte (Skill) ou reporte `NEEDS_DECISION` (Agent). Se contexto é claro, infere. Escopo `tarefa` nunca reusa — sempre avalia pra cada tarefa.
+
+| ID | Sub-skill | Ponto | Opções | Escopo |
+|---|---|---|---|---|
+| `sofisticacao-mercado` | `headlines` | Sofisticação de mercado (Schwartz) | 1-novo · 2-emergente · 3-estabelecido · 4-saturado · 5-ultracompetitivo | tarefa |
+| `nivel-consciencia` | `pagina-de-vendas` | Nível de consciência (Schwartz) | 1-Inconsciente · 2-Problema · 3-Solução · 4-Produto · 5-Pronto | tarefa |
+| `estrutura-pagina` | `pagina-de-vendas` | Estrutura da página | Long-form · VSL · Short+bullets · Híbrida | tarefa |
+
+Enums com 5 opções ordinais (Schwartz) seguem agrupamento em 2 perguntas (ver protocolo seção 6). Ao final da execução, grave a escolha na seção `## Decisões estratégicas` do artefato. **Escopo `tarefa` NÃO grava em `memorias/decisoes.md`.**
+
+---
+
 ## 7. Abordagem de Trabalho
 
 ### Protocolo de Sub-tarefas

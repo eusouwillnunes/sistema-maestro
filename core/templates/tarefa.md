@@ -15,6 +15,9 @@ data-inicio: "[PREENCHER — YYYY-MM-DDTHH:MM:SS]"
 data-conclusao: ~
 data-cancelamento: ~                  # timestamp ISO 8601 | ~ (preenchido só em status=cancelada)
 motivo-cancelamento: ~                # enum: duplicada|obsoleta|mudanca-de-prioridade|erro|substituida|outro|cascata-automatica | ~
+aguardando-decisoes: []               # lista de IDs canônicos pendentes (ex: [formato-lancamento]); vazia quando não há decisão pendente
+decisoes-pendentes-report: ~          # string multi-linha com o report NEEDS_DECISION preservado; ~ quando vazio
+decisoes-resolvidas: {}               # mapa de id→escolha após usuário responder; limpo após re-despacho bem-sucedido
 resultado: "[[caminho-do-artefato]]"
 tags:
   - "#maestro/tarefa"
