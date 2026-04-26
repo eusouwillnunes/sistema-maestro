@@ -150,6 +150,11 @@ Bom dia! Aqui o estado do projeto **[Nome da Empresa]**:
 - Entrevistas: [N] pendentes, [N] em andamento, [N] concluídas
 - Biblioteca: [N] templates preenchidos de [M] total
 
+[Se pendencias_qualidade ≥ 1, renderizar bloco abaixo. pendencias_qualidade = contagem no grep do Turno 2 de tarefas com `status: aprovado-com-pendencia` OU (`categoria: revisao` E status diferente de `concluida`/`cancelada`). Se pendencias_qualidade == 0: omitir o bloco.]
+
+> [!warning] Pendências de qualidade: [pendencias_qualidade] tarefa(s) com pendência aceita ou em revisão.
+> Abrir `_qa-reprovacoes.md` pra revisar.
+
 ## O que pode ser feito agora
 [Lista de tarefas pendentes (não bloqueadas), ordenadas por prioridade]
 - **[Título]** ([Agente]) — [prioridade], grupo: [grupo]

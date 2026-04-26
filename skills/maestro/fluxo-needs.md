@@ -100,10 +100,15 @@ Após 3 usos no mesmo projeto **sem mudança de checklist**:
 
 1. Maestro bloqueia opção "forçar entrega com pendência" na 4a vez.
 2. Abre `AskUserQuestion`:
-   - **Ajustar o item do checklist** (edita `memorias/checklists-ajustados.md` — projeto-específico)
+   - **Ajustar o item do checklist** (escreve em `{projeto}/maestro/checklists/{nome}.md` — projeto-específico, aditivo ao core)
+     - Se o item ajustado vem de `core.md` ou `delta-{categoria}.md`: gravar em `{projeto}/maestro/checklists/{nome-original}.md`
+     - Se o item ajustado vem de `tipo-{tipo}.md` ou `peca-{peca}.md`: gravar em `{projeto}/maestro/checklists/{nome-original}.md`
+     - Conteúdo: lista de `- [ ] item ajustado` espelhando formato do core, com observação no topo "ajustado via fluxo-needs em {data}"
    - **Desativar o item pra este projeto** (marca como skip)
    - **Contestar o padrão com revisão formal** (abre tarefa no backlog pra revisar Grupo 7/8)
 3. Aplicar a escolha.
+
+> **Nota sobre legado:** projetos pré-v2.17.0 com `memorias/checklists-ajustados.md` legado: arquivo fica intocado (greenfield-only). Sistema novo escreve apenas em `{projeto}/maestro/checklists/`. Usuário pode migrar manualmente se quiser.
 
 ### Feedback pro ciclo de melhoria
 

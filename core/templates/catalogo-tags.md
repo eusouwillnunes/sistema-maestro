@@ -54,3 +54,6 @@ Peça = formato final do artefato. Permite queries tipo "todas as headlines do t
 - `peca/funil` — documento de funil completo
 - `peca/identidade` — documento de identidade de marca
 - `peca/manifesto` — manifesto de marca
+- `peca/sequencia-email` — sequências de email (boas-vindas, lançamento, nutrição)
+- `peca/copy-longa` — copies longas (carta de vendas, página completa)
+- `peca/story` — stories curtos do Instagram/Facebook (vertical, 24h)

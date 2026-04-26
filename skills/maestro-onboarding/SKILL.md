@@ -411,6 +411,20 @@ Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
 
 Marcar task "Criar Biblioteca de Marketing" como `completed`.
 
+### 2.6.1 Validação automática
+
+O Maestro valida cada entrega contra um checklist automático antes de te entregar. Se algum critério falhar, o Revisor corrige antes de chegar até você.
+
+Você pode personalizar critérios pro seu projeto editando arquivos em `{projeto}/maestro/checklists/` — o Maestro acabou de criar essa pasta com um README explicando como usar.
+
+Usar `AskUserQuestion`:
+- question: "Quer que eu te mostre o README com um exemplo?"
+- options:
+  - label: "Sim, abre o README", description: "Te mostro como adicionar critérios próprios"
+  - label: "Não, vamos seguir", description: "Pulamos pra próxima etapa"
+
+**Se sim:** orientar o usuário a abrir `{projeto}/maestro/checklists/README.md` no Obsidian (ou editor de preferência) — o conteúdo já tem exemplos de customização.
+
 **Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
 ### 2.7 Obsidian

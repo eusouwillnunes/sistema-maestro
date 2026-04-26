@@ -84,15 +84,17 @@ Acionado quando não existe biblioteca no projeto ou o usuário pede para criar.
    - Consultar `core/templates/biblioteca-de-marketing/_scaffold-projeto.md` para a estrutura de pastas
    - Criar `[nome-da-empresa].md` dentro da pasta (ex: `padaria-do-joao.md`) usando `core/templates/biblioteca-de-marketing/_index-biblioteca.md` como base, preenchendo `empresa:` com o nome legível e `criado:` com a data atual
    - Criar `maestro/config.md` com configuração padrão
+   - Criar `maestro/checklists/` (pasta vazia)
+   - Copiar `plugin/core/templates/_readme-checklists-projeto.md` → `maestro/checklists/README.md` (cópia literal)
    - Copiar os 8 templates de identidade de `core/templates/biblioteca-de-marketing/preenchimento/identidade/` para `identidade/` (cada um já vem com `status: vazio` no frontmatter)
    - Criar indexes inline em 3 pastas com schema solto: `social/_social.md`, `referencias/_referencias.md`, `memorias/_memorias.md` usando os modelos inline do scaffold
-   - **Criar os 13 painéis Dataview copiando literalmente os templates oficiais e renomeando `_X-index.md` → `_X.md` no destino** (sufixo `-index` cai). Não inventar conteúdo:
+   - **Criar os 15 painéis Dataview copiando literalmente os templates oficiais e renomeando `_X-index.md` → `_X.md` no destino** (sufixo `-index` cai). Não inventar conteúdo:
 
      **Validação de existência (M5 do spec Grupo E):** antes de copiar cada um, validar via `Read` que o template existe. Se ausente, avisar usuário com:
      > "⚠ Template `<path>` não encontrado — atualize o plugin pra v2.15.0+ pra ativar o painel de `<area>`. Vou continuar o scaffold sem este painel."
      E continuar o scaffold sem abortar. Aviso "não inventar conteúdo" segue valendo — fallback é **omitir o painel**, nunca improvisar.
 
-     **Lista dos 13 painéis (origem → destino):**
+     **Lista dos 15 painéis (origem → destino):**
      - `plugin/core/templates/_tarefas-index.md` → `tarefas/_tarefas.md`
      - `plugin/core/templates/_planos-index.md` → `planos/_planos.md`
      - `plugin/core/templates/_entrevistas-index.md` → `entrevistas/_entrevistas.md`
@@ -106,8 +108,10 @@ Acionado quando não existe biblioteca no projeto ou o usuário pede para criar.
      - `plugin/core/templates/indexes-area/_pesquisas-index.md` → `pesquisas/_pesquisas.md`
      - `plugin/core/templates/indexes-area/_entregas-index.md` → `entregas/_entregas.md`
      - `plugin/core/templates/indexes-area/_identidade-index.md` → `identidade/_identidade.md`
+     - `plugin/core/templates/indexes-area/_qa-reprovacoes-index.md` → `_qa-reprovacoes.md` (raiz do projeto)
+     - `plugin/core/templates/indexes-area/_pendencias-aceitas-index.md` → `_pendencias-aceitas.md` (raiz do projeto)
 
-   - Esses 13 painéis têm callout `[!info]`, queries Dataview e frontmatter específico. Sem os templates reais, as features de painéis Dataview não funcionam.
+   - Esses painéis têm callout `[!info]`, queries Dataview e frontmatter específico. Sem os templates reais, as features de painéis Dataview não funcionam.
 5. **Apresentar resultado:**
    - Listar a estrutura criada (mostrando a pasta da empresa como raiz)
    - Indicar que o próximo passo é preencher a Identidade da Marca

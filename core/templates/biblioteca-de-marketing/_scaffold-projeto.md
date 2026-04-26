@@ -21,7 +21,9 @@ tags: [meta, scaffold, biblioteca]
 ├── [nome-da-empresa]/                    ← Pasta do projeto (lowercase, hifens, sem acentos)
 │   ├── [nome-da-empresa].md              ← Index geral (usar _index-biblioteca.md)
 │   ├── maestro/
-│   │   └── config.md
+│   │   ├── config.md
+│   │   └── checklists/                ← Critérios de qualidade customizados (opcional, com README)
+│   │       └── README.md
 │   ├── identidade/
 │   │   ├── _identidade.md
 │   │   ├── circulo-dourado.md            ← Camada 1
@@ -143,6 +145,9 @@ Memórias dos agentes — feedbacks, preferências e padrões identificados.
 | planos/ | Pasta + _planos.md (cópia literal do painel Dataview) | Cada plano pelo Gerente de Projetos |
 | entrevistas/ | Pasta + _entrevistas.md (cópia literal do painel Dataview) | Cada entrevista pelo Gerente de Projetos |
 | rascunhos/ | Pasta + _rascunhos.md (cópia literal do painel Dataview) | Cada rascunho pelo especialista via `/rascunho` |
+| maestro/checklists/ | Pasta + README.md (cópia literal de _readme-checklists-projeto.md) | Cada arquivo de critério customizado pelo usuário ou via fluxo-needs |
+| (raiz) _qa-reprovacoes.md | Cópia literal do painel Dataview | — |
+| (raiz) _pendencias-aceitas.md | Cópia literal do painel Dataview | — |
 
 ## Ordem de Criação
 
@@ -151,7 +156,7 @@ Memórias dos agentes — feedbacks, preferências e padrões identificados.
 3. maestro/config.md
 4. identidade/ — pasta + 8 templates de identidade preenchidos vazios + painel Dataview `_identidade.md` (cópia literal — ver passo 6)
 5. Pastas com indexes inline (`social`, `referencias`, `memorias`) — usar conteúdo da seção "Indexes Vazios por Área" deste documento
-6. **As 13 áreas com painel Dataview** — pastas + painéis **copiados literalmente** dos templates abaixo, **renomeando `_X-index.md` → `_X.md`** no destino:
+6. **Os 15 painéis Dataview** (13 nas áreas + 2 na raiz do projeto) — pastas (quando aplicável) + painéis **copiados literalmente** dos templates abaixo, **renomeando `_X-index.md` → `_X.md`** no destino:
 
    | Origem (template) | Destino no vault |
    |-------------------|------------------|
@@ -168,5 +173,9 @@ Memórias dos agentes — feedbacks, preferências e padrões identificados.
    | `plugin/core/templates/indexes-area/_pesquisas-index.md` | `pesquisas/_pesquisas.md` |
    | `plugin/core/templates/indexes-area/_entregas-index.md` | `entregas/_entregas.md` |
    | `plugin/core/templates/indexes-area/_identidade-index.md` | `identidade/_identidade.md` |
+   | `plugin/core/templates/indexes-area/_qa-reprovacoes-index.md` | `_qa-reprovacoes.md` (raiz do projeto) |
+   | `plugin/core/templates/indexes-area/_pendencias-aceitas-index.md` | `_pendencias-aceitas.md` (raiz do projeto) |
+
+   Além disso, criar `maestro/checklists/` (vazia) + `maestro/checklists/README.md` (cópia literal de `plugin/core/templates/_readme-checklists-projeto.md`).
 
    **Não inventar conteúdo** — copiar literalmente. Cada painel precisa ter o callout `[!info]` + as queries Dataview do template pra funcionar. Ver `bibliotecario/SKILL.md` pro fluxo de validação de existência (caso template ausente, avisa user e continua sem painel).
