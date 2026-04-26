@@ -8,6 +8,7 @@ descricao: Fallback universal para entregas que não se encaixam em outro padrã
 ## Frontmatter do artefato
 
 ```yaml
+# === 🤖 Operacional (Gerente preenche) ===
 titulo: "[Título]"
 tipo: entrega-generica
 agente: "[agente]"
@@ -15,13 +16,28 @@ status: em-andamento
 data-criacao: "[timestamp]"
 data-cancelamento: ~
 motivo-cancelamento: ~
+tags-dominio:
+  - tema/[preencher]       # obrigatório — pelo menos 1 do catálogo (plugin/core/templates/catalogo-tags.md + override user)
+  # produto/<slug> é opcional pra este tipo — adicionar se aplicável
 tags:
+  # OBRIGATÓRIO: espelhar todos os valores de tags-dominio aqui. Obsidian tag pane só renderiza hierarquia via este campo nativo. Manter também tags do sistema.
   - "#maestro/entrega"
+  # - tema/[mesmo valor de tags-dominio]
+  # - produto/[mesmo valor de tags-dominio]
+
+# === ✍️ Criativo (Especialista preenche) ===
+# (nenhum — entrega-generica tem frontmatter 100% operacional; agente vem do contexto da tarefa)
 ```
 
 ## Seções-base
 
+> [!info] 🤖 Casca operacional (Gerente preenche)
+> Gerente preenche apenas o frontmatter operacional acima. Não tocar no corpo abaixo.
+
 # [Título]
+
+> [!note] ✍️ Conteúdo (Especialista preenche)
+> Especialista entra com a casca limpa e preenche todas as seções abaixo.
 
 ## Contexto
 

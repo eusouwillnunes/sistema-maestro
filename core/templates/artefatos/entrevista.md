@@ -5,13 +5,15 @@ naming: cronologico
 descricao: Entrevista de coleta de dados conduzida pelo Entrevistador
 ---
 
+> Aplica: [[protocolo-biblioteca]] (seção "Wikilinks em frontmatter")
+
 ## Frontmatter do artefato
 
 ```yaml
 titulo: "[Título da entrevista]"
 tipo: entrevista
 agente-solicitante: "[agente]"
-tarefa-relacionada: "[[tarefa]]"
+tarefa-relacionada: "[[tarefas/<slug>]]" # ex: "[[tarefas/2026-04-25-1200-entrevista-publico]]"
 status: pendente
 data-criacao: "[timestamp]"
 data-conclusao: ~

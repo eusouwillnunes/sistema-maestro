@@ -135,3 +135,128 @@ Após entregar o resultado, avalie se ele merece virar template reutilizável.
 2. **Sem bloqueio:** template ausente nunca impede execução. Frameworks próprios suprem a lacuna.
 3. **Aprovação obrigatória:** nenhum template novo é salvo sem ok explícito do usuário.
 4. **Separação core/user:** templates do core nunca são alterados. Templates do usuário ficam em `user/biblioteca/` ou `biblioteca/` do projeto.
+
+---
+
+## Wikilinks em frontmatter
+
+Todo campo de frontmatter que aponta para outro artefato do vault usa o formato `[[pasta/slug]]` com a pasta-destino do tipo do alvo. Em listas, cada item segue o mesmo formato.
+
+**Não usar `[[slug]]` simples** — ambíguo no Obsidian quando dois arquivos compartilham slug em pastas diferentes (ex: tarefa e entrega promovida com mesmo slug).
+
+### Exemplos canônicos
+
+```yaml
+parte-de: "[[planos/plano-x]]"           # OK — tarefa aponta pra plano
+parte-de: "[[plano-x]]"                  # ERRADO — sem path
+
+bloqueada-por:                           # OK — lista
+  - "[[tarefas/tarefa-y]]"
+  - "[[tarefas/tarefa-z]]"
+
+resultado: "[[campanhas/campanha-black-friday]]"   # OK — pasta varia conforme tipo do artefato gerado
+```
+
+### Tabela canônica (8 templates × 11 campos)
+
+| Campo | Template(s) | Pasta destino |
+|-------|-------------|---------------|
+| `parte-de` | `tarefa.md` | `planos/` |
+| `bloqueada-por` | `tarefa.md` (lista) | `tarefas/` |
+| `resultado` | `tarefa.md` | qualquer pasta (depende do tipo do artefato gerado) |
+| `corrige` | `plano.md` | `planos/` |
+| `correcoes` | `plano.md` (lista) | `planos/` |
+| `regera` | `plano.md` | `planos/` |
+| `produto` | `campanha.md`, `funil.md`, `lancamento.md`, `escada-de-valor.md` | `produtos/` |
+| `produto-destino` | `lead-magnet.md` | `produtos/` |
+| `tarefa-relacionada` | `entrevista.md` | `tarefas/` |
+| `campanha` | `analise-performance.md` | `campanhas/` |
+| `promovido-para` | (preenchido por `fluxo-entrega.md` no rascunho promovido) | qualquer pasta |
+| `origem-tarefa` | (adicionado pelo especialista ao frontmatter do artefato gerado) | `tarefas/` |
+
+**Fora desta regra:** `depende-de` em templates de identidade/produto. Já usa formato `pasta/slug` sem brackets — é referência simbólica resolvida pelo Bibliotecário, não wikilink Obsidian.
+
+### Quando aplicar
+
+Toda skill que escreve wikilink em frontmatter de artefato deve referenciar este protocolo via cabeçalho `Aplica:` no topo do SKILL.md (mesmo padrão de `protocolo-interacao`, `protocolo-timestamp`, etc.).
+
+---
+
+## Tags de Domínio
+
+Sistema de tags transversais que permitem navegação por produto, tema e dimensões futuras. Complementa (não substitui) as tags estruturais `#maestro/*`.
+
+### Catálogo
+
+Duas camadas com merge aditivo:
+
+| Prioridade | Fonte | Caminho |
+|:---:|---|---|
+| 1 | Usuário | `~/.maestro/templates/catalogo-tags.md` |
+| 2 | Core | `plugin/core/templates/catalogo-tags.md` |
+
+Tags válidas = união das duas fontes, deduplicado. Usuário **acrescenta**, não substitui. Tag core não pode ser removida via override.
+
+### Formato canônico
+
+Cada dimensão é uma seção com header `## {dim}/` (barra obrigatória no fim). Itens:
+
+```
+- `{dim}/{valor}` — {descrição opcional}
+```
+
+Parser regex (2 passadas):
+
+- Identificar seções: `(?m)^##\s+(?P<dim>[a-z0-9][a-z0-9-]*)\/\s*$`
+- Extrair tags dentro de cada seção até o próximo `##`: `` `(?P<tag>[a-z0-9][a-z0-9-]*\/[a-z0-9][a-z0-9-]*)` ``
+
+Exceção `produto/`: o core não lista bullets — tags são derivadas do frontmatter de cada artefato via slugify.
+
+### Campo no frontmatter
+
+Templates de artefato aplicáveis (`funil`, `campanha`, `lancamento`, `lead-magnet`, `escada-de-valor`, `analise-performance`, `pesquisa`, `entrega-generica`) têm:
+
+```yaml
+tags-dominio:
+  - produto/<slug>
+  - tema/<valor>
+```
+
+**Regra de slugify pra `produto/`:** tag = `produto/<slug>`, onde `<slug>` = conteúdo do wiki-link do campo `produto:` em lowercase + espaços convertidos em hífen + sem acentos.
+
+Exemplos:
+- `produto: "[[curso-x]]"` → `produto/curso-x`
+- `produto: "[[Curso Completo do João]]"` → `produto/curso-completo-do-joao`
+
+Campo `produto:` do frontmatter continua string única (produto principal). Cruzamentos (artefato envolve 2+ produtos) moram em `tags-dominio` como `produto/*` adicionais.
+
+### Matriz de obrigatoriedade
+
+| Tipo | `produto/*` | `tema/*` |
+|---|:---:|:---:|
+| funil, campanha, lancamento, lead-magnet, escada-de-valor, analise-performance | obrigatório | obrigatório |
+| pesquisa, entrega-generica | opcional | obrigatório |
+| tarefa, plano, entrevista | **não se aplica** | **não se aplica** |
+
+### Fluxo de validação
+
+- **QA** valida **presença** (Fluxo 5.1 passo 3 do Maestro). Item binário no checklist da categoria. Reprova se ausente → tarefa de revisão.
+- **Bibliotecário** valida **legalidade** (Fluxo FECHAR ARTEFATO, após aprovação humana). Parseia catálogos, verifica cada tag.
+  - Tag existe no catálogo → OK.
+  - Tag é `produto/<slug>` e casa com `produto:` via slugify → OK (auto-válido mesmo sem declaração).
+  - Tag não bate → acumula em `tags-novas` com sugestões por prefixo.
+
+### Round-trip de tag nova
+
+Bibliotecário em Agent() **NÃO abre `AskUserQuestion`**. Reporta `NEEDS_CONTEXT`:
+
+```
+BLOCKER:
+  motivo: "tags fora do catálogo"
+  tags-novas: [<lista>]
+  sugestoes: {<tag>: [<sugestões por prefixo>]}
+```
+
+Maestro recebe, abre `AskUserQuestion` (1 por tag, 3 opções: adicionar ao user / trocar por sugestão / descartar), aplica decisões (escreve em `~/.maestro/templates/catalogo-tags.md` para adições), re-despacha Bibliotecário com CONTEXTO enriquecido por `tags-decisoes: {<tag>: {acao: ..., alvo: ...}}`.
+
+Bibliotecário na 2ª rodada aplica trocas/descartes no artefato e valida — idempotente, máximo 2 rodadas.

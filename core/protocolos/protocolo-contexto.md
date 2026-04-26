@@ -114,6 +114,75 @@ O sistema nunca fica travado.
 
 ---
 
+## Contexto para o Especialista no modo "Decompor plano" (Fluxo de Plano v2 — Grupo B)
+
+O Maestro anexa no bloco CONTEXTO do despacho do especialista-dono em modo decompor:
+
+### Padrão pra todos os 6 especialistas (Estrategista, Copywriter, Marca, Mídias Sociais, Performance, Pesquisador)
+
+```
+Contexto de identidade (se existe):
+- {projeto}/_identidade.md
+
+Memória de decisões estratégicas (se existe):
+- {projeto}/memorias/decisoes.md
+
+Briefing original do usuário:
+[bloco de texto com o pedido literal capturado no brainstorm da Fase 1]
+
+Tags de domínio sugeridas pelo Maestro:
+- produto/[slug se aplicável]
+- tema/[slug do contexto]
+```
+
+### Extensões por especialista-dono
+
+| Especialista | Adicionais ao CONTEXTO |
+|---|---|
+| Estrategista | Produto referenciado (se citado e existe), pesquisas recentes do projeto (se existem), escada-de-valor existente (se existe) |
+| Copywriter | Produto referenciado (se citado), posicionamento do produto (se existe), ângulos prévios usados em campanhas anteriores (se existem) |
+| Marca | Plataforma de marca atual (se existe), naming history (se existe) |
+| Mídias Sociais | Calendário social vigente — 3 últimos meses (se existe), perfis de plataforma usados (se existem) |
+| Performance | Histórico de campanhas pagas (se existem), pixel/analytics setup (se existe) |
+| Pesquisador | Pesquisas anteriores do mesmo tema (se existem) |
+
+### Modo de invocação
+
+`MODO: decompor-plano` no bloco INSTRUÇÃO. Especialista identifica pelo modo qual fluxo seguir (decomposição vs entrega vs rascunho).
+
+### Iteração (CK1 — Ajustar)
+
+Quando o usuário pede ajuste no CK1, o Maestro re-despacha o mesmo especialista com:
+- Bloco CONTEXTO idêntico (prompt cache hit reduz custo ~80%).
+- Bloco `AJUSTE PEDIDO:` com texto livre do usuário.
+- Última versão do `RESUMO-PRO-PLAN-MODE` pra contexto.
+
+Cap de 5 iterações no loop (decisão do hub).
+
+---
+
+## Contexto para o Bibliotecário no Fluxo FECHAR ARTEFATO
+
+O Maestro anexa sempre no bloco CONTEXTO do despacho do Bibliotecário pra fechar artefato:
+
+```
+Catálogos de tags (leia antes de validar):
+- plugin/core/templates/catalogo-tags.md
+- ~/.maestro/templates/catalogo-tags.md   (se existe; senão trate como user vazio)
+```
+
+Em **re-despacho** após o Maestro resolver tags novas via `AskUserQuestion` (Fluxo 5.12 do hub), o CONTEXTO ganha também:
+
+```
+Decisões aplicadas pelo Maestro:
+tags-decisoes:
+  <tag>: {acao: "adicionar" | "trocar" | "descartar", alvo: "<tag-destino-se-troca>"}
+```
+
+Bibliotecário usa `tags-decisoes` pra editar o artefato (trocar/descartar tags) antes de revalidar contra o catálogo já atualizado (o Maestro escreveu no catálogo user antes do re-despacho).
+
+---
+
 ## Checklist Rápido
 
 Antes de despachar um especialista:
@@ -125,3 +194,5 @@ Antes de despachar um especialista:
 - [ ] Especialista criativo (`estrategista`, `marca`, `copywriter`, `midias-sociais`, `performance`)? → Incluir `{projeto}/memorias/decisoes.md` no CONTEXTO (se arquivo existe). Vale tanto no despacho do especialista quanto no despacho do Revisor.
 - [ ] Modo Agent()? → Caminhos no Bloco CONTEXTO
 - [ ] Modo Skill()? → Instruir leitura de biblioteca/identidade/
+- [ ] Despachando Bibliotecário pra fechar artefato? → Incluir os 2 catálogos de tags no CONTEXTO (core + user)
+- [ ] Despachando especialista no modo "Decompor plano" (Fase 2 do Fluxo de Plano v2)? → Incluir CONTEXTO padrão + extensões do especialista-dono (ver seção dedicada acima)

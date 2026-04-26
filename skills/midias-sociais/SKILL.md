@@ -11,6 +11,8 @@ description: >
 
 > Aplica: [[protocolo-interacao]]
 > Aplica: [[protocolo-contexto]]
+> Aplica: [[protocolo-decompor-plano]]
+> Aplica: [[protocolo-biblioteca]] (seção "Wikilinks em frontmatter" — usar `[[pasta/slug]]` em campos como `produto:`)
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
@@ -200,6 +202,12 @@ Antes de executar qualquer tarefa, leia o contexto de marca indicado no Bloco CO
 **Complementar** = leia se existir. Melhora a qualidade mas não bloqueia.
 
 Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
+
+### Tags de Domínio
+
+Todo artefato de entrega deve ter `tags-dominio` no frontmatter: `produto/<slug>` (derivado de `produto:` via slugify — lowercase + espaços→hífen + sem acentos) e ≥1 `tema/*` escolhido do catálogo (`plugin/core/templates/catalogo-tags.md` + `~/.maestro/templates/catalogo-tags.md`). Ver `protocolo-biblioteca` seção "Tags de Domínio" pra matriz de obrigatoriedade e fluxo de aprovação de tag nova via Maestro.
+
+**Em modo rascunho**, aplica `[[protocolo-tags-rascunho]]` — matriz relaxada (`tema/*` obrigatório, `produto/*` opcional) e retorno via bloco `---TAGS-RASCUNHO---` em vez de frontmatter. Sem round-trip de tag nova (a validação estrita acontece no `/promover`).
 
 ---
 
@@ -538,6 +546,29 @@ Quando o bloco TAREFA incluir o campo `caminho-do-artefato`:
 ### Feedbacks Recebidos
 
 - (adicione conforme feedback)
+
+## Modo "Decompor plano" (Fluxo de Plano v2 — Grupo B)
+
+Quando o Maestro despacha as Mídias Sociais com `MODO: decompor-plano` no bloco INSTRUÇÃO, sigo o protocolo único `plugin/core/protocolos/protocolo-decompor-plano.md` (lido via `Aplica:`).
+
+### Extensões específicas das Mídias Sociais
+
+**Quando sou despachada:** planos primariamente de conteúdo social (calendário editorial, mix de plataformas, série de posts, sprint de reels). Pedidos cross-domain caem no Estrategista.
+
+**Coluna opcional `Formato`** na tabela quando relevante: reels, carrossel, story, post estático, vídeo longo. Aparece na tabela quando o pedido envolve múltiplos formatos por peça.
+
+**Hooks viralizáveis (Brendan Kane)** entram no raciocínio quando o pedido envolve "ganhar atenção" em plataforma fria (TikTok, Reels). Decomposição costuma incluir tarefa explícita de "hooks candidatos" antes do conteúdo final.
+
+**Distribuição multi-plataforma (Vaynerchuk)** quando o pedido toca 2+ plataformas: cada plataforma pode virar tarefa separada (mesmo conteúdo, adaptação por formato), ou uma tarefa única "produzir matéria-prima + adaptar pra N plataformas" se o ciclo é mais leve.
+
+**Decomposição típica de calendário editorial mensal:**
+- Pesquisa de tendências do nicho (Pesquisador, se não existe — opcional)
+- Eixos temáticos do mês (1 tarefa)
+- Pillar posts (1-3 tarefas — peças centrais)
+- Posts de apoio / variações (1 tarefa por plataforma ou por semana)
+- Stories / engajamento (1 tarefa de série)
+
+Dependências: eixos temáticos primeiro, depois pillar, depois apoio. Stories podem rodar em paralelo após eixos.
 
 ## Histórico de Mudanças
 

@@ -8,6 +8,8 @@ description: >
   diretamente via /entrevistador.
 ---
 
+> Aplica: [[protocolo-biblioteca]] (seção "Wikilinks em frontmatter" — usar `[[pasta/slug]]` em `tarefa-relacionada:` da entrevista)
+
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
 # Entrevistador

@@ -6,3 +6,4 @@
 - [ ] Pesquisa executada pelo Pesquisador
 - [ ] Fontes verificadas
 - [ ] Relatório salvo no vault
+- [ ] **Tags de domínio presentes?** Frontmatter do artefato tem `tags-dominio` preenchido com ≥1 `tema/*` (obrigatório). `produto/*` é opcional pra pesquisa — adicionar se a pesquisa é sobre produto específico. Placeholders `[preencher]` não são válidos.

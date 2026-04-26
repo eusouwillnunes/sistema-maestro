@@ -9,61 +9,86 @@ tags:
 # Tarefas
 
 > [!info] Painel de tarefas
-> Mantido automaticamente pelo Gerente de Projetos. Consultável no Obsidian.
+> Atualizado automaticamente via Dataview. Se você acabou de ativar o Maestro e este painel está vazio, é normal — ele se preenche conforme o Gerente cria tarefas. Requer o plugin Dataview do Obsidian instalado e habilitado.
 
 ## Estatísticas
 
-| Métrica | Valor |
-|---------|-------|
-| Total (histórico) | 0 |
-| Ativas | 0 |
-| Concluídas | 0 |
-| Canceladas | 0 |
-| Em andamento | 0 |
-| Pendentes | 0 |
-| Bloqueadas | 0 |
-| Tempo médio | — |
+```dataview
+TABLE length(rows) as Quantidade
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "tarefa"
+GROUP BY status
+```
 
 ### Por agente
 
-| Agente | Concluídas | Pendentes | Bloqueadas | Canceladas |
-|--------|-----------|-----------|------------|------------|
-| (nenhum) | — | — | — | — |
+```dataview
+TABLE length(rows) as Total,
+      length(filter(rows, (r) => r.status = "concluida")) as Concluídas,
+      length(filter(rows, (r) => r.status = "pendente")) as Pendentes,
+      length(filter(rows, (r) => r.status = "bloqueada")) as Bloqueadas,
+      length(filter(rows, (r) => r.status = "cancelada")) as Canceladas
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "tarefa"
+GROUP BY agente
+```
 
 ### Por solicitante
 
-| Solicitante | Total | Concluídas | Em andamento | Canceladas |
-|-------------|-------|-----------|--------------|------------|
-| (nenhum) | — | — | — | — |
+```dataview
+TABLE length(rows) as Total,
+      length(filter(rows, (r) => r.status = "concluida")) as Concluídas,
+      length(filter(rows, (r) => r.status = "em-andamento")) as "Em andamento",
+      length(filter(rows, (r) => r.status = "cancelada")) as Canceladas
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "tarefa"
+GROUP BY solicitante
+```
 
 ---
 
 ## Em Andamento
 
-| Tarefa | Agente | Solicitante | Plano | Resultado | Início | Checklist |
-|--------|--------|-------------|-------|-----------|--------|-----------|
-| (nenhuma) | — | — | — | — | — | — |
+```dataview
+TABLE agente, solicitante, parte-de as Plano, resultado as Resultado, data-inicio as Início
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "tarefa" AND status = "em-andamento"
+SORT data-inicio DESC
+```
 
 ## Pendentes
 
-| Tarefa | Agente | Solicitante | Plano | Resultado | Prioridade | Criação |
-|--------|--------|-------------|-------|-----------|------------|---------|
-| (nenhuma) | — | — | — | — | — | — |
+```dataview
+TABLE agente, solicitante, parte-de as Plano, resultado as Resultado, prioridade, data-criacao as Criação
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "tarefa" AND status = "pendente"
+SORT prioridade ASC, data-criacao DESC
+```
 
 ## Bloqueadas
 
-| Tarefa | Agente | Bloqueada por | Solicitante | Plano |
-|--------|--------|---------------|-------------|-------|
-| (nenhuma) | — | — | — | — |
+```dataview
+TABLE agente, bloqueada-por as "Bloqueada por", solicitante, parte-de as Plano
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "tarefa" AND status = "bloqueada"
+```
 
 ## Concluídas (últimas 15)
 
-| Tarefa | Agente | Solicitante | Plano | Resultado | Tempo | Conclusão |
-|--------|--------|-------------|-------|-----------|-------|-----------|
-| (nenhuma) | — | — | — | — | — | — |
+```dataview
+TABLE agente, solicitante, parte-de as Plano, resultado as Resultado, data-conclusao as Conclusão, choice(concluido-por = "sistema", "🤖 sistema", choice(concluido-por = "manual", "✋ manual", "— desconhecido")) as Origem
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "tarefa" AND status = "concluida"
+SORT data-conclusao DESC
+LIMIT 15
+```
 
 ## Canceladas (últimas 15)
 
-| Tarefa | Agente | Solicitante | Plano | Motivo | Cancelamento |
-|--------|--------|-------------|-------|--------|--------------|
-| (nenhuma) | — | — | — | — | — |
+```dataview
+TABLE agente, solicitante, parte-de as Plano, motivo-cancelamento as Motivo, data-cancelamento as Cancelamento, choice(concluido-por = "sistema", "🤖 sistema", choice(concluido-por = "manual", "✋ manual", "— desconhecido")) as Origem
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "tarefa" AND status = "cancelada"
+SORT data-cancelamento DESC
+LIMIT 15
+```

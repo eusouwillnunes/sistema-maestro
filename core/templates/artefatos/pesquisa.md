@@ -16,7 +16,11 @@ data: "[YYYY-MM-DD]"
 status: atual
 data-cancelamento: ~
 motivo-cancelamento: ~
+tags-dominio:
+  - tema/[preencher]       # obrigatório — pelo menos 1 do catálogo; escolher tema que represente o objeto da pesquisa (ex: concorrência → tema/autoridade)
+  # produto/<slug> é opcional pra este tipo — adicionar se a pesquisa é sobre produto específico
 tags:
+  # OBRIGATÓRIO: espelhar todos os valores de tags-dominio aqui. Obsidian tag pane só renderiza hierarquia via este campo nativo. Manter também tags do sistema.
   - "#maestro/pesquisa"
 ```
 

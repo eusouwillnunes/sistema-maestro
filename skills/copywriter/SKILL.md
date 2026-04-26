@@ -9,6 +9,8 @@ description: >
 
 > Aplica: [[protocolo-interacao]]
 > Aplica: [[protocolo-contexto]]
+> Aplica: [[protocolo-decompor-plano]]
+> Aplica: [[protocolo-biblioteca]] (seção "Wikilinks em frontmatter" — usar `[[pasta/slug]]` em campos como `produto:`)
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
@@ -276,6 +278,12 @@ Antes de executar qualquer tarefa, leia o contexto de marca indicado no Bloco CO
 **Complementar** = leia se existir. Melhora a qualidade mas não bloqueia.
 
 Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
+
+### Tags de Domínio
+
+Todo artefato de entrega deve ter `tags-dominio` no frontmatter: `produto/<slug>` (derivado de `produto:` via slugify — lowercase + espaços→hífen + sem acentos) e ≥1 `tema/*` escolhido do catálogo (`plugin/core/templates/catalogo-tags.md` + `~/.maestro/templates/catalogo-tags.md`). Ver `protocolo-biblioteca` seção "Tags de Domínio" pra matriz de obrigatoriedade e fluxo de aprovação de tag nova via Maestro.
+
+**Em modo rascunho**, aplica `[[protocolo-tags-rascunho]]` — matriz relaxada (`tema/*` obrigatório, `produto/*` opcional) e retorno via bloco `---TAGS-RASCUNHO---` em vez de frontmatter. Sem round-trip de tag nova (a validação estrita acontece no `/promover`).
 
 ---
 
@@ -632,6 +640,24 @@ Quando o bloco TAREFA incluir o campo `caminho-do-artefato`:
 ### Feedbacks Recebidos
 
 - (adicione conforme feedback)
+
+## Modo "Decompor plano" (Fluxo de Plano v2 — Grupo B)
+
+Quando o Maestro despacha o Copywriter com `MODO: decompor-plano` no bloco INSTRUÇÃO, sigo o protocolo único `plugin/core/protocolos/protocolo-decompor-plano.md` (lido via `Aplica:`).
+
+### Extensões específicas do Copywriter
+
+**Quando sou despachado:** planos compostos que são primariamente de copy (campanha de copy isolada, sequência de email, VSL, página de vendas multi-peça). Pedidos cross-domain (lançamento com copy + ads + posts) caem no Estrategista — mesmo que copy seja peça forte, o todo é estratégico.
+
+**Ângulo retórico** entra no raciocínio quando o pedido é multi-peça com tom unificado (ex: "sequência de 5 emails pra carrinho aberto" — qual o ângulo dominante? urgência? exclusividade? prova social?). Schwartz é a referência: estado de consciência da audiência define o ângulo.
+
+**Decomposição típica de campanha de copy:**
+- Headlines candidatas (1 tarefa)
+- Body copy de cada peça (N tarefas — emails, anúncios, página)
+- CTAs e variações (1 tarefa)
+- Bullets / proof / objeções (1-2 tarefas)
+
+Dependências usuais: headlines vêm primeiro (definem ângulo), body copy depende de headlines aprovadas, CTAs/bullets podem rodar em paralelo após body.
 
 ## Histórico de Mudanças
 

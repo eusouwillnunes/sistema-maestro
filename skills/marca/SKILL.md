@@ -11,6 +11,8 @@ description: >
 
 > Aplica: [[protocolo-interacao]]
 > Aplica: [[protocolo-contexto]]
+> Aplica: [[protocolo-decompor-plano]]
+> Aplica: [[protocolo-biblioteca]] (seção "Wikilinks em frontmatter" — usar `[[pasta/slug]]` em campos como `produto:`)
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
@@ -181,6 +183,12 @@ O agente de Marca lê o que já existe pra evoluir, não pra começar do zero.
 **Complementar** = leia se existir. Melhora a qualidade mas não bloqueia.
 
 Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
+
+### Tags de Domínio
+
+Artefatos de entrega do Marca (manifesto, naming, branding aplicado) devem ter `tags-dominio` no frontmatter quando o tipo suporta (ex: funil de branding, campanha de manifesto). Regra geral: `produto/<slug>` obrigatório (derivado de `produto:` via slugify) + ≥1 `tema/*` do catálogo (`plugin/core/templates/catalogo-tags.md` + `~/.maestro/templates/catalogo-tags.md`). Ver `protocolo-biblioteca` seção "Tags de Domínio" pra matriz de obrigatoriedade por tipo e fluxo de aprovação de tag nova via Maestro. Templates puros de identidade não entram neste fluxo.
+
+**Em modo rascunho**, aplica `[[protocolo-tags-rascunho]]` — matriz relaxada (`tema/*` obrigatório, `produto/*` opcional) e retorno via bloco `---TAGS-RASCUNHO---` em vez de frontmatter. Sem round-trip de tag nova (a validação estrita acontece no `/promover`).
 
 ---
 
@@ -529,6 +537,26 @@ Quando o bloco TAREFA incluir o campo `caminho-do-artefato`:
 ### Feedbacks Recebidos
 
 - (adicione conforme feedback)
+
+## Modo "Decompor plano" (Fluxo de Plano v2 — Grupo B)
+
+Quando o Maestro despacha a Marca com `MODO: decompor-plano` no bloco INSTRUÇÃO, sigo o protocolo único `plugin/core/protocolos/protocolo-decompor-plano.md` (lido via `Aplica:`).
+
+### Extensões específicas da Marca
+
+**Quando sou despachada:** planos primariamente de identidade (plataforma de marca completa, naming, posicionamento integrado). Pedidos que misturam identidade + copy + posts caem no Estrategista.
+
+**Golden Circle** (Sinek) entra no raciocínio quando o pedido pede "redefinir a marca" ou "platform brand": tarefas costumam decompor em Why → How → What, nessa ordem (dependência sequencial natural).
+
+**Arquétipo da marca** (Mark & Pearson) aparece como decisão estratégica em planos que envolvem personalidade de marca — vira tarefa explícita de definição quando a marca não tem arquétipo declarado.
+
+**Decomposição típica de plataforma de marca:**
+- Pesquisa de público + concorrentes (Pesquisador como dependência, se não existir)
+- Círculo Dourado (Why, How, What) — 1 tarefa, com Why primeiro
+- Posicionamento — depende de Círculo Dourado
+- Personalidade da marca / Arquétipo — depende de Posicionamento
+- Tom de voz — depende de Personalidade
+- Naming (se aplicável) — pode ser paralelo ao posicionamento ou após
 
 ## Histórico de Mudanças
 

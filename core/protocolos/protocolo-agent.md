@@ -312,3 +312,24 @@ A seção específica de cada agente pode adicionar itens ao "Antes de executar"
 Especialistas **criativos** em modo Skill() (Estrategista, Marca, Copywriter, Mídias Sociais, Performance) **NÃO invocam Agent() de outros especialistas criativos**. Se a sub-tarefa precisa de outro especialista criativo, retorna controle ao usuário com sugestão ("esse pedaço é da Marca, quer que eu te redirecione?").
 
 Invocação de agentes **operacionais** (Gerente, Bibliotecário, Pesquisador, Entrevistador, QA, Revisor) via Agent() continua permitida — esses não reportam `NEEDS_DECISION`.
+
+---
+
+## 6. Modo Rascunho (sem report)
+
+Despacho em modo rascunho (acionado via `/rascunho` ou quando o classificador do Maestro retorna `tipo=Rascunho`) usa contrato mais leve que os outros modos:
+
+- **Sem `---REPORT---`:** especialista retorna conteúdo livre diretamente, sem bloco de report estruturado.
+- **Sem QA, Revisor ou Gerente:** pipeline curto — Maestro despacha, especialista entrega, Maestro salva.
+- **Bloco obrigatório de retorno:** ao final da resposta (após todo o conteúdo produzido), incluir:
+
+      ---TAGS-RASCUNHO---
+      - tema/<valor>
+      - produto/<valor>   # omitir se não aplicável
+      ---END-TAGS-RASCUNHO---
+
+  Delimitadores literais. O Maestro parseia e escreve em `tags-dominio:` + espelha em `tags:`.
+
+Ver `protocolo-tags-rascunho.md` pra matriz relaxada (tema obrigatório, produto opcional) e regras de validação.
+
+Este modo aplica-se aos 5 especialistas criativos (Copywriter, Estrategista, Marca, Mídias Sociais, Performance) e ao Pesquisador. Entrevistador, Bibliotecário, Gerente e QA/Revisor não recebem despacho em modo rascunho.

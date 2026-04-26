@@ -246,12 +246,27 @@ Executar silenciosamente, sem mensagem detalhada ao usuário:
 1. Verificar se `~/.maestro/` existe: `test -d ~/.maestro`
 2. Se **NÃO existir** → criar a estrutura:
    ```bash
-   mkdir -p ~/.maestro/memorias/agentes ~/.maestro/overrides ~/.maestro/personas
+   mkdir -p ~/.maestro/memorias/agentes ~/.maestro/overrides ~/.maestro/personas ~/.maestro/templates
    ```
 3. Verificar se `~/.maestro/config.md` existe: `test -f ~/.maestro/config.md`
    - Se **NÃO existir** → copiar o template inicial: `cp [plugin]/user/config.md ~/.maestro/config.md`
    - Substituir `[plugin]` pelo caminho real do diretório do plugin (onde está o SKILL.md)
 4. Se já existir → manter sem alteração (preservar configurações do usuário)
+5. Verificar se `~/.maestro/templates/catalogo-tags.md` existe: `test -f ~/.maestro/templates/catalogo-tags.md`
+   - Se **NÃO existir** → criar vazio com frontmatter padrão:
+     ```yaml
+     ---
+     tipo: catalogo
+     area: tags
+     descricao: "Overrides aditivos do catálogo de tags do usuário"
+     ---
+
+     # Catálogo de Tags (overrides)
+
+     > Este arquivo ACRESCENTA ao catálogo core (`plugin/core/templates/catalogo-tags.md`).
+     > Tags aprovadas pelo usuário via AskUserQuestion são gravadas aqui automaticamente pelo Maestro.
+     ```
+   - Se já existir → manter sem alteração (preservar catálogo existente)
 
 Informar brevemente apenas se precisou criar: "Diretório `~/.maestro/` criado para suas configurações globais."
 
@@ -320,6 +335,8 @@ Executar silenciosamente (sem mensagens detalhadas para cada item):
    - `maestro/memorias/contexto.md`
    - `maestro/memorias/sessoes/` (pasta vazia; `_sessoes.md` é criado pelo /tchau-maestro na primeira sessão)
    - `maestro/memorias/decisoes.md`
+   - `maestro/memorias/preferencias-classificacao.md` — copia de `core/templates/_preferencias-classificacao-template.md` (v2.12.0, Bug 4). Maestro preenche ao longo do uso conforme você responde AskUserQuestion de ambiguidade. Após 3 escolhas iguais pro mesmo padrão, vira preferência aplicada automaticamente com opção de override.
+   - `maestro/memorias/pendencias-aceitas.md` — copia de `core/templates/_pendencias-aceitas-template.md` (v2.12.0, Bug 4). Registra longitudinalmente usos da opção "forçar entrega com pendência" em QA/Revisor. Após 3 usos, Maestro bloqueia a opção e força revisão estrutural do checklist.
    - `maestro/memorias/agentes/` (pasta vazia)
 
    O arquivo `memorias/decisoes.md` começa vazio e será preenchido automaticamente conforme você toma decisões estratégicas durante o uso do Maestro (arquétipo, formato de lançamento, tom de voz, etc.). O sistema reusa escolhas anteriores pra manter coerência entre entregas.
@@ -427,8 +444,24 @@ Ajustar o fluxo conforme a escolha:
 4. Sugerir configurações opcionais:
    > "Dica: nas configurações do Obsidian (engrenagem no canto inferior esquerdo), ative **'Files & Links' → 'Detect all file extensions'** pra ver todos os arquivos do projeto."
 
+5. Instalar o plugin **Dataview** (obrigatório):
+   > "Agora um plugin que é **obrigatório** pro Maestro funcionar bem: o **Dataview**. Ele é quem transforma os painéis de tarefas, planos e entrevistas em tabelas automáticas, sempre atualizadas conforme você trabalha. Sem o Dataview, esses painéis aparecem só como blocos de código — não vão renderizar.
+   >
+   > Siga:
+   > 1. No Obsidian, abra **Settings** (engrenagem, canto inferior esquerdo)
+   > 2. Vá em **Community plugins**
+   > 3. Se pedir pra habilitar community plugins, clique em **Turn on community plugins**
+   > 4. Clique em **Browse** e busque **Dataview**
+   > 5. Clique em **Install** e depois em **Enable**
+   >
+   > Me avise quando estiver pronto."
+   - Aguardar confirmação do usuário
+
+6. Dica final — navegação por tags. **Mostrar ao usuário (obrigatório, não pular):**
+   > "Última dica: depois de criar alguns artefatos, abra o **painel de Tags** do Obsidian (ícone de `#` no sidebar direito). Seus produtos e temas aparecem como árvore navegável — clicar em qualquer tag filtra o vault. É o jeito mais rápido de ver 'todos os copies do Produto X' ou 'todas as peças de vendas'."
+
 **Se não/depois:**
-- Informar: "Sem problema! Tudo funciona no terminal mesmo. Se quiser configurar depois, rode `/maestro:onboarding` e escolha a opção do Obsidian."
+- Informar: "Sem problema! Tudo funciona no terminal mesmo. Se quiser configurar depois, rode `/maestro:onboarding` e escolha a opção do Obsidian. Lembre-se: sem o Dataview instalado, os painéis de tarefas/planos/entrevistas ficam ilegíveis."
 
 Marcar task "Configurar Obsidian" como `completed`.
 
@@ -719,6 +752,8 @@ Executar silenciosamente:
    - `maestro/memorias/contexto.md`
    - `maestro/memorias/sessoes/` (pasta vazia; `_sessoes.md` é criado pelo /tchau-maestro na primeira sessão)
    - `maestro/memorias/decisoes.md`
+   - `maestro/memorias/preferencias-classificacao.md` — copia de `core/templates/_preferencias-classificacao-template.md` (v2.12.0, Bug 4). Maestro preenche ao longo do uso conforme você responde AskUserQuestion de ambiguidade. Após 3 escolhas iguais pro mesmo padrão, vira preferência aplicada automaticamente com opção de override.
+   - `maestro/memorias/pendencias-aceitas.md` — copia de `core/templates/_pendencias-aceitas-template.md` (v2.12.0, Bug 4). Registra longitudinalmente usos da opção "forçar entrega com pendência" em QA/Revisor. Após 3 usos, Maestro bloqueia a opção e força revisão estrutural do checklist.
    - `maestro/memorias/agentes/` (pasta vazia)
 
    O arquivo `memorias/decisoes.md` começa vazio e será preenchido automaticamente conforme você toma decisões estratégicas durante o uso do Maestro (arquétipo, formato de lançamento, tom de voz, etc.). O sistema reusa escolhas anteriores pra manter coerência entre entregas.

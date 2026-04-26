@@ -29,19 +29,82 @@ Esta skill é acionada quando:
 
 ---
 
-## 2. Intervalo Adaptativo
+## 2. Fluxo (mapa de turnos)
 
-Antes de montar o dashboard, calcular quantos dias se passaram desde a última sessão registrada.
+> **Disparar todas as tool calls de um turno como chamadas paralelas em um único bloco.** Não serializar. Turnos adjacentes têm dependência de dados — não misturar turnos.
+
+Antes de tudo, detectar projeto ativo conforme `core/protocolos/protocolo-ativacao.md`. O mapa abaixo assume que `{projeto}` já está resolvido.
+
+### Turno 1 — Descoberta e leitura consolidada (paralelo, sem dependências)
+
+Dispare as 7 tool calls abaixo em um **único bloco**:
+
+- `Read` `~/.maestro/config.md`
+- `Read` `{projeto}/{index-do-projeto}.md` (arquivo da raiz do projeto com `tipo: index` + `empresa:`; contém a tabela de status da biblioteca). Se o arquivo não existir, o dashboard omite a linha "Biblioteca" e mostra "Biblioteca: não configurada"
+- `Glob` `{projeto}/memorias/sessoes/*.md`
+- `Glob` `~/.maestro/sessoes-emergencia/*.md`
+- `Glob` `{projeto}/tarefas/*.md`
+- `Glob` `{projeto}/entrevistas/*.md`
+- `Glob` `{projeto}/rascunhos/*.md`
+
+**Importante:** `_tarefas.md`, `_entrevistas.md` e `_planos.md` são **painéis Dataview puros** desde o Grupo 6. Ler o arquivo via `Read` devolve só o texto da query, não os dados renderizados (Dataview só executa dentro do Obsidian). Por isso o Turno 1 não os inclui; a extração de contadores e metadados acontece no Turno 2 via `Bash grep` nos arquivos individuais.
+
+**Exemplo canônico do Turno 1 (formato correto):** em **um único turno do modelo**, emitir as 7 chamadas paralelamente:
+
+```
+Read    ~/.maestro/config.md
+Read    {projeto}/{index-do-projeto}.md
+Glob    {projeto}/memorias/sessoes/*.md
+Glob    ~/.maestro/sessoes-emergencia/*.md
+Glob    {projeto}/tarefas/*.md
+Glob    {projeto}/entrevistas/*.md
+Glob    {projeto}/rascunhos/*.md
+```
+
+**Errado:** emitir uma chamada, esperar o retorno, emitir a próxima, esperar o retorno, etc. Isso serializa e anula o ganho do mapa de turnos.
+
+### Turno 2 — Extração consolidada (paralelo, depende do Turno 1)
+
+Dispare em um **único bloco** após o Turno 1 concluir:
+
+- `Read` da sessão mais recente (primeiro arquivo da lista ordenada descendente retornada pelo glob em `memorias/sessoes/`) — precisa do corpo do arquivo
+- `Bash` com grep consolidado extraindo frontmatters em lote de tarefas + entrevistas + rascunhos em uma única chamada:
+
+  ```bash
+  grep -HE "^(status|agente|titulo|objetivo|parte-de|prioridade|resultado|bloqueada-por|data-conclusao|data-inicio|data-cancelamento|motivo-cancelamento|template-destino|agente-solicitante|solicitante|grupo|categoria|expira-em|tags-dominio|tipo):" \
+    {projeto}/tarefas/*.md {projeto}/entrevistas/*.md {projeto}/rascunhos/*.md 2>/dev/null || true
+  ```
+
+  - `-H` prefixa o nome do arquivo em cada linha pra permitir agrupamento posterior
+  - `2>/dev/null` suprime erros de "No such file or directory" quando alguma pasta não existe
+  - `|| true` evita que `set -e` aborte quando nenhum arquivo bate
+
+Turno 2 tem **2 tool calls** (1 Read + 1 Bash), independente do tamanho do vault — escala O(1) em tool calls, não O(N).
+
+### Turno 3 — Montagem e interação (sequencial, sem mais I/O)
+
+Sem novas leituras. Aplicar na ordem:
+
+1. Cálculo de intervalo usando `data` do frontmatter da sessão mais recente (Seção 3)
+2. Aviso de backup de emergência (se glob `sessoes-emergencia/` retornou arquivos) — oferecer cópia via `AskUserQuestion`
+3. Recuperação de tarefa interrompida → Seção 6 (um `AskUserQuestion` por caso detectado no grep)
+4. Higiene de rascunho → Seção 7 (um `AskUserQuestion` por expirado detectado no grep)
+5. Montar dashboard (Seção 4)
+6. `AskUserQuestion` final de opções (conforme [[protocolo-interacao]])
+
+---
+
+## 3. Cálculo de intervalo e leitura de sessões
+
+Após o Turno 1 retornar a lista de arquivos em `memorias/sessoes/`, calcular quantos dias se passaram desde a última sessão e aplicar a tabela abaixo.
 
 ### Como calcular
 
-1. Obter lista de arquivos em `{projeto}/memorias/sessoes/` (ver seção 3)
-2. Se há arquivos, pegar o mais recente (primeiro da lista ordenada descendente)
-3. Ler o frontmatter do arquivo — extrair `data`
-4. Calcular a diferença em dias entre `data` e a data atual
-5. Aplicar a tabela abaixo
-6. Se não há arquivos novos mas há `sessoes.md` legado, extrair a data do cabeçalho mais recente (`### [AAAA-MM-DD]`) e calcular igual
-7. Se não há nenhuma fonte, primeira sessão
+1. Da lista retornada pelo glob `{projeto}/memorias/sessoes/*.md`, excluir `_sessoes.md` e pegar o primeiro arquivo (ordem descendente por nome — o prefixo `YYYY-MM-DD-HHMM` garante ordem cronológica natural).
+2. No Turno 2 esse arquivo já foi lido — extrair `data` do frontmatter.
+3. Calcular a diferença em dias entre `data` e a data atual.
+4. Aplicar a tabela de comportamento.
+5. Se a lista está vazia, é primeira sessão.
 
 ### Tabela de comportamento
 
@@ -52,48 +115,18 @@ Antes de montar o dashboard, calcular quantos dias se passaram desde a última s
 | 3-7 dias | "Faz [X] dias desde a última sessão" | `max(N, 1)` | Resumo padrão (concluído + parou em + observações) |
 | > 7 dias | "Faz [X] dias desde a última sessão — resumo mais completo" | `max(N, 3)` | Resumo expandido (últimas 2-3 sessões + recap geral) |
 
-`N` = valor de `sessoes-ao-iniciar` no `~/.maestro/config.md` (default 1).
-
----
-
-## 3. Leitura de sessões
-
-### Descoberta de arquivos
-
-1. **Ler `~/.maestro/config.md`** — extrair valor de `sessoes-ao-iniciar`.
-   - Se ausente ou inválido (não-inteiro, ou negativo diferente de zero), avisar no dashboard ("config `sessoes-ao-iniciar` inválida, usando default `1`") e usar `1`.
-   - Chamar o valor final de **N**.
-
-2. **Listar arquivos em `{projeto}/memorias/sessoes/`** — glob `*.md`, excluir `_sessoes.md`.
-   - Ordenar descendente por nome (prefixo `YYYY-MM-DD-HHMM` garante ordem cronológica natural).
-   - Chamar a lista de **arquivos-novos**.
-
-3. **Verificar existência de `{projeto}/memorias/sessoes.md` legado.**
-   - Se existe, chamar de **legado-existe = true**.
+`N` = valor de `sessoes-ao-iniciar` no `~/.maestro/config.md` (default 1). Se ausente ou inválido (não-inteiro, ou negativo diferente de zero), avisar no dashboard ("config `sessoes-ao-iniciar` inválida, usando default `1`") e usar `1`.
 
 ### Decisão de fonte
 
-| Situação | Fonte do dashboard |
-|----------|---------------------|
-| `arquivos-novos` >= 3 | Só arquivos-novos |
-| `arquivos-novos` 1-2 + `legado-existe` | Híbrido: arquivos-novos + últimas 2-3 entradas do legado |
-| `arquivos-novos` 1-2 + não há legado | Só arquivos-novos |
-| `arquivos-novos` == 0 + `legado-existe` | Só legado (parser antigo) |
-| `arquivos-novos` == 0 + não há legado | Primeira sessão registrada |
-
-### Quantas sessões carregar
-
-Depende do intervalo adaptativo (ver seção 2):
-
-| Intervalo | Quantidade |
-|-----------|------------|
-| 0-2 dias | `max(N, 1)` |
-| 3-7 dias | `max(N, 1)` |
-| > 7 dias | `max(N, 3)` |
+| Situação | Fonte |
+|----------|-------|
+| `memorias/sessoes/` tem 1+ arquivo | Arquivos individuais |
+| `memorias/sessoes/` vazio | Primeira sessão registrada |
 
 ### Detecção de backup de emergência
 
-Antes de montar o dashboard, verificar se `~/.maestro/sessoes-emergencia/` existe e tem arquivos. Se sim, avisar:
+Se o glob `~/.maestro/sessoes-emergencia/*.md` retornou arquivos, antes de montar o dashboard avisar:
 
 > "Detectei sessão(ões) em backup de emergência: [lista]. Quer copiar pra `{projeto}/memorias/sessoes/`? [Sim / Não agora]"
 
@@ -101,25 +134,7 @@ Se sim, copiar e remover do backup. Se não, continuar normalmente.
 
 ---
 
-## 4. Fluxo
-
-1. **Detectar projeto ativo** — usar a lógica de detecção do Maestro hub (protocolo-ativacao)
-2. **Ler indexes:**
-   - `{projeto}/tarefas/_tarefas.md`
-   - `{projeto}/entrevistas/_entrevistas.md`
-3. **Executar leitura de sessões** — conforme seção 3 (Leitura de sessões):
-   - Carregar config
-   - Descobrir arquivos-novos via glob
-   - Decidir fonte (só-novo / híbrido / só-legado / primeira-sessão)
-   - Detectar backup de emergência e oferecer recuperação se houver
-4. **Calcular intervalo adaptativo** — conforme seção 2
-5. **Ler status da biblioteca** — verificar quantos templates estão preenchidos vs. vazios
-6. **Apresentar dashboard** — conforme seção 5, usando o intervalo calculado
-7. **Oferecer opções** via `AskUserQuestion` — conforme [[protocolo-interacao]]
-
----
-
-## 5. Dashboard
+## 4. Dashboard
 
 ### Dashboard com tarefas
 
@@ -158,7 +173,7 @@ Quer resolver agora? Posso acionar o Entrevistador.
 - **[Título]** — bloqueada por: [[bloqueador]] ([status do bloqueador])
 
 ## Última sessão ([data] [hora])
-[Conteúdo varia conforme intervalo adaptativo — ver seção 2:]
+[Conteúdo varia conforme intervalo adaptativo — ver Seção 3:]
 
 [0-2 dias — resumo enxuto:]
 - **Parou em:** [ler `parou-em` do frontmatter do arquivo mais recente]
@@ -188,7 +203,7 @@ Máximo 4 opções. Priorizar: entrevistas pendentes > tarefas desbloqueáveis >
 
 ### Dashboard sem tarefas
 
-Se o projeto não tem `tarefas/_tarefas.md` ou está vazio:
+Se o glob `{projeto}/tarefas/*.md` do Turno 1 retornou vazio ou só contém `_tarefas.md` (nenhuma tarefa criada):
 
 ```markdown
 [FRASE DO INTERVALO ADAPTATIVO]
@@ -217,9 +232,17 @@ Quer criar um novo projeto? Posso chamar o Bibliotecário pra montar a estrutura
 Ou se já tem um projeto, me diz o nome da empresa.
 ```
 
+### Aviso rodapé: formato antigo
+
+Se existir arquivo `{projeto}/memorias/sessoes.md` (formato antigo, único), adicionar no **rodapé** do dashboard (uma linha só, após todas as outras seções):
+
+> ℹ Formato antigo `memorias/sessoes.md` detectado — não entra no dashboard. O `/tchau-maestro` oferece migração automática ao fechar a sessão (`tchau-maestro/SKILL.md` seção 7).
+
+Sem parser do conteúdo, sem fallback, sem branch condicional adicional. A migração real fica a cargo do `/tchau-maestro` (comportamento pré-existente).
+
 ---
 
-## 6. Regras do dashboard
+## 5. Regras do dashboard
 
 - **Priorize o que o usuário pode resolver.** Entrevistas pendentes e tarefas prontas aparecem primeiro.
 - **Mostre o que pode rodar autônomo.** Tarefas pendentes sem bloqueio que poderiam ser despachadas via Agent().
@@ -232,11 +255,47 @@ Ou se já tem um projeto, me diz o nome da empresa.
 
 ---
 
-## 7. Restrições
+## 6. Recuperação de tarefa interrompida
+
+Usar os dados extraídos no **Turno 2** (Bash grep de `tarefas/*.md`) pra checar estado de pipelines incompletos. Também usar o glob de `~/.maestro/sessoes-emergencia/` do Turno 1 pra detectar backups órfãos.
+
+1. **Filtrar** do resultado do Bash grep: tarefas com `status: em-andamento` que **não** têm `data-conclusao` preenchida no frontmatter.
+2. **Verificar** se há backups de `TodoWrite` órfãos em `~/.maestro/sessoes-emergencia/` (situação em que o TodoWrite foi escrito mas o Gerente não chegou a criar a tarefa antes da sessão fechar).
+3. **Pra cada caso detectado**, abrir `AskUserQuestion`:
+   > "Tarefa [[x]] ficou aberta em DATA. Retomar de onde parou, cancelar ou forçar conclusão?"
+4. **Se "retomar":** carregar o TodoWrite de onde parou (o próprio Maestro hub despacha a sub-skill correspondente e continua da etapa pendente).
+5. **Se "cancelar":** disparar fluxo de cancelamento (sub-skill `fluxo-cancelamento.md`).
+6. **Se "forçar conclusão":** Gerente fecha a tarefa com flag `conclusao: forcada-pelo-usuario` no frontmatter (rastreável).
+7. Após retomada bem-sucedida, apagar o backup emergencial correspondente.
+
+Essa checagem é defesa em profundidade — pega o caso em que a sessão fechou entre item 1 e item 2 do TodoWrite de Entrega (tarefa ainda não existia em `tarefas/`).
+
+---
+
+## 7. Política de rascunho
+
+Ao final do dashboard, aplicar higiene dos rascunhos usando os dados extraídos no **Turno 2** (Bash grep de `rascunhos/*.md`):
+
+1. **Filtrar** do resultado do grep: rascunhos com `expira-em < hoje` (ignorar rascunhos em subpasta `rascunhos/arquivados/` — se o glob do Turno 1 já os excluiu, ótimo; senão, filtrar aqui pelo caminho).
+2. **Pra cada expirado**, abrir `AskUserQuestion`:
+   > "Rascunho [[x]] venceu em YYYY-MM-DD. Promover, arquivar ou apagar?"
+3. **Aplicar escolha imediatamente:**
+   - **Promover:** dispara `/promover [[x]]` (fluxo completo de Entrega)
+   - **Arquivar:** move pra `rascunhos/arquivados/`, atualiza `status: arquivado`
+   - **Apagar:** remove arquivo
+4. **Contar ativos** (fora de `arquivados/`) — também a partir do mesmo resultado do grep:
+   - **Se ≥20:** avisar no dashboard: "Você tem N rascunhos abertos (limite 20). Recomendo limpar 1-2 antes de criar novos."
+   - **Se 4-19:** agrupar por `tema/*` dominante lendo `tags-dominio` do frontmatter (campo já extraído pelo Bash grep). Exibir sumário: `Ativos: N rascunhos → tema/autoridade (3), tema/vendas (2), sem tema (1)`. Bucket `sem tema` cobre rascunhos sem `tags-dominio` preenchido (caso "especialista não sugeriu" ou legado pré-Grupo D).
+   - **Se ≤3:** manter listagem plana de arquivos (comportamento atual).
+
+Política inegociável: rascunho vencido bloqueia criação de novos até o usuário decidir.
+
+---
+
+## 8. Restrições
 
 - **Nunca crie ou atualize tarefas diretamente.** Use o Gerente de Projetos.
 - **Nunca roteia pedidos.** Isso é papel do Maestro hub.
 - **Nunca bloqueie o usuário.** O ritual é opt-in. Se o usuário pedir algo direto, o Maestro segue o fluxo normal.
-- **Nunca invente dados de sessões anteriores.** Se `sessoes/` está vazio e `sessoes.md` legado não existe, diga "Primeira sessão registrada!".
+- **Nunca invente dados de sessões anteriores.** Se `sessoes/` está vazio, diga "Primeira sessão registrada!".
 - **Nunca modifique arquivos de sessão.** Leitura apenas. A escrita é papel do `/tchau-maestro`.
-- **Nunca toque em `sessoes.md` legado.** Apenas leitura com parser antigo quando necessário.

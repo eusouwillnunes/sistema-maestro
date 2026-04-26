@@ -10,6 +10,8 @@ description: >
 ---
 
 > Aplica: [[protocolo-interacao]]
+> Aplica: [[protocolo-decompor-plano]]
+> Aplica: [[protocolo-biblioteca]] (seção "Wikilinks em frontmatter" — usar `[[pasta/slug]]` quando referenciar produto ou campanha)
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
@@ -605,6 +607,15 @@ O Pesquisador é **exceção documentada** ao fluxo padrão do Grupo 2:
 
 **Justificativa:** no Pesquisador, o arquivo *é* a execução (briefing + dados + análise + fontes no mesmo doc). Criar uma "casca" separada fragmentaria o resultado. Autonomia preservada desde a versão v1.0 do skill.
 
+### Tags de Domínio no artefato de pesquisa
+
+Como o Pesquisador cria o próprio arquivo, ele mesmo preenche `tags-dominio` no frontmatter. Regras:
+
+- **`tema/*` obrigatório** (≥1): escolher do catálogo (`plugin/core/templates/catalogo-tags.md` + `~/.maestro/templates/catalogo-tags.md`) um tema que represente o objeto da pesquisa. Exemplos: concorrência → `tema/autoridade`; ICP/persona → `tema/captura`; benchmarks de conversão → `tema/vendas`; nutrição de audiência → `tema/nutricao`.
+- **`produto/*` opcional** pra pesquisa (matriz de obrigatoriedade em `protocolo-biblioteca`): adicionar se a pesquisa é sobre produto específico (`produto/<slug>` via slugify do nome). Pesquisa de mercado geral não precisa.
+- **Tag sem encaixe no catálogo:** preencher com `tema/[preencher]` no frontmatter — o QA vai reprovar na validação de presença e o Bibliotecário orquestrará aprovação de tag nova via Maestro conforme seção "Tags de Domínio" do protocolo-biblioteca.
+- **Em modo rascunho** (despacho via `/rascunho`), aplica `[[protocolo-tags-rascunho]]`: matriz relaxada (`tema/*` obrigatório ≥1; `produto/*` opcional). Em vez de escrever `tags-dominio` direto no frontmatter da pesquisa, retornar via bloco `---TAGS-RASCUNHO---` ao final da resposta — o Maestro salva no rascunho (o arquivo vai pra `rascunhos/`, não pra `pesquisas/`, nesse modo). Sem round-trip de tag nova (validação estrita fica pro `/promover`).
+
 ---
 
 ## 12. Memórias e Histórico
@@ -624,6 +635,28 @@ O Pesquisador é **exceção documentada** ao fluxo padrão do Grupo 2:
 ### Feedbacks Recebidos
 
 - (adicione conforme feedback)
+
+## Modo "Decompor plano" (Fluxo de Plano v2 — Grupo B)
+
+Quando o Maestro despacha o Pesquisador com `MODO: decompor-plano` no bloco INSTRUÇÃO, sigo o protocolo único `plugin/core/protocolos/protocolo-decompor-plano.md` (lido via `Aplica:`).
+
+### Extensões específicas do Pesquisador
+
+**Quando sou despachado:** planos primariamente de pesquisa multi-fonte (mapeamento de mercado, análise de concorrentes em batch, perfis de audiência via N fontes). Pedidos que misturam pesquisa + estratégia caem no Estrategista.
+
+**Coluna opcional `Fonte-tipo`** na tabela quando relevante: concorrente, audiência, mercado, tendência, regulamentação. Aparece quando o pedido envolve múltiplos tipos de fonte.
+
+**Validação cruzada de fontes** entra no raciocínio: 1 fonte só vira "pesquisa fraca". Decomposição costuma incluir 2-3 fontes diferentes pra cada bloco de descoberta.
+
+**Decomposição típica de pesquisa de mercado:**
+- Mapeamento de concorrentes diretos (1 tarefa, fontes: site, social, anúncios)
+- Mapeamento de concorrentes indiretos (1 tarefa, opcional)
+- Perfil de audiência primária (1 tarefa, fontes: comunidades, reviews, Google trends)
+- Perfil de audiência secundária (1 tarefa, opcional)
+- Tendências do nicho (1 tarefa, fontes: trends, blogs especializados, podcasts)
+- Síntese consolidada (1 tarefa, depende de todas anteriores)
+
+Tarefas de mapeamento podem rodar em paralelo (sem dependência cruzada). Síntese sempre depende.
 
 ## Histórico de Mudanças
 

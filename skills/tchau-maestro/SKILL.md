@@ -8,6 +8,8 @@ description: >
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 > Aplica: [[protocolo-interacao]]
+> Aplica: [[protocolo-timestamp]]
+> Aplica: [[protocolo-biblioteca]] (seção "Wikilinks em frontmatter")
 
 # Tchau, Maestro — Ritual de Fechamento
 
@@ -28,40 +30,69 @@ Esta skill é acionada quando:
 
 ---
 
-## 2. Fluxo
+## 2. Fluxo (mapa de turnos)
 
-1. **Detectar o que mudou na sessão:**
-   - Tarefas que mudaram de status (criadas, iniciadas, concluídas, bloqueadas, desbloqueadas)
-   - Entrevistas criadas, iniciadas, concluídas ou parcialmente respondidas
-   - Templates preenchidos ou modificados na biblioteca
-   - Pesquisas realizadas
-   - Modo de execução de cada tarefa (Agent() vs Skill())
+> **Disparar todas as tool calls de um turno como chamadas paralelas em um único bloco.** Não serializar.
 
-2. **Verificar se projeto tem `sessoes.md` legado** — se o arquivo existe e tem mais de 5 entradas (contar cabeçalhos `### [AAAA-`), seguir pra Fluxo de Migração Opt-in (seção 7). Caso contrário, pular.
+Antes de tudo, detectar projeto ativo conforme `core/protocolos/protocolo-ativacao.md`. O mapa abaixo assume que `{projeto}` já está resolvido.
 
-3. **Inferir foco da sessão** — ver seção 5 (Inferência determinística do foco).
+### Turno 1 — Descoberta paralela (5 calls num único bloco, sem dependências)
 
-4. **Confirmar foco via `AskUserQuestion`:**
+Dispare em **um único turno do modelo**:
 
+- `Glob` `{projeto}/tarefas/*.md`
+- `Glob` `{projeto}/planos/*.md`
+- `Glob` `{projeto}/entrevistas/*.md`
+- `Glob` `{projeto}/rascunhos/*.md`
+- `Glob` `{projeto}/memorias/sessoes/*.md`
+
+**Importante:** `_tarefas.md`, `_planos.md`, `_entrevistas.md`, `_rascunhos.md` são **painéis Dataview puros** desde o Grupo 6 (e v2.15.0 expande pras 9 áreas dinâmicas). `Read` direto retorna só o texto da query, não os dados renderizados (Dataview só executa dentro do Obsidian). Por isso o Turno 1 usa `Glob` direto na pasta dos artefatos individuais.
+
+### Turno 2 — Extração paralela (1 call, depende do Turno 1)
+
+Após o Turno 1 retornar, dispare 1 `Bash` com grep consolidado:
+
+```bash
+grep -HE "^(status|agente|titulo|parte-de|prioridade|resultado|bloqueada-por|data-conclusao|data-inicio|data-cancelamento|motivo-cancelamento|grupo|categoria|expira-em|tags-dominio|tipo|foco|parou-em|corrige|correcoes|regera):" \
+  {projeto}/tarefas/*.md {projeto}/planos/*.md {projeto}/entrevistas/*.md {projeto}/rascunhos/*.md 2>/dev/null || true
+```
+
+- `-H` prefixa o nome do arquivo em cada linha pra permitir agrupamento posterior
+- `2>/dev/null` suprime erros de "No such file or directory" quando alguma pasta não existe
+- `|| true` evita que `set -e` aborte quando nenhum arquivo bate
+
+Turno 2 escala **O(1) em tool calls**, não O(N).
+
+### Turno 3 — Montagem e gravação (sequencial, sem mais I/O)
+
+Aplicar na ordem:
+
+1. **Verificar se projeto tem `sessoes.md` legado** — se o glob `memorias/sessoes/` retornou nada e o projeto tem o arquivo `sessoes.md` antigo com mais de 5 entradas, seguir pra Fluxo de Migração Opt-in (seção 7). Caso contrário, pular.
+
+2. **Inferir foco da sessão** (ver seção 5) — usar dados do Turno 2 filtrando por `tipo = "plano" AND status = "em-andamento"` em vez de `Read` raw de `_planos.md`.
+
+3. **Confirmar foco via `AskUserQuestion`:**
    - question: "Foco desta sessão: `{foco-inferido}`. Usar este nome?"
    - options:
      - label: "Sim, usar `{foco-inferido}`", description: "Nome gerado pela heurística"
      - label: "Editar o foco", description: "Abre prompt livre pra você digitar"
      - label: "Usar `sessao-geral`", description: "Fallback quando nenhum foco faz sentido"
 
-   Se o usuário escolher "Editar o foco", perguntar o slug desejado em texto livre. Normalizar conforme regras do template (`plugin/core/templates/_sessao-template.md`, seção "Normalização do slug").
+   Se o usuário escolher "Editar o foco", perguntar o slug em texto livre. Normalizar conforme `plugin/core/templates/_sessao-template.md` seção "Normalização do slug".
 
-5. **Gerar path do arquivo:**
-   - `data` = hoje (AAAA-MM-DD, obtido via `date +%Y-%m-%d` no shell)
-   - `hora` = hora atual (HHMM sem dois-pontos, obtida via `date +%H%M`)
+4. **Gerar path do arquivo:**
+   - `data` = hoje via `Bash date +%Y-%m-%d`
+   - `hora` = via `Bash date +%H%M` (HHMM sem dois-pontos)
    - `foco` = slug aprovado normalizado
    - Path: `{projeto}/memorias/sessoes/{data}-{hora}-{foco}.md`
 
-6. **Criar pasta `{projeto}/memorias/sessoes/` se não existir** — usar `mkdir -p` via Bash.
+5. **Criar pasta `{projeto}/memorias/sessoes/` se não existir** — `mkdir -p` via Bash.
 
-7. **Criar `_sessoes.md` se não existir** — copiar conteúdo do template `plugin/core/templates/_sessoes-index-template.md` (seção "Conteúdo"). Só criar uma vez, não sobrescrever.
+6. **Criar `_sessoes.md` se não existir** — copiar conteúdo do template `plugin/core/templates/_sessoes-index-template.md`. Só criar uma vez, não sobrescrever.
 
-8. **Escrever o arquivo de sessão** — frontmatter + corpo conforme seção 3 (Formato do registro). UTF-8 nativo, verificação pós-escrita (regra das seções "Regras do fechamento").
+7. **Escrever wiki-links referenciando arquivos descobertos no Turno 1** — `file.name` do glob é o nome real do arquivo; a pasta é `tarefas/`, `planos/`, `entrevistas/`, `rascunhos/`. Formar wiki-link como `[[<pasta>/<file.name-sem-extensao>]]`. Não precisa `Read` adicional dos painéis Dataview.
+
+8. **Escrever o arquivo de sessão** — frontmatter + corpo conforme seção 3 (Formato do registro). UTF-8 nativo, verificação pós-escrita (regra "UTF-8 nativo sem escape" em seção 6).
 
 9. **Em caso de falha na escrita** — seguir Fluxo de Recuperação em Falha (seção 8).
 
@@ -75,15 +106,17 @@ Esta skill é acionada quando:
 
 ## 3. Formato do registro
 
-Cada sessão vira um arquivo individual em `{projeto}/memorias/sessoes/`, com nome `YYYY-MM-DD-HHMM-foco.md`.
+Cada sessão vira um arquivo individual em `{projeto}/memorias/sessoes/`, com nome `<YYYY-MM-DD-HHMM>-foco.md` onde o timestamp vem de `Bash date +"%Y-%m-%d-%H%M"` — **nunca chutar** (ver `protocolo-timestamp`).
 
 ### Frontmatter (mínimo)
+
+Obter `data` via `Bash date +"%Y-%m-%d"` e `hora` via `Bash date +"%H:%M"` antes de gravar:
 
 ```yaml
 ---
 tipo: sessao
-data: 2026-04-20
-hora: "14:30"
+data: <YYYY-MM-DD lido do sistema>
+hora: "<HH:MM lido do sistema>"
 foco: grupo-4-sessoes
 parou-em: "frase curta descrevendo o ponto de retomada"
 ---
@@ -104,23 +137,23 @@ parou-em: "frase curta descrevendo o ponto de retomada"
 # Sessão 2026-04-20 14:30 — grupo-4-sessoes
 
 ## Concluído
-- ✅ [[tarefa-x]] ([agente], modo Agent/Skill)
+- ✅ [[tarefas/tarefa-x]] ([agente], modo Agent/Skill)
 
 ## Em andamento
-- 🔄 [[tarefa-y]] — parou em: [detalhe específico]
+- 🔄 [[tarefas/tarefa-y]] — parou em: [detalhe específico]
 
 ## Bloqueado
-- 🚫 [[tarefa-z]] — bloqueada por: [[bloqueador]]
+- 🚫 [[tarefas/tarefa-z]] — bloqueada por: [[tarefas/bloqueador]]
 
 ## Entrevistas
-- [[entrevista-x]] (concluída), [[entrevista-y]] (iniciada), [[entrevista-z]] (pendente)
+- [[entrevistas/entrevista-x]] (concluída), [[entrevistas/entrevista-y]] (iniciada), [[entrevistas/entrevista-z]] (pendente)
 
 ## Pesquisas
-- [[pesquisa-x]] — tema: [descrição]
+- [[pesquisas/pesquisa-x]] — tema: [descrição]
 
 ## Pendências para próxima sessão
-- ⏳ [[tarefa-pronta-1]], [[tarefa-pronta-2]]
-- 📋 [[entrevista-pendente-1]]
+- ⏳ [[tarefas/tarefa-pronta-1]], [[tarefas/tarefa-pronta-2]]
+- 📋 [[entrevistas/entrevista-pendente-1]]
 
 ## Parou em
 [Frase curta — a "bússola" pro retorno na próxima sessão]
@@ -131,9 +164,11 @@ parou-em: "frase curta descrevendo o ponto de retomada"
 
 ### Regra obrigatória: wiki-links
 
-Toda menção a tarefa, plano, entrevista ou pesquisa concluída na sessão deve ser `[[wiki-link]]`. Antes de escrever, consultar os indexes (`_tarefas.md`, `_planos.md`, `_entrevistas.md`) pra obter o nome real do arquivo.
+Toda menção a tarefa, plano, entrevista ou pesquisa concluída na sessão deve ser `[[pasta/slug]]` (com path — ver `protocolo-biblioteca` seção "Wikilinks em frontmatter").
 
-Sem wiki-links, o grafo do Obsidian não conecta a sessão aos artefatos criados. Isso é rastreabilidade essencial do sistema.
+O nome real do arquivo já vem do **Turno 1** (`Glob` retorna `file.name`); a pasta vem do path do glob (`tarefas/`, `planos/`, `entrevistas/`, `rascunhos/`). **Não consultar os painéis Dataview** (`_tarefas.md` etc.) — eles são queries, não fontes de dados.
+
+Sem wiki-links com path, o grafo do Obsidian pode resolver errado quando dois arquivos compartilham slug em pastas diferentes. Isso é rastreabilidade essencial do sistema.
 
 ### Seções vazias
 
@@ -175,7 +210,7 @@ Sessão encerrada! Resumo:
 
 O foco da sessão é inferido pelo `/tchau-maestro` por heurística simples e previsível. A ordem é:
 
-1. **Plano ativo** — ler `{projeto}/planos/_planos.md`. Se houver plano com `status: em-andamento`, usar o slug do plano como foco.
+1. **Plano ativo** — filtrar resultado do Turno 2 por `tipo = "plano" AND status = "em-andamento"`. Se houver match, usar o slug do plano como foco. **Não ler `_planos.md` raw** — o painel é Dataview puro e retornaria só texto da query.
 
 2. **Última tarefa concluída na sessão** — se não há plano ativo, identificar a tarefa concluída mais recente da sessão. Extrair o slug do nome do arquivo da tarefa (ex: `2026-04-20-1200-refator-ola-maestro.md` → `refator-ola-maestro`).
 
@@ -203,8 +238,8 @@ Aplicar sempre depois de decidir o foco:
 ## 6. Regras do fechamento
 
 - **Seja factual.** Registre o que aconteceu, não o que deveria ter acontecido.
-- **Registre progresso detalhado.** "[[entrevista-x]]: 3 de 5 perguntas respondidas" é melhor que "entrevista em andamento".
-- **Use wiki-links em toda menção a artefato.** Tarefas, planos, entrevistas e pesquisas sempre como `[[wiki-link]]`. Resolve pelo index do tipo (`_tarefas.md`, `_planos.md`, etc.) antes de escrever.
+- **Registre progresso detalhado.** "[[entrevistas/entrevista-x]]: 3 de 5 perguntas respondidas" é melhor que "entrevista em andamento".
+- **Use wiki-links com path em toda menção a artefato.** Tarefas, planos, entrevistas e pesquisas sempre como `[[<pasta>/<slug>]]` (ver `protocolo-biblioteca` seção "Wikilinks em frontmatter"). Resolve pelo `Glob` do Turno 1, não pelos painéis Dataview.
 - **Sugira próximos passos com justificativa.** Explique por que aquela sugestão é a melhor (ex: "desbloqueia 3 tarefas").
 - **Ofereça resolver pendências antes de fechar.** Se há entrevistas pendentes curtas, pergunte se quer resolver.
 - **Não force fechamento.** Se o usuário quer continuar, não insista.
@@ -244,6 +279,39 @@ Executado apenas quando o projeto tem `{projeto}/memorias/sessoes.md` com mais d
 ### Por quê opt-in e não automático
 
 Inferir HHMM e slug retroativamente tem taxa de erro alta. Deixar o usuário decidir reduz risco de degradar o histórico. O arquivo legado fica intocado como garantia.
+
+---
+
+## 7.1 Backup emergencial de TodoWrite ativo
+
+Antes de escrever a sessão e finalizar, checar se há pipeline incompleto:
+
+1. **Checar se há `TodoWrite` ativo** — algum item com status `in_progress` ou `pending` sem todos os anteriores `completed`.
+2. **Se sim:**
+   - Extrair o conteúdo do TodoWrite (itens + status de cada)
+   - Extrair o contexto do pedido original do usuário que iniciou o fluxo
+   - Obter timestamp via `Bash date +"%Y-%m-%d-%H%M"` (nome) e `date +"%Y-%m-%d %H:%M"` (campo `sessao-encerrada`) — **nunca chutar** (ver `protocolo-timestamp`).
+   - Salvar em `~/.maestro/sessoes-emergencia/todowrite-<YYYY-MM-DD-HHMM>.md`
+   - Formato:
+     ```yaml
+     ---
+     tipo: backup-todowrite
+     sessao-encerrada: <YYYY-MM-DD HH:MM lido do sistema>
+     pedido-original: [texto do usuário]
+     tipo-classificado: [Entrega/Refinamento/Rascunho/Plano/Cancelamento]
+     ---
+
+     ## TodoWrite no momento do encerramento
+
+     - [x] Item 1 — concluído
+     - [ ] Item 2 — in_progress (parou aqui)
+     - [ ] Item 3 — pending
+     ...
+     ```
+3. **No próximo `/ola-maestro`**, Maestro detecta o arquivo na pasta de emergência e oferece retomada (ver `ola-maestro/SKILL.md` seção 6.1).
+4. **Após retomada bem-sucedida**, o backup é apagado automaticamente.
+
+Essa camada complementa o fluxo 8 (recuperação em falha de escrita) — a diferença é que aqui estamos encerrando sessão com pipeline incompleto deliberadamente, sem erro de escrita.
 
 ---
 

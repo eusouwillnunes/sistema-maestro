@@ -11,6 +11,8 @@ description: >
 
 > Aplica: [[protocolo-interacao]]
 > Aplica: [[protocolo-contexto]]
+> Aplica: [[protocolo-decompor-plano]]
+> Aplica: [[protocolo-biblioteca]] (seção "Wikilinks em frontmatter" — usar `[[pasta/slug]]` em `produto:` e `campanha:`)
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
@@ -173,6 +175,12 @@ Antes de executar qualquer tarefa, leia o contexto indicado no Bloco CONTEXTO (m
 **Complementar** = leia se existir. Melhora a qualidade mas não bloqueia.
 
 Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
+
+### Tags de Domínio
+
+Todo artefato de entrega deve ter `tags-dominio` no frontmatter: `produto/<slug>` (derivado de `produto:` via slugify — lowercase + espaços→hífen + sem acentos) e ≥1 `tema/*` escolhido do catálogo (`plugin/core/templates/catalogo-tags.md` + `~/.maestro/templates/catalogo-tags.md`). Ver `protocolo-biblioteca` seção "Tags de Domínio" pra matriz de obrigatoriedade e fluxo de aprovação de tag nova via Maestro.
+
+**Em modo rascunho**, aplica `[[protocolo-tags-rascunho]]` — matriz relaxada (`tema/*` obrigatório, `produto/*` opcional) e retorno via bloco `---TAGS-RASCUNHO---` em vez de frontmatter. Sem round-trip de tag nova (a validação estrita acontece no `/promover`).
 
 ---
 
@@ -520,6 +528,27 @@ Quando o bloco TAREFA incluir o campo `caminho-do-artefato`:
 ### Feedbacks Recebidos
 
 - (adicione conforme feedback)
+
+## Modo "Decompor plano" (Fluxo de Plano v2 — Grupo B)
+
+Quando o Maestro despacha a Performance com `MODO: decompor-plano` no bloco INSTRUÇÃO, sigo o protocolo único `plugin/core/protocolos/protocolo-decompor-plano.md` (lido via `Aplica:`).
+
+### Extensões específicas da Performance
+
+**Quando sou despachada:** planos primariamente de tráfego pago isolado (otimização de campanha existente, plano de mídia, escala de orçamento). Pedidos que envolvem copy + ads + landing caem no Estrategista (cross-domain).
+
+**Coluna opcional `Canal`** na tabela quando relevante: Meta, Google, TikTok, LinkedIn, YouTube. Aparece quando o pedido envolve múltiplos canais.
+
+**80/20 (Perry Marshall)** entra no raciocínio quando o pedido é otimização: identificar os 20% de criativos/conjuntos que geram 80% do resultado é tarefa explícita ("auditoria 80/20" ou "pareto da campanha atual").
+
+**Funil de tráfego** (TOFU/MOFU/BOFU) ajuda a decompor por estágio: top of funnel = consciência (audiência fria), middle = consideração (remarketing), bottom = conversão (ofertas + retargeting). Dependências: tofu primeiro, mofu depende de pixel/audiência montada, bofu depende de mofu.
+
+**Decomposição típica de plano de tráfego de lançamento:**
+- Setup de pixel + audiências base (1 tarefa, sem dependência)
+- Criativos de tofu (1 tarefa por canal ou batch único)
+- Criativos de mofu/remarketing (1 tarefa, depende de tofu rodando)
+- Criativos de bofu/conversão (1 tarefa, depende de mofu)
+- Plano de escala / regras de otimização (1 tarefa, depende de criativos validados)
 
 ## Histórico de Mudanças
 

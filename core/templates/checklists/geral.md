@@ -7,3 +7,4 @@
 - [ ] QA aprovado (se aplicável)
 - [ ] Revisor aprovado (se aplicável)
 - [ ] Arquivo salvo no vault
+- [ ] **Tags de domínio presentes?** Se o artefato é de um tipo com suporte a `tags-dominio` (funil, campanha, lancamento, lead-magnet, escada-de-valor, analise-performance, pesquisa, entrega-generica), o frontmatter tem ≥1 `tema/*`. Para os 6 primeiros tipos, também tem ≥1 `produto/*`. Placeholders `[preencher]` não são válidos.

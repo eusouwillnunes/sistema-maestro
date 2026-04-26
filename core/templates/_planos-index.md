@@ -9,14 +9,14 @@ tags:
 # Planos
 
 > [!info] Painel de planos
-> Mantido automaticamente pelo Gerente de Projetos. Consultável no Obsidian.
+> Atualizado automaticamente via Dataview. Painel vazio é normal em projeto novo. Requer o plugin Dataview do Obsidian instalado e habilitado.
 
 ## Estatísticas
 
 ```dataview
 TABLE length(rows) as Quantidade
-FROM "planos"
-WHERE tipo = "plano"
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "plano"
 GROUP BY status
 ```
 
@@ -24,45 +24,67 @@ GROUP BY status
 
 ## Rascunho
 
-| Plano | Solicitante | Criação |
-|-------|-------------|---------|
-| (nenhum) | — | — |
+```dataview
+TABLE solicitante, data-criacao as Criação
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "plano" AND status = "rascunho"
+SORT data-criacao DESC
+```
 
 ## Aprovado
 
-| Plano | Solicitante | Aprovação |
-|-------|-------------|-----------|
-| (nenhum) | — | — |
+```dataview
+TABLE solicitante, data-aprovacao as Aprovação
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "plano" AND status = "aprovado"
+SORT data-aprovacao DESC
+```
 
 ## Em execução
 
-| Plano | Solicitante | Aprovação | Tarefas pendentes |
-|-------|-------------|-----------|-------------------|
-| (nenhum) | — | — | — |
+```dataview
+TABLE solicitante, data-aprovacao as Aprovação
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "plano" AND status = "em-execucao"
+SORT data-aprovacao DESC
+```
 
 ## Aguardando validação
 
-| Plano | Solicitante | Aprovação |
-|-------|-------------|-----------|
-| (nenhum) | — | — |
+```dataview
+TABLE solicitante, data-aprovacao as Aprovação
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "plano" AND status = "aguardando-validacao"
+```
 
 ## Concluído
 
-| Plano | Solicitante | Conclusão |
-|-------|-------------|-----------|
-| (nenhum) | — | — |
+```dataview
+TABLE solicitante, data-conclusao as Conclusão
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "plano" AND status = "concluido"
+SORT data-conclusao DESC
+LIMIT 15
+```
 
 ## Rejeitado
 
-| Plano | Solicitante | Data |
-|-------|-------------|------|
-| (nenhum) | — | — |
+```dataview
+TABLE solicitante, data-criacao as Criação
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "plano" AND status = "rejeitado"
+SORT data-criacao DESC
+```
 
 ## Cancelado
 
-| Plano | Solicitante | Motivo | Cancelamento |
-|-------|-------------|--------|--------------|
-| (nenhum) | — | — | — |
+```dataview
+TABLE solicitante, motivo-cancelamento as Motivo, data-cancelamento as Cancelamento
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "plano" AND status = "cancelado"
+SORT data-cancelamento DESC
+LIMIT 15
+```
 
 ---
 
@@ -70,7 +92,7 @@ GROUP BY status
 
 ```dataview
 TABLE corrige as "Corrige", status as "Status"
-FROM "planos"
-WHERE corrige != null
+FROM ""
+WHERE file.folder = this.file.folder AND corrige != null
 SORT data-criacao DESC
 ```

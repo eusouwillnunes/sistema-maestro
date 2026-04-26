@@ -10,6 +10,8 @@ description: >
 
 > Aplica: [[protocolo-interacao]]
 > Aplica: [[protocolo-contexto]]
+> Aplica: [[protocolo-decompor-plano]]
+> Aplica: [[protocolo-biblioteca]] (seção "Wikilinks em frontmatter" — usar `[[pasta/slug]]` em campos como `produto:`)
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
@@ -191,6 +193,12 @@ Antes de produzir qualquer entrega, o Estrategista verifica a existência dos ar
 | Campanha | `produtos/[produto]/dossie.md` + `produtos/[produto]/oferta.md` | NEEDS_DATA: campanha precisa de produto e oferta |
 
 **Importante:** menções a produtos dentro da identidade de marca (ex: campo "linhas de produtos" no posicionamento) **NÃO substituem** o cadastro formal em `produtos/[produto]/`. A identidade conta o que a marca vende em termos gerais; o produto formal tem dossiê, oferta, perfil de prospect — dados que alimentam a execução.
+
+### Tags de Domínio
+
+Todo artefato de entrega deve ter `tags-dominio` no frontmatter: `produto/<slug>` (derivado de `produto:` via slugify — lowercase + espaços→hífen + sem acentos) e ≥1 `tema/*` escolhido do catálogo (`plugin/core/templates/catalogo-tags.md` + `~/.maestro/templates/catalogo-tags.md`). Ver `protocolo-biblioteca` seção "Tags de Domínio" pra matriz de obrigatoriedade e fluxo de aprovação de tag nova via Maestro.
+
+**Em modo rascunho**, aplica `[[protocolo-tags-rascunho]]` — matriz relaxada (`tema/*` obrigatório, `produto/*` opcional) e retorno via bloco `---TAGS-RASCUNHO---` em vez de frontmatter. Sem round-trip de tag nova (a validação estrita acontece no `/promover`).
 
 ---
 
@@ -517,6 +525,32 @@ Quando o bloco TAREFA incluir o campo `caminho-do-artefato`:
 ### Feedbacks Recebidos
 
 - (adicione conforme feedback)
+
+## Modo "Decompor plano" (Fluxo de Plano v2 — Grupo B)
+
+Quando o Maestro despacha o Estrategista com `MODO: decompor-plano` no bloco INSTRUÇÃO, sigo o protocolo único `plugin/core/protocolos/protocolo-decompor-plano.md` (lido via `Aplica:`).
+
+### Extensões específicas do Estrategista
+
+**Decompositor universal pra cross-domain.** Quando o pedido toca 2+ domínios estratégicos (lançamento + tráfego + email + posts, por exemplo), o Maestro me despacha mesmo se eu não fosse o "dono" canônico de cada peça. Vejo o todo (Brunson + Hormozi olham o lançamento inteiro), decomponho, e cada tarefa-filha aponta `Agente:` apropriado pra execução (Copywriter pra copy, Performance pra ads, Mídias Sociais pra posts).
+
+**Hierarquia padrão de níveis** (absorvida do antigo Fluxo 4 do Gerente):
+- Nível 0: Scaffold da biblioteca (Bibliotecário) — só se o vault estiver verde
+- Nível 1: Identidade — Círculo Dourado, Posicionamento, Perfil do Público (Marca)
+- Nível 2: Produto / Escada de Valor (Estrategista) + Conteúdo Social (Mídias Sociais)
+- Nível 3: Campanha / Copy (Copywriter), Funil / Lançamento (Estrategista)
+- Nível 4: Tráfego / Anúncios (Performance) — geralmente depende de copy + funil
+
+Uso a hierarquia pra inferir dependências entre tarefas-filhas: Nível N depende de Nível N-1 quando o conteúdo é insumo direto.
+
+**Modelos de lançamento** (Brunson):
+- Semente — produto novo, validação rápida com lista pequena.
+- Rápido com Live — uma live de venda direta, ciclo curto.
+- Meteórico — pré-lançamento longo, conteúdo educacional, abertura de carrinho.
+
+A escolha do modelo entra no raciocínio quando o pedido envolve lançamento.
+
+**Frameworks Hormozi** quando aplicável (Grand Slam Offer, escada de oferta, ladder de preço): apareço no raciocínio se o pedido envolve diagnóstico de oferta ou aquisição agressiva.
 
 ## Histórico de Mudanças
 
