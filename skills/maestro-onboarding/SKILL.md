@@ -356,6 +356,27 @@ Executar silenciosamente (sem mensagens detalhadas para cada item):
      > Memórias de usuário: ~/.maestro/memorias/
      ```
 5. **Memórias de usuário:** verificar se `~/.maestro/memorias/_index.md` existe. Se não existe, criar a estrutura `~/.maestro/` (conforme passo 2.3.5).
+6. **Cache de projeto ativo:** persistir o projeto recém-criado (ver protocolo-ativacao.md Sub-fluxo 1.5):
+
+   ```bash
+   # Normalizar CWD pra forward slash (Git Bash do Windows pode vir com backslash)
+   CWD_NORM=$(echo "$CWD" | tr '\\' '/')
+   HASH=$(echo -n "$CWD_NORM" | md5sum | cut -c1-32)
+   mkdir -p "$HOME/.maestro/projeto-ativo-cache"
+   cat > "$HOME/.maestro/projeto-ativo-cache/${HASH}.md" <<EOF
+   ---
+   versao: 1
+   slug: <slug-da-empresa>
+   caminho-absoluto: <caminho-absoluto-do-projeto-criado>
+   macro: <pasta-pai-do-projeto>
+   atualizado-em: <ISO 8601 agora via Bash date>
+   ---
+   EOF
+   ```
+
+   Onde `<caminho-absoluto-do-projeto-criado>` é o path normalizado (forward slash) da pasta recém-criada — `${CWD_NORM}/<slug>` se o scaffold criou subpasta no CWD-macro, ou o próprio `${CWD_NORM}` se o usuário rodou onboarding já dentro da pasta do projeto. `macro` é sempre o parent dir do `caminho-absoluto`.
+
+   Onde `<slug-da-empresa>` é o slug derivado do nome coletado no início. Se o Write falhar por permissão, aviso "cache não pode ser persistido — projeto ativo válido só nessa sessão" e segue.
 
 Informar brevemente: "Estrutura de memórias e configuração criadas."
 
@@ -852,8 +873,30 @@ Marcar task "Importar material de referência" como `completed`.
 
 Marcar task "Finalizar projeto" como `in_progress`.
 
-1. Atualizar `maestro/config.md`: setar `onboarding-completo: true`
-2. Enviar mensagem:
+1. **Cache de projeto ativo:** persistir o projeto recém-criado (ver protocolo-ativacao.md Sub-fluxo 1.5):
+
+   ```bash
+   # Normalizar CWD pra forward slash (Git Bash do Windows pode vir com backslash)
+   CWD_NORM=$(echo "$CWD" | tr '\\' '/')
+   HASH=$(echo -n "$CWD_NORM" | md5sum | cut -c1-32)
+   mkdir -p "$HOME/.maestro/projeto-ativo-cache"
+   cat > "$HOME/.maestro/projeto-ativo-cache/${HASH}.md" <<EOF
+   ---
+   versao: 1
+   slug: <slug-da-empresa>
+   caminho-absoluto: <caminho-absoluto-do-projeto-criado>
+   macro: <pasta-pai-do-projeto>
+   atualizado-em: <ISO 8601 agora via Bash date>
+   ---
+   EOF
+   ```
+
+   Onde `<caminho-absoluto-do-projeto-criado>` é o path normalizado (forward slash) da pasta recém-criada — `${CWD_NORM}/<slug>` se o scaffold criou subpasta no CWD-macro, ou o próprio `${CWD_NORM}` se o usuário rodou onboarding já dentro da pasta do projeto. `macro` é sempre o parent dir do `caminho-absoluto`.
+
+   Se o Write falhar por permissão, aviso "cache não pode ser persistido — projeto ativo válido só nessa sessão" e segue.
+
+2. Atualizar `maestro/config.md`: setar `onboarding-completo: true`
+3. Enviar mensagem:
 
 > "Projeto {nome da empresa} configurado! O que vamos trabalhar?"
 

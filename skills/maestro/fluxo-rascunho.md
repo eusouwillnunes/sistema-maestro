@@ -2,6 +2,8 @@
 
 > Aplica: [[protocolo-timestamp]], [[protocolo-tags-rascunho]]
 
+> [!info] **Path resolution.** Toda escrita e Glob em pasta de vault usa `{projeto}/` resolvido pelo Maestro (via `protocolo-ativacao.md` Sub-fluxo 1). Nunca CWD direto nem path relativo.
+
 Sub-skill lida pelo Maestro via `Read` quando o classificador retorna `tipo=Rascunho`.
 
 Rascunho = artefato rápido sem validação. Sai em `rascunhos/` fora do grafo principal. Não passa por QA nem Revisor. Pode ser promovido pra Entrega depois via `/promover`.

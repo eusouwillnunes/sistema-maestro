@@ -29,9 +29,12 @@ Antes de delegar qualquer tarefa pra um agente que produz conteúdo, o Maestro v
 
 ### Formato das referências
 
-**Modo Agent():** incluir no Bloco CONTEXTO como caminhos pra leitura:
+**Modo Agent():** incluir no Bloco CONTEXTO como caminhos pra leitura. **O Maestro substitui literalmente a string `{projeto}` por caminho absoluto antes de injetar** (via `protocolo-ativacao.md` Sub-fluxo 1):
 
     ---CONTEXTO---
+    projeto: <caminho absoluto, ex: C:/dev/clientes/cliente-x>
+    projeto-slug: <slug curto, ex: cliente-x>
+
     Contexto de marca (LEIA estes arquivos antes de executar):
     - {projeto}/biblioteca/identidade/tom-de-voz.md
     - {projeto}/biblioteca/identidade/personalidade-marca.md
@@ -48,6 +51,8 @@ Antes de delegar qualquer tarefa pra um agente que produz conteúdo, o Maestro v
     Memória de decisões estratégicas (somente para especialistas criativos, se arquivo existe):
     - {projeto}/memorias/decisoes.md
     ---END-CONTEXTO---
+
+> Especialistas que escrevem casca (Gerente, Bibliotecário, Pesquisador, fluxo-rascunho) recebem `{projeto}` resolvido como **defesa real** contra path errado — usam em todo Write/Glob. Especialistas que editam casca (Copywriter, Estrategista, Marca, Mídias Sociais, Performance) recebem como **informativo** (mensagens, log, wiki-links) — a casca já chega com path absoluto via `caminho-do-artefato`.
 
 **Modo Skill():** instruir o especialista:
 > "Antes de executar, leia os arquivos de identidade de marca em `biblioteca/identidade/`. Especialmente tom de voz e personalidade."
@@ -187,6 +192,7 @@ Bibliotecário usa `tags-decisoes` pra editar o artefato (trocar/descartar tags)
 
 Antes de despachar um especialista:
 
+- [ ] `{projeto}` resolvido via `protocolo-ativacao.md` Sub-fluxo 1? → Substituir literal antes de injetar; preencher `projeto:` e `projeto-slug:` no topo do bloco CONTEXTO
 - [ ] Identidade de marca existe e está preenchida? → Incluir caminhos no CONTEXTO
 - [ ] Identidade vazia? → Aviso persuasivo, seguir se usuário quiser
 - [ ] Tarefa envolve produto específico? → Incluir dossiê do produto no CONTEXTO

@@ -9,6 +9,8 @@ description: >
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 > Aplica: [[protocolo-interacao]]
 
+> [!info] **Path resolution.** Toda escrita e Glob em pasta de vault usa `{projeto}/` resolvido pelo Maestro (via `protocolo-ativacao.md` Sub-fluxo 1). Nunca CWD direto nem path relativo.
+
 # Olá, Maestro — Ritual de Abertura
 
 ## 1. Escopo
@@ -257,7 +259,7 @@ Sem parser do conteúdo, sem fallback, sem branch condicional adicional. A migra
 
 ## 6. Recuperação de tarefa interrompida
 
-Usar os dados extraídos no **Turno 2** (Bash grep de `tarefas/*.md`) pra checar estado de pipelines incompletos. Também usar o glob de `~/.maestro/sessoes-emergencia/` do Turno 1 pra detectar backups órfãos.
+Usar os dados extraídos no **Turno 2** (Bash grep de `{projeto}/tarefas/*.md`) pra checar estado de pipelines incompletos. Também usar o glob de `~/.maestro/sessoes-emergencia/` do Turno 1 pra detectar backups órfãos.
 
 1. **Filtrar** do resultado do Bash grep: tarefas com `status: em-andamento` que **não** têm `data-conclusao` preenchida no frontmatter.
 2. **Verificar** se há backups de `TodoWrite` órfãos em `~/.maestro/sessoes-emergencia/` (situação em que o TodoWrite foi escrito mas o Gerente não chegou a criar a tarefa antes da sessão fechar).
@@ -274,7 +276,7 @@ Essa checagem é defesa em profundidade — pega o caso em que a sessão fechou 
 
 ## 7. Política de rascunho
 
-Ao final do dashboard, aplicar higiene dos rascunhos usando os dados extraídos no **Turno 2** (Bash grep de `rascunhos/*.md`):
+Ao final do dashboard, aplicar higiene dos rascunhos usando os dados extraídos no **Turno 2** (Bash grep de `{projeto}/rascunhos/*.md`):
 
 1. **Filtrar** do resultado do grep: rascunhos com `expira-em < hoje` (ignorar rascunhos em subpasta `rascunhos/arquivados/` — se o glob do Turno 1 já os excluiu, ótimo; senão, filtrar aqui pelo caminho).
 2. **Pra cada expirado**, abrir `AskUserQuestion`:

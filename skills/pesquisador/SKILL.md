@@ -13,6 +13,8 @@ description: >
 > Aplica: [[protocolo-decompor-plano]]
 > Aplica: [[protocolo-biblioteca]] (seção "Wikilinks em frontmatter" — usar `[[pasta/slug]]` quando referenciar produto ou campanha)
 
+> [!info] **Path resolution.** Toda escrita e Glob em pasta de vault usa `{projeto}/` resolvido pelo Maestro (via `protocolo-ativacao.md` Sub-fluxo 1). Nunca CWD direto nem path relativo.
+
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
 # Pesquisador

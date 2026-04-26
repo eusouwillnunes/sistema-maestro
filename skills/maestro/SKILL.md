@@ -30,19 +30,26 @@ Você é o Maestro, o agente central de coordenação do Sistema Maestro.
 
 ---
 
-## 2. Verificação de Ativação
+## 2. Resolução de projeto + Verificação de Ativação
 
-Antes de classificar, checar o estado do sistema:
+Antes de classificar, executar `protocolo-ativacao.md` em duas etapas:
 
-1. Tente ler `maestro/config.md` no CWD.
-2. **Se não existe + mensagem é ação no projeto:** executar onboarding via `Skill("maestro-onboarding")`.
-3. **Se `maestro-ativo: false`:** reativar e informar o usuário.
-4. **Se `maestro-ativo: true`:** prosseguir com classificação (seção 3).
-5. **Se mensagem é conversa pura:** responder direto, independente de ativação.
+1. **Resolver projeto ativo** (Sub-fluxo 1 do protocolo) → produz `{projeto}` (caminho absoluto) + `{projeto-slug}` em estado da sessão. Roda **uma vez por sessão** + invocação explícita de `/projeto`.
+2. **Verificar ativação** (Sub-fluxo 2 do protocolo) → checa `{projeto}/maestro/config.md` e campo `maestro-ativo`.
 
-### Detecção de projeto ativo
+Casos:
 
-Se CWD é raiz com múltiplos projetos, usar `AskUserQuestion` com lista. Se CWD já é dentro de um projeto (`.md` com `tipo: index` + `empresa:`), confirmar: "Estamos na **[Empresa]**, certo?"
+- **Projeto resolvido + ativo:** prosseguir com classificação (seção 3).
+- **CWD-inválido (sem projeto e sem macro):** mensagem orientada do Sub-fluxo 1 da matriz; sem classificação.
+- **Sem `maestro/config.md` no projeto resolvido + mensagem é ação no projeto:** executar onboarding via `Skill("maestro-onboarding")`.
+- **`maestro-ativo: false`:** reativar e informar o usuário.
+- **Mensagem é conversa pura:** responder direto, independente de ativação.
+
+> A resolução de projeto roda **uma vez por sessão**. Pra trocar de projeto mid-session, usuário invoca `/projeto`.
+
+### Substituição de `{projeto}` no CONTEXTO
+
+O Maestro **substitui literalmente** a string `{projeto}` por caminho absoluto resolvido antes de injetar no bloco CONTEXTO de qualquer dispatch Agent(). Skills que recebem o CONTEXTO consomem caminhos absolutos prontos — não resolvem placeholder.
 
 ---
 
@@ -126,7 +133,8 @@ Pseudo-código:
 
 ```
 receber-pedido()
-  → verificar-ativação()
+  → resolver-projeto-ativo()          // roda 1x por sessão; produz {projeto} absoluto
+  → verificar-ativação({projeto})     // recebe projeto resolvido, não usa CWD
   → classificar(pedido)               // retorna 1 dos 6 tipos
   → se tipo = Conversa: responder-no-chat(); retornar
   → se ambíguo: AskUserQuestion(); revisitar-classificação()
@@ -165,6 +173,7 @@ Sub-skill é lida **uma vez** por fluxo. Dispatches internos (QA, Revisor, espec
 | **Gerente de Projetos** | tarefa, criar tarefa, listar tarefas, decompor, planejar tarefas, cancelar | Gestão de tarefas e planos |
 | **Entrevistador** | entrevista, responder perguntas, coletar dados, entrevistas pendentes | Coleta guiada de dados do usuário |
 | **Onboarding** | onboarding, configurar maestro, setup inicial | Setup/reconfiguração do sistema |
+| **Projeto** | /projeto, trocar projeto, listar projetos, projeto ativo | Lista/troca projeto ativo via slash command |
 
 ### Desempate
 

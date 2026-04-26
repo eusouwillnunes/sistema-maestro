@@ -2,6 +2,8 @@
 
 > Aplica: [[protocolo-timestamp]]
 
+> [!info] **Path resolution.** Toda escrita e Glob em pasta de vault usa `{projeto}/` resolvido pelo Maestro (via `protocolo-ativacao.md` Sub-fluxo 1). Nunca CWD direto nem path relativo.
+
 Sub-skill lida pelo Maestro via `Read` quando o classificador retorna `tipo=Cancelamento`.
 
 ## TodoWrite obrigatório (5 itens fixos)
@@ -17,7 +19,7 @@ Sub-skill lida pelo Maestro via `Read` quando o classificador retorna `tipo=Canc
 ### Item 1 — Confirmar pedido + identificar escopo
 
 1. Matching case/accent-insensitive, em ordem de tentativa:
-   - **Por slug** (ex: "cancela headlines-automators") → grep em `tarefas/*.md` + `planos/*.md` + `rascunhos/*.md`. Se 1 match → segue pro passo 2. Se ≥2 → AUQ listando candidatos. Se 0 → tentar próximo tipo abaixo.
+   - **Por slug** (ex: "cancela headlines-automators") → grep em `{projeto}/tarefas/*.md` + `{projeto}/planos/*.md` + `{projeto}/rascunhos/*.md`. Se 1 match → segue pro passo 2. Se ≥2 → AUQ listando candidatos. Se 0 → tentar próximo tipo abaixo.
    - **Por tipo genérico** (ex: "esquece o plano", "cancela a tarefa", "abandonei a pesquisa") → glob da pasta do tipo + filtrar por `status` ativo (não `concluida`, não `cancelada`). Se 1 → confirma. Se N → AUQ. Se 0 → "não encontrei [tipo] ativo". Tipos aceitos: `plano`, `tarefa`, `rascunho`, `pesquisa`, e qualquer tipo listado em `plugin/core/templates/artefatos/`. Palavras ambíguas ("o projeto") não batem aqui — caem no próximo tipo.
    - **Meta** (ex: "esquece o que eu pedi", "cancela o último", "aquilo que falamos") → resolver em 3 origens, em ordem:
      - **(a) Memória da conversa atual do Maestro** — artefatos criados nos turnos recentes (dispatches executados, TodoWrite com wiki-links de output, arquivos escritos nesta interação). Tem precedência máxima.
@@ -66,7 +68,7 @@ Apresentar ao usuário:
 
 Mesma lógica, adaptada:
 
-1. Matching em `planos/*.md`.
+1. Matching em `{projeto}/planos/*.md`.
 2. Validação de consistência inclui todas as tarefas-filhas (cada uma deve receber cascata).
 3. Execução cancela plano + N tarefas-filhas + N artefatos (com `AskUserQuestion` de confirmação: "Cancelar X tarefas-filhas em cascata? Sim/Não/Selecionar").
 4. Atualização de índices afetados (`_planos.md` e `_tarefas.md`).
