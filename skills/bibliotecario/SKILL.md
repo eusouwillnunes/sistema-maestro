@@ -86,6 +86,7 @@ Acionado quando não existe biblioteca no projeto ou o usuário pede para criar.
    - Criar `maestro/config.md` com configuração padrão
    - Criar `maestro/checklists/` (pasta vazia)
    - Copiar `plugin/core/templates/_readme-checklists-projeto.md` → `maestro/checklists/README.md` (cópia literal)
+   - Copiar `plugin/core/templates/_feedback-revisor-template.md` → `memorias/feedback-revisor.md` (cópia literal — registro contínuo de feedbacks do Revisor pra ajuste de calibragem por projeto, Grupo 7)
    - Copiar os 8 templates de identidade de `core/templates/biblioteca-de-marketing/preenchimento/identidade/` para `identidade/` (cada um já vem com `status: vazio` no frontmatter)
    - Criar indexes inline em 3 pastas com schema solto: `social/_social.md`, `referencias/_referencias.md`, `memorias/_memorias.md` usando os modelos inline do scaffold
    - **Criar os 15 painéis Dataview copiando literalmente os templates oficiais e renomeando `_X-index.md` → `_X.md` no destino** (sufixo `-index` cai). Não inventar conteúdo:

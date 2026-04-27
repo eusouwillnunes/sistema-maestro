@@ -12,6 +12,7 @@ description: >
 > Aplica: [[protocolo-contexto]]
 > Aplica: [[protocolo-decompor-plano]]
 > Aplica: [[protocolo-biblioteca]] (seção "Wikilinks em frontmatter" — usar `[[pasta/slug]]` em campos como `produto:`)
+> Aplica: [[escrita-natural]]
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 

@@ -256,3 +256,69 @@ Só salve após confirmação explícita do usuário.
 - Documentação da arquitetura: `docs/features/bug4-pipeline-obrigatorio.md`
 - Spec: `docs/superpowers/specs/2026-04-23-bug4-pipeline-obrigatorio-design.md`
 - Plano de implementação: `docs/superpowers/plans/2026-04-23-bug4-pipeline-obrigatorio-plan.md`
+
+---
+
+## 10. Captura de Feedback do Revisor
+
+A captura de feedback complementa o classificador — não compete. Roda em paralelo ao fluxo principal e oferece registro via `AskUserQuestion` ao final de qualquer interação.
+
+### 10.1 Canal 1 — Frase-gatilho passiva
+
+Detecta expressões de insatisfação com naturalidade do texto durante qualquer interação:
+
+| Categoria | Frases-gatilho |
+|---|---|
+| Falso negativo (Revisor aprovou texto sujo) | "tá com cara de IA", "isso soa artificial", "ficou robótico", "Revisor aprovou mas não devia", "esse texto não tá natural", "ficou com jeitão de ChatGPT" |
+| Falso positivo (Revisor reprovou indevidamente) | "Revisor reprovou errado", "essa correção foi exagero", "limiar baixo demais", "isso é técnica de copy", "tinha que deixar passar" |
+
+**Comportamento:**
+
+1. Reconhecer a frase-gatilho enquanto processa o pedido principal — classificação segue normal.
+2. Ao final do fluxo principal (entrega/refinamento/conversa concluído), oferecer:
+
+```
+AskUserQuestion(
+  question="Aproveitando, quer registrar como feedback do Revisor pra ajustar a calibragem do projeto?",
+  options=[
+    "Sim, falso negativo (Revisor deveria ter reprovado)",
+    "Sim, falso positivo (Revisor reprovou indevidamente)",
+    "Não, só comentário"
+  ]
+)
+```
+
+3. Se sim, follow-up perguntando qual padrão (lista ids ou descrição livre).
+4. Gravar entrada em `{projeto}/memorias/feedback-revisor.md` na seção apropriada (Falsos negativos, Falsos positivos ou Padrões novos).
+
+### 10.2 Canal 4 — Edit pós-aprovação na sessão
+
+Disparado quando, **na mesma sessão**, o usuário edita manualmente um artefato que o Revisor acabou de aprovar (sem pedir nova revisão pelo Revisor).
+
+**Comportamento:**
+
+1. Maestro nota o edit (comparação simples na sessão atual — sem hook persistente entre sessões).
+2. Oferece:
+
+```
+AskUserQuestion(
+  question="Você editou o texto que o Revisor tinha aprovado. Queria deixar mais natural?",
+  options=[
+    "Sim, registrar como falso negativo do Revisor",
+    "Não, era ajuste de conteúdo (não relacionado a naturalidade)"
+  ]
+)
+```
+
+3. Se sim, gravar como falso negativo em `feedback-revisor.md`.
+
+> Edit feito em sessão posterior depende do usuário sinalizar via Canal 1 (frase-gatilho).
+
+### 10.3 Não competidor com classificação
+
+- Frase-gatilho com verbo de edição ("esse texto tá com cara de IA, melhora") → classifica como Refinamento normalmente E ao final oferece registrar feedback.
+- Sem verbo de edição → Conversa + AUQ direto.
+
+Captura **sempre** passa por confirmação tua. Nunca automática.
+
+> Canais 2 (`/feedback-revisor`) e 3 (cap de Revisor na rodada 3) vivem em outros arquivos: `plugin/skills/feedback-revisor/SKILL.md` e `plugin/skills/maestro/fluxo-needs.md` respectivamente.

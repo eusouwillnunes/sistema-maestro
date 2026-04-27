@@ -81,6 +81,53 @@ A tarefa fica com `status: cancelada`, mantém rastreabilidade.
 
 ---
 
+## Cap do Revisor com bridge pro feedback (Canal 3)
+
+Quando o Revisor reprova **o mesmo padrão (mesmo id) no mesmo artefato** em rodada 2 ou 3, antes de re-despachar o especialista, o Maestro intervém:
+
+### Rodada 2
+
+```
+AskUserQuestion(
+  question="O Revisor reprovou o padrão A-XX duas vezes seguidas. Essa correção parece exagero?",
+  options=[
+    "Não, é texto sujo mesmo — manda corrigir de novo",
+    "Sim, registrar como possível falso positivo (limiar pode estar errado)"
+  ]
+)
+```
+
+- "Não" → re-despacha especialista normalmente (rodada 3 vem a seguir se reprovar de novo).
+- "Sim" → registra entrada em `{projeto}/memorias/feedback-revisor.md` na seção "Falsos positivos" com nota "captura via Canal 3 rodada 2"; segue re-despachando especialista (decisão de override fica pra rodada 3).
+
+### Rodada 3 (cap)
+
+Antes de oferecer "aprovar com pendência" (já existe abaixo), insere AUQ:
+
+```
+AskUserQuestion(
+  question="O padrão A-XX reprovou 3 vezes nesse artefato. É calibragem errada (falso positivo recorrente) ou texto realmente sujo?",
+  options=[
+    "Texto sujo mesmo — quero re-revisar manualmente",
+    "Calibragem errada — registrar 3 falsos positivos consolidados e suspender o padrão pro projeto",
+    "Aprovar com pendência (continuar do jeito que está)"
+  ]
+)
+```
+
+- "Texto sujo" → fluxo manual de revisão pelo usuário.
+- "Calibragem errada" → grava 3 entradas em `feedback-revisor.md` (rodadas 1, 2 e 3) E aplica `DESATIVAR: A-XX` em `{projeto}/maestro/escrita-natural.md` no mesmo passo, com comentário de origem:
+  ```
+  - DESATIVAR: A-XX
+    # Origem: cap de Revisor 2026-04-XX (3 falsos positivos consolidados via Canal 3)
+  ```
+  Cria o arquivo `{projeto}/maestro/escrita-natural.md` se ainda não existir.
+- "Aprovar com pendência" → cai no fluxo já existente abaixo.
+
+> Esse mecanismo dispensa rodar `/maestro-revisar-memorias` pra casos recorrentes — resolve no momento que a divergência fica clara.
+
+---
+
 ## Governança de "aprovar com pendência" (QA/Revisor 3x reprovou)
 
 Essa opção só aparece após 3 rodadas de reprovação em QA ou Revisor (ver `fluxo-entrega.md`). Mas a contabilidade longitudinal vive aqui:

@@ -140,7 +140,7 @@ Memórias dos agentes — feedbacks, preferências e padrões identificados.
 | pesquisas/ | Pasta + _pesquisas.md (cópia literal do painel Dataview) | Cada pesquisa pelo Pesquisador |
 | entregas/ | Pasta + _entregas.md (cópia literal do painel Dataview) | Cada entrega avulsa |
 | referencias/ | Pasta + _referencias.md (inline) | Cada arquivo pelo usuário |
-| memorias/ | Pasta + _memorias.md (inline) | Cada arquivo de memória por agente |
+| memorias/ | Pasta + _memorias.md (inline) + feedback-revisor.md (cópia literal de `_feedback-revisor-template.md`) | Cada arquivo de memória por agente |
 | tarefas/ | Pasta + _tarefas.md (cópia literal do painel Dataview) | Cada tarefa pelo Gerente de Projetos |
 | planos/ | Pasta + _planos.md (cópia literal do painel Dataview) | Cada plano pelo Gerente de Projetos |
 | entrevistas/ | Pasta + _entrevistas.md (cópia literal do painel Dataview) | Cada entrevista pelo Gerente de Projetos |
@@ -175,6 +175,7 @@ Memórias dos agentes — feedbacks, preferências e padrões identificados.
    | `plugin/core/templates/indexes-area/_identidade-index.md` | `identidade/_identidade.md` |
    | `plugin/core/templates/indexes-area/_qa-reprovacoes-index.md` | `_qa-reprovacoes.md` (raiz do projeto) |
    | `plugin/core/templates/indexes-area/_pendencias-aceitas-index.md` | `_pendencias-aceitas.md` (raiz do projeto) |
+   | `plugin/core/templates/_feedback-revisor-template.md` | `memorias/feedback-revisor.md` |
 
    Além disso, criar `maestro/checklists/` (vazia) + `maestro/checklists/README.md` (cópia literal de `plugin/core/templates/_readme-checklists-projeto.md`).
 

@@ -101,6 +101,9 @@ Aplicar na ordem:
 10. **Apresentar resumo visual ao usuário** — conforme seção 4.
 
 11. **Sugerir próximos passos com justificativa** — explicar por que aquela sugestão é a melhor (ex: "desbloqueia 3 tarefas").
+    - **Feedback do Revisor (Grupo 7):** se o contador de feedbacks novos capturados nesta sessão é ≥3, adicionar item:
+      `Processar feedback do Revisor (N entradas novas) — rode /maestro-revisar-memorias enquanto o contexto está fresco`
+      O contador vem de comparar entradas em `{projeto}/memorias/feedback-revisor.md` antes/depois da sessão (delta na sessão atual). Se a sessão não capturou ≥3, omitir o item.
 
 12. **Oferecer resolver pendências antes de fechar** — se há entrevistas pendentes curtas, perguntar se quer resolver antes de encerrar.
 

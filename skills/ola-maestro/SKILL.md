@@ -81,7 +81,16 @@ Dispare em um **único bloco** após o Turno 1 concluir:
   - `2>/dev/null` suprime erros de "No such file or directory" quando alguma pasta não existe
   - `|| true` evita que `set -e` aborte quando nenhum arquivo bate
 
-Turno 2 tem **2 tool calls** (1 Read + 1 Bash), independente do tamanho do vault — escala O(1) em tool calls, não O(N).
+- `Bash` adicional pra contar entradas pendentes em `feedback-revisor.md` (Grupo 7 — não processadas):
+
+  ```bash
+  # Conta cabeçalhos ### nas seções "Falsos negativos", "Falsos positivos" e "Padrões novos"
+  # (exclui a seção "Processado" — última do arquivo)
+  awk '/^## Processado/{exit} /^### /{c++} END{print c+0}' \
+    {projeto}/memorias/feedback-revisor.md 2>/dev/null || echo 0
+  ```
+
+Turno 2 tem **3 tool calls** (1 Read + 2 Bash), independente do tamanho do vault — escala O(1) em tool calls, não O(N).
 
 ### Turno 3 — Montagem e interação (sequencial, sem mais I/O)
 
@@ -149,6 +158,12 @@ Bom dia! Aqui o estado do projeto **[Nome da Empresa]**:
 - Tarefas: [N] concluídas, [N] em andamento, [N] bloqueadas, [N] pendentes, [N] canceladas
 - Entrevistas: [N] pendentes, [N] em andamento, [N] concluídas
 - Biblioteca: [N] templates preenchidos de [M] total
+[Se feedback_pendentes ≥ 1: linha condicional]
+- 📝 Revisor: [feedback_pendentes] feedbacks pendentes — rode `/maestro-revisar-memorias` quando quiser
+
+[Se feedback_pendentes ≥ 10: bloco proativo após o resumo]
+
+> 💡 Você tem [feedback_pendentes] feedbacks de Revisor parados. Vale rodar `/maestro-revisar-memorias` antes do próximo dispatch criativo — a calibragem do projeto pode estar saindo do alinhamento.
 
 [Se pendencias_qualidade ≥ 1, renderizar bloco abaixo. pendencias_qualidade = contagem no grep do Turno 2 de tarefas com `status: aprovado-com-pendencia` OU (`categoria: revisao` E status diferente de `concluida`/`cancelada`). Se pendencias_qualidade == 0: omitir o bloco.]
 
