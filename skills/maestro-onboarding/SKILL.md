@@ -682,7 +682,11 @@ Marcar task "Finalizar onboarding" como `in_progress`.
 1. Atualizar `maestro/config.md`: setar `onboarding-completo: true`
 2. Enviar mensagem de encerramento:
 
-> "Tudo pronto! Agora é só me pedir o que precisar. Por exemplo: 'Crie headlines pra [produto da {nome da empresa}]'."
+> "Tudo pronto!
+>
+> Abre o painel **Bookmarks** no Obsidian — ele mostra a sequência da Biblioteca em ordem, começando pela Identidade da Marca. Esse é o melhor caminho pra navegar o vault.
+>
+> Agora é só me pedir o que precisar. Por exemplo: 'Crie headlines pra [produto da {nome da empresa}]'."
 
 Marcar task "Finalizar onboarding" como `completed`.
 
@@ -912,7 +916,11 @@ Marcar task "Finalizar projeto" como `in_progress`.
 2. Atualizar `maestro/config.md`: setar `onboarding-completo: true`
 3. Enviar mensagem:
 
-> "Projeto {nome da empresa} configurado! O que vamos trabalhar?"
+> "Projeto {nome da empresa} configurado!
+>
+> Abre o painel **Bookmarks** no Obsidian — ele mostra a sequência da Biblioteca em ordem, começando pela Identidade da Marca. Esse é o melhor caminho pra navegar o vault.
+>
+> O que vamos trabalhar?"
 
 Marcar task "Finalizar projeto" como `completed`.
 

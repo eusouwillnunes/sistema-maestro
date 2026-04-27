@@ -180,3 +180,5 @@ Memórias dos agentes — feedbacks, preferências e padrões identificados.
    Além disso, criar `maestro/checklists/` (vazia) + `maestro/checklists/README.md` (cópia literal de `plugin/core/templates/_readme-checklists-projeto.md`).
 
    **Não inventar conteúdo** — copiar literalmente. Cada painel precisa ter o callout `[!info]` + as queries Dataview do template pra funcionar. Ver `bibliotecario/SKILL.md` pro fluxo de validação de existência (caso template ausente, avisa user e continua sem painel).
+
+7. **Bookmarks de navegação** — após os painéis Dataview existirem, o Bibliotecário escreve `<vault>/.obsidian/bookmarks.json` apontando pras 14 áreas em ordem de consumo (Biblioteca → Operacional). Ver `plugin/skills/bibliotecario/SKILL.md` → "Fluxo CRIAR BOOKMARKS DE NAVEGAÇÃO" pro pseudocódigo. Template em `plugin/core/templates/_bookmarks-projeto.json`. Idempotente por presença de path interno conhecido (`<prefix>identidade/_identidade.md`); falha graceful se `jq` e Python ambos ausentes.

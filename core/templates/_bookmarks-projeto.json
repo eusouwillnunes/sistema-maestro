@@ -1,0 +1,147 @@
+{
+  "type": "group",
+  "ctime": {ctime},
+  "title": "🏢 {nome-projeto}",
+  "items": [
+    {
+      "type": "group",
+      "ctime": {ctime},
+      "title": "📚 Biblioteca",
+      "items": [
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "🎭 1. Identidade da Marca",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}identidade/_identidade.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}identidade" }
+          ]
+        },
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "🪜 2. Escada de Valor",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}escada-de-valor/_escada-de-valor.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}escada-de-valor" }
+          ]
+        },
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "🧲 3. Lead Magnets",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}lead-magnets/_lead-magnets.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}lead-magnets" }
+          ]
+        },
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "📦 4. Produtos",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}produtos/_produtos.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}produtos" }
+          ]
+        },
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "🌪️ 5. Funis de Vendas",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}funis/_funis.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}funis" }
+          ]
+        },
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "🚀 6. Lançamentos",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}lancamentos/_lancamentos.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}lancamentos" }
+          ]
+        },
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "📣 7. Campanhas",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}campanhas/_campanhas.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}campanhas" }
+          ]
+        },
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "📱 8. Social",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}social/_social.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}social" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "ctime": {ctime},
+      "title": "🛠️ Operacional",
+      "items": [
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "✅ Tarefas",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}tarefas/_tarefas.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}tarefas" }
+          ]
+        },
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "🎤 Entrevistas",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}entrevistas/_entrevistas.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}entrevistas" }
+          ]
+        },
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "📥 Referências",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}referencias/_referencias.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}referencias" }
+          ]
+        },
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "🔍 Pesquisas",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}pesquisas/_pesquisas.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}pesquisas" }
+          ]
+        },
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "📤 Entregas",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}entregas/_entregas.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}entregas" }
+          ]
+        },
+        {
+          "type": "group",
+          "ctime": {ctime},
+          "title": "🧠 Memórias",
+          "items": [
+            { "type": "file",   "ctime": {ctime}, "title": "📊 Painel", "path": "{path-prefix}memorias/_memorias.md" },
+            { "type": "folder", "ctime": {ctime}, "title": "📂 Pasta",  "path": "{path-prefix}memorias" }
+          ]
+        }
+      ]
+    }
+  ]
+}

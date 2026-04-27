@@ -114,6 +114,9 @@ Acionado quando não existe biblioteca no projeto ou o usuário pede para criar.
      - `plugin/core/templates/indexes-area/_pendencias-aceitas-index.md` → `_pendencias-aceitas.md` (raiz do projeto)
 
    - Esses painéis têm callout `[!info]`, queries Dataview e frontmatter específico. Sem os templates reais, as features de painéis Dataview não funcionam.
+
+   - **Após criar todos os painéis Dataview**, executar o **Fluxo CRIAR BOOKMARKS DE NAVEGAÇÃO** (definido abaixo) pra escrever `<vault>/.obsidian/bookmarks.json` com a navegação ordenada das 14 áreas. Esse passo cria atalhos visuais no painel Bookmarks do Obsidian; sem ele, o usuário só vê as pastas em ordem alfabética.
+
 5. **Apresentar resultado:**
    - Listar a estrutura criada (mostrando a pasta da empresa como raiz)
    - Indicar que o próximo passo é preencher a Identidade da Marca
@@ -152,6 +155,83 @@ Acionado quando o usuário indica que já tem material da empresa.
    > "Biblioteca criada! Para importar seus documentos, coloque os arquivos na pasta `{empresa}/referencias/` e peça ao Maestro: 'lê meus arquivos de referência'.
    >
    > Ele vai ler os documentos, identificar o que pode ser preenchido e delegar pros agentes especialistas."
+
+### Fluxo CRIAR BOOKMARKS DE NAVEGAÇÃO
+
+Acionado como passo final do Fluxo CRIAR (após criar todas as pastas, indexes e painéis Dataview). Cria a navegação no painel Bookmarks do Obsidian apontando pras 14 áreas em ordem de consumo.
+
+**Modelo: Sonnet** (operacional, manipulação de JSON estrita).
+
+#### Passos
+
+1. **Resolver `<vault-root>`:**
+   - Subir do path `{projeto}` resolvido até achar pasta `.obsidian/` no nível atual.
+   - Se não achar até a raiz do filesystem, avisar usuário ("vault Obsidian não detectado em ancestrais de `{projeto}` — abre o Obsidian na pasta certa antes de continuar") e abortar este fluxo (scaffold já está feito, só os bookmarks ficam pendentes).
+
+1.5. **Resolver `<path-prefix>`:**
+   - Se `{projeto}` (path absoluto) == `<vault-root>` → `<path-prefix>` = `""` (vault simples).
+   - Senão → `<path-prefix>` = `"<slug-projeto>/"` (vault macro).
+
+2. **Verificar se plugin Bookmarks está habilitado** (não-bloqueante):
+   - Read `<vault-root>/.obsidian/core-plugins.json`.
+   - Se "bookmarks" não está na lista (ou arquivo não existe), avisar:
+     > "Plugin Bookmarks desabilitado. Ative em Configurações → Plugins centrais pra ver a navegação. Vou criar o JSON mesmo assim — funciona assim que ativar."
+   - Continuar mesmo sem habilitar.
+
+3. **Criar `<vault-root>/.obsidian/` se não existir:**
+   - `mkdir -p <vault-root>/.obsidian/`
+
+4. **Garantir `bookmarks.json` existe:**
+   - Se ausente, escrever `{"items":[]}`.
+
+5. **Parse com jq (fallback python):**
+   - `parsed = jq '.' <vault-root>/.obsidian/bookmarks.json`
+   - Se parse falhar:
+     - Renomear o arquivo atual pra `bookmarks.json.bak`.
+     - Escrever `{"items":[]}` no original.
+     - `parsed = {"items":[]}`.
+     - Avisar usuário ("`bookmarks.json` corrompido — backup salvo em `bookmarks.json.bak`, criando novo").
+
+6. **Verificar idempotência por path interno:**
+   - `marcador = "<path-prefix>identidade/_identidade.md"`
+   - Procurar no JSON parseado por algum item com `path == marcador` em qualquer profundidade:
+     ```bash
+     jq --arg p "<path-prefix>identidade/_identidade.md" '..|.path? // empty | select(. == $p)' bookmarks.json
+     ```
+   - Se retornar não-vazio → bookmarks já criados pra este projeto. Avisar "bookmarks já existem — pulando" e encerrar fluxo.
+
+7. **Read template:**
+   - `template = Read plugin/core/templates/_bookmarks-projeto.json`
+
+8. **Substituir placeholders** (3 placeholders):
+   - Gerar `<ctime>` via `python -c "import time; print(int(time.time()*1000))"` — epoch ms atual. Mesmo valor pra todos os itens.
+   - `template = sed -e "s/\\{nome-projeto\\}/<nome-projeto>/g" -e "s|\\{path-prefix\\}|<path-prefix>|g" -e "s/\\{ctime\\}/<ctime>/g"` (ou equivalente Python).
+   - **Atenção ao delimitador do sed:** `<path-prefix>` contém `/` (ex: `empresa-x/`), então usar `|` como delimitador na linha do path-prefix.
+   - **Atenção a `{ctime}`:** valor é número, NÃO string — não envolver em aspas. JSON válido tem `"ctime": 1777304414674`, não `"ctime": "1777304414674"`.
+   - Variáveis vêm do Fluxo CRIAR: `<nome-projeto>` é o input do usuário (ex: "Padaria do João"); `<path-prefix>` resolvido em 1.5; `<ctime>` gerado agora.
+
+9. **Append no array `items` do `parsed`:**
+   - `merged = jq --slurpfile new <(echo "$template") '.items += [$new[0]]' bookmarks.json`
+   - (Ou Python: `parsed["items"].append(json.loads(template))`.)
+
+10. **Write JSON formatado:**
+    - `echo "$merged" | jq '.' > <vault-root>/.obsidian/bookmarks.json` (fallback Python: `json.dump(parsed, fp, indent=2, ensure_ascii=False)`).
+
+11. **Reportar sucesso:**
+    > "✓ Bookmarks de navegação criados em `.obsidian/bookmarks.json`. Abra o painel Bookmarks no Obsidian — a Biblioteca aparece em ordem de consumo, começando pela Identidade da Marca."
+
+#### Falha graceful
+
+Se nenhuma ferramenta de JSON estiver disponível (`jq` ausente E `python` ausente):
+- Avisar:
+  > "Não consegui criar os bookmarks de navegação — falta `jq` ou Python no sistema. Rode `/biblioteca` de novo no mesmo projeto após instalar — o passo é idempotente e completa o que faltou."
+- Não bloquear o resto do scaffold.
+
+#### Restrições específicas
+
+- **Nunca** escrever JSON via concatenação de strings — sempre `jq` ou `python -c "import json"`. JSON malformado quebra o painel inteiro do Obsidian.
+- **Nunca** sobrescrever bookmarks pré-existentes — apenas append. O JSON do usuário (bookmarks manuais) é intocável.
+- **Nunca** assumir CWD = `<vault-root>` — sempre resolver via passo 1 do fluxo.
 
 ### Fluxo FECHAR ARTEFATO
 
