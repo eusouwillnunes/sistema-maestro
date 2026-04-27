@@ -571,7 +571,7 @@ curl -s -w "\n%{http_code}" https://openrouter.ai/api/v1/chat/completions \
 
 **Interpretar o resultado:**
 
-- **HTTP 200 + resposta válida:** informar "Chave validada! Conexão com o OpenRouter funcionando." Acionar o Pesquisador para salvar o documento de teste (delegar a criação do documento ao agente especialista, nunca criar diretamente).
+- **HTTP 200 + resposta válida:** informar "Chave validada! Conexão com o OpenRouter funcionando." Marcar a task como `completed` e seguir. **Não despachar Pesquisador aqui** — o `curl` já validou a conexão; salvar artefato de teste no vault polui `pesquisas/` sem valor.
 - **HTTP 401 ou 403:** informar "A chave não foi aceita pelo OpenRouter. Verifique se está correta e tente novamente com `/maestro:onboarding`."
 - **HTTP 402 ou erro de crédito:** informar "A chave é válida, mas sua conta no OpenRouter não tem créditos. Adicione saldo em openrouter.ai e a pesquisa paga vai funcionar."
 - **Outro erro (timeout, rede):** informar "Não consegui conectar ao OpenRouter agora. A chave foi salva. Você pode testar depois pedindo: 'testa minha conexão com o OpenRouter'."
@@ -593,14 +593,24 @@ Oferecer:
 > Qual o site da {nome da empresa}?"
 
 **Se informou o site:**
-- Despachar o Pesquisador com a tarefa de analisar o site da empresa e redes sociais
-- O Pesquisador usará `ferramenta-default` do config automaticamente (definido no step 2.8)
-- O Pesquisador segue seus próprios protocolos de encomenda e entrega
+
+Tratar este passo como uma **Entrega padrão**, exatamente como o hub do Maestro trataria se o usuário tivesse pedido a pesquisa fora do onboarding. Executar o fluxo `plugin/skills/maestro/fluxo-entrega.md` (5 itens, pipeline completo) para o pedido:
+
+> "Pesquisa inicial sobre {nome da empresa}: site {url} e redes sociais. Mapear posicionamento atual, produtos/serviços, público-alvo aparente, tom de voz observado e presença em redes."
+
+Parâmetros do dispatch:
+- **Especialista:** Pesquisador
+- **Categoria:** `pesquisa`
+- **Tipo:** `pesquisa`
+- **tags-dominio:** `pesquisa/empresa`
+- **Ferramenta:** `ferramenta-default` do `~/.maestro/config.md` (definido no step 2.8)
+
+O fluxo cobre todo o pipeline obrigatório: Gerente cria tarefa → Pesquisador executa via `Agent()` → ciclo QA + Revisor → Gerente conclui tarefa. **Não invocar `Skill("/maestro:pesquisador")` direto aqui** — quebra rastreabilidade (`origem-tarefa:` ausente) e pula validação. Bug B-S55-20 da v2.20.0 aconteceu por causa disso.
 
 **Se não tem site ou prefere pular:**
 - Informar: "Sem problema! Quando quiser, peça: 'pesquisa sobre minha empresa'."
 
-Marcar task "Pesquisa inicial do negócio" como `completed`.
+Marcar task "Pesquisa inicial do negócio" como `completed` somente após o ciclo de validação retornar aprovado (ou após o usuário confirmar que pulou).
 
 **Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
@@ -857,13 +867,24 @@ Marcar task "Pesquisa inicial do negócio" como `in_progress`.
 > Qual o site da {nome da empresa}?"
 
 **Se informou o site:**
-- Despachar o Pesquisador com a tarefa de analisar o site da empresa e redes sociais
-- O Pesquisador usará `ferramenta-default` do config automaticamente
+
+Tratar este passo como uma **Entrega padrão**, igual ao step 2.9 do onboarding completo. Executar o fluxo `plugin/skills/maestro/fluxo-entrega.md` (5 itens, pipeline completo) para o pedido:
+
+> "Pesquisa inicial sobre {nome da empresa}: site {url} e redes sociais. Mapear posicionamento atual, produtos/serviços, público-alvo aparente, tom de voz observado e presença em redes."
+
+Parâmetros do dispatch:
+- **Especialista:** Pesquisador
+- **Categoria:** `pesquisa`
+- **Tipo:** `pesquisa`
+- **tags-dominio:** `pesquisa/empresa`
+- **Ferramenta:** `ferramenta-default` do `~/.maestro/config.md`
+
+O fluxo cobre Gerente cria tarefa → Pesquisador via `Agent()` → ciclo QA + Revisor → Gerente conclui. **Não invocar `Skill("/maestro:pesquisador")` direto** (B-S55-20).
 
 **Se não tem site ou prefere pular:**
 - Informar: "Sem problema! Quando quiser, peça: 'pesquisa sobre minha empresa'."
 
-Marcar task "Pesquisa inicial do negócio" como `completed`.
+Marcar task "Pesquisa inicial do negócio" como `completed` somente após o ciclo de validação retornar aprovado (ou após o usuário confirmar que pulou).
 
 **Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 

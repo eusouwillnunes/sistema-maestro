@@ -339,3 +339,21 @@ Despacho em modo rascunho (acionado via `/rascunho` ou quando o classificador do
 Ver `protocolo-tags-rascunho.md` pra matriz relaxada (tema obrigatório, produto opcional) e regras de validação.
 
 Este modo aplica-se aos 5 especialistas criativos (Copywriter, Estrategista, Marca, Mídias Sociais, Performance) e ao Pesquisador. Entrevistador, Bibliotecário, Gerente e QA/Revisor não recebem despacho em modo rascunho.
+
+---
+
+## 7. Quando o Gerente NÃO entra no caminho
+
+A regra "todo despacho de especialista passa pelo Gerente" se aplica a **conteúdo criativo** — copy, pesquisa salva no vault, plano editorial, qualquer texto autoral em pt-br que o usuário lerá depois. Operações mecânicas que não produzem conteúdo autoral ficam fora do pipeline:
+
+| Operação | Despacho | Por quê fica fora do pipeline |
+|---|---|---|
+| Scaffold de biblioteca (criar pastas, copiar templates) | `Skill("maestro:bibliotecario")` direto | Sem texto criativo. QA + Revisor não têm o que validar. Rastreabilidade já vive em git. |
+| Coleta de dados via Entrevistador, dentro de pipeline já ativo | `Skill("maestro:entrevistador")` invocado pelo especialista | Especialista já está dentro do pipeline (tarefa criada, dispatch via `Agent()`). Entrevistador preenche templates fechados via diálogo, não produz copy. Recursão pelo Gerente é desnecessária. |
+| Validação descartável de API/conexão | Resposta direta na conversa | Sem artefato salvo no vault. |
+
+**Critério decisor:** o resultado da operação fica salvo no vault como **entrega**? Tem texto autoral em pt-br que o usuário lerá depois? Então pipeline obrigatório (Gerente cria tarefa → especialista via `Agent()` → ciclo QA + Revisor → Gerente conclui). Senão, despacho direto via `Skill()` é aceitável.
+
+**Pesquisa é conteúdo criativo, não operação mecânica.** Pesquisas vão pra `pesquisas/`, viram referência consultada depois e contêm texto autoral em pt-br. Toda pesquisa, inclusive a inicial do onboarding (step 2.9 / 2B.5 do `maestro-onboarding`), passa pelo pipeline completo via `fluxo-entrega.md`.
+
+**Bibliotecário e Entrevistador como exceções formais.** Skills paralelas ao hub (como `maestro-onboarding`) podem invocá-los direto via `Skill()`. Esta é a única forma legítima de invocação fora do hub do Maestro.
