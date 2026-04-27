@@ -42,9 +42,15 @@ Todo agente rodando como Agent() DEVE reportar um destes status ao final da exec
 
 Se o agente detecta múltiplos problemas simultâneos, reporta **apenas um** status, obedecendo esta ordem:
 
-`NEEDS_DATA` > `INSUFFICIENT_DATA` > `NEEDS_CONTEXT` > `NEEDS_DECISION`
+`BLOCKED (dado cru ausente)` > `NEEDS_DATA` > `INSUFFICIENT_DATA` > `NEEDS_CONTEXT` > `NEEDS_DECISION`
 
-Racional: dado objetivo faltando (entrevista/pesquisa) bloqueia tudo. Decisão estratégica só faz sentido com contexto completo. Ex: não adianta perguntar formato de lançamento se o ticket do produto é desconhecido.
+Racional:
+- **BLOCKED por dado cru ausente** vence quando o especialista (tipicamente Performance) precisa de input que não vive na Biblioteca (CSV, dashboard, prints). Sem o cru, cadastro de produto/identidade não resolve análise — não adianta perguntar dossiê quando faltam métricas pra analisar.
+- **NEEDS_DATA** vence sobre os outros dentre dados-de-Biblioteca: dado objetivo faltando (entrevista/pesquisa) bloqueia tudo.
+- **INSUFFICIENT_DATA** vem antes de NEEDS_CONTEXT porque dado parcial é problema mais urgente que contexto não-passado.
+- **Decisão estratégica** só faz sentido com contexto completo. Ex: não adianta perguntar formato de lançamento se o ticket do produto é desconhecido.
+
+**Sub-precedência interna ao especialista (Grupo 9):** antes de checar dependências da Tabela, especialista resolve ambiguidade de qual produto via `NEEDS_CONTEXT` (se o pedido menciona produto sem slug claro). Evita abrir cascata pra produto errado.
 
 ---
 

@@ -185,6 +185,33 @@ O agente de Marca lê o que já existe pra evoluir, não pra começar do zero.
 
 Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
 
+### Dependências obrigatórias por peça/entrega
+
+Antes de produzir qualquer entrega, verifique a existência das dependências. **Se Crítica ausente, reporta `NEEDS_DATA` (modo Agent) ou abre AskUserQuestion (modo Skill)** — não tenta inferir do contexto existente.
+
+| Entrega | Críticas | Enriquecedoras | Verdict se crítica ausente |
+|---|---|---|---|
+| `posicionamento` | `circulo-dourado`, `perfil-publico` | `personalidade-marca`, `historia-fundadores` | NEEDS_DATA |
+| `manifesto` | `circulo-dourado` | `posicionamento`, `historia-fundadores`, `personalidade-marca` | NEEDS_DATA |
+| `tom-de-voz` | `personalidade-marca`, `perfil-publico` | `posicionamento` | NEEDS_DATA |
+| `personalidade-marca` | `circulo-dourado`, `perfil-publico` | `posicionamento` | NEEDS_DATA |
+| `naming` | `posicionamento`, `personalidade-marca` | `circulo-dourado`, `perfil-publico` | NEEDS_DATA |
+| `identidade-visual` | `personalidade-marca`, `posicionamento` | `perfil-publico`, `manifesto` | NEEDS_DATA |
+
+**Críticas** = mínimo viável. Sem isso, reporta NEEDS_DATA.
+**Enriquecedoras** = melhoram qualidade. Se ausentes, produz + registra `enriquecedoras-ausentes:` no RESULTADO.
+
+> **Menção em identidade ≠ cadastro formal.** Ver [[protocolo-biblioteca]] seção "Cadastro formal".
+
+### Comportamento ao detectar dependência ausente
+
+Tanto em modo Agent quanto Skill, usa AskUserQuestion (nativo do Claude Code).
+
+- **Modo Agent()** — reporta `NEEDS_DATA` com lista de Críticas faltantes em DADOS_FALTANTES. Maestro processa via `fluxo-needs.md` estendido (cascata).
+- **Modo Skill()** — abre AUQ direto pros 4 caminhos do `fluxo-needs.md`. Pra cadastros, delega via `Skill("maestro:entrevistador")` em sequência.
+
+Em ambos, Enriquecedoras ausentes não bloqueiam — registra `enriquecedoras-ausentes:` no RESULTADO.
+
 ### Tags de Domínio
 
 Artefatos de entrega do Marca (manifesto, naming, branding aplicado) devem ter `tags-dominio` no frontmatter quando o tipo suporta (ex: funil de branding, campanha de manifesto). Regra geral: `produto/<slug>` obrigatório (derivado de `produto:` via slugify) + ≥1 `tema/*` do catálogo (`plugin/core/templates/catalogo-tags.md` + `~/.maestro/templates/catalogo-tags.md`). Ver `protocolo-biblioteca` seção "Tags de Domínio" pra matriz de obrigatoriedade por tipo e fluxo de aprovação de tag nova via Maestro. Templates puros de identidade não entram neste fluxo.

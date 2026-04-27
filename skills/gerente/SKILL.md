@@ -565,6 +565,72 @@ Acionado pelo Maestro quando especialista reporta `NEEDS_DATA` ou `INSUFFICIENT_
 
 9. Reportar ao Maestro: entrevista criada + caminho + tarefa pai bloqueada.
 
+#### Fluxo 10 v2: modo `criar-cascata` (Grupo 9)
+
+Variante invocada pelo Maestro quando recebe NEEDS_DATA com lista de Críticas e usuário escolhe "preencher tudo agora" ou "só essenciais" no `fluxo-needs.md`. Cria N entrevistas em uma chamada (vs 1 do Fluxo 10 padrão).
+
+**Payload de entrada (recebido do Maestro):**
+
+```yaml
+modo: criar-cascata
+tarefa-pai: [[tarefa-X]]
+entrevistas:
+  - nome-simbólico: produto
+    template-path: plugin/core/templates/biblioteca-de-marketing/preenchimento/produto/dossie.md
+    instância-no-projeto: produtos/[slug]/dossie.md
+    ordem-recomendada: 1
+  - nome-simbólico: oferta
+    template-path: plugin/core/templates/biblioteca-de-marketing/preenchimento/produto/oferta.md
+    instância-no-projeto: produtos/[slug]/oferta.md
+    ordem-recomendada: 2
+```
+
+**Passos:**
+
+1. **Para cada entrevista no payload (em ordem):**
+   - Criar arquivo de entrevista em `{projeto}/entrevistas/<slug>.md` usando template do `plugin/core/templates/entrevista.md`
+   - Frontmatter:
+     ```yaml
+     titulo: "Cadastro de [nome-simbólico] — [contexto]"
+     tipo: entrevista
+     objetivo: "Coletar dados pra preencher [instância-no-projeto]"
+     agente-solicitante: gerente
+     template-destino: "[instância-no-projeto]"
+     tarefa-relacionada: "[[tarefa-X]]"
+     parte-de-cascata: true
+     status: pendente
+     motivo: needs_data
+     ```
+
+2. **Atualizar tarefa pai** (Edit em `{projeto}/tarefas/<slug-tarefa>.md`):
+   ```yaml
+   status: bloqueada
+   bloqueada-por: ["[[entrevistas/<slug-1>]]", "[[entrevistas/<slug-2>]]", ...]
+   entrevistas-cascata: ["[[entrevistas/<slug-1>]]", "[[entrevistas/<slug-2>]]", ...]
+   ```
+
+3. **Reportar pro Maestro** lista das entrevistas criadas + ordem recomendada (já vem do payload).
+
+**Detecção de retomada (Fluxo 2 do Gerente — concluir-tarefa, já existente):**
+
+Quando Fluxo 2 conclui uma entrevista (status pendente → concluida), antes de finalizar verifica:
+
+```pseudo
+SE entrevista.parte-de-cascata == true:
+  tarefa-pai = entrevista.tarefa-relacionada
+  remover wikilink desta entrevista de tarefa-pai.bloqueada-por
+
+  SE tarefa-pai.bloqueada-por está vazio:
+    tarefa-pai.status = "pendente"
+    sinalizar Maestro: "tarefa [[tarefa-pai]] pronta pra retomar — última cascata concluída"
+```
+
+Maestro recebe sinal e re-despacha especialista original com CONTEXTO atualizado (DEPENDENCIAS_PRESENTES agora inclui novos cadastros).
+
+**Cancelamento de cascata (Fluxo 13 — cancelar-tarefa, já existente):**
+
+Quando Fluxo 13 cancela tarefa pai com `entrevistas-cascata` não-vazio, cascateia cancelamento pras entrevistas filhas pendentes (padrão Grupo E).
+
 ---
 
 ### Fluxo 11: CONSULTAR

@@ -321,3 +321,27 @@ Política inegociável: rascunho vencido bloqueia criação de novos até o usu�
 - **Nunca bloqueie o usuário.** O ritual é opt-in. Se o usuário pedir algo direto, o Maestro segue o fluxo normal.
 - **Nunca invente dados de sessões anteriores.** Se `sessoes/` está vazio, diga "Primeira sessão registrada!".
 - **Nunca modifique arquivos de sessão.** Leitura apenas. A escrita é papel do `/tchau-maestro`.
+
+---
+
+### Cascatas em andamento (Grupo 9)
+
+No Turno 2 (Bash grep consolidado de frontmatters), incluir verificação de cascatas:
+
+```bash
+# Tarefas com cascata em andamento (status bloqueada + entrevistas-cascata não-vazio)
+grep -l "^entrevistas-cascata:" {projeto}/tarefas/*.md 2>/dev/null
+```
+
+Pra cada match, ler frontmatter e renderizar:
+
+```
+### 🔄 Cascata pendente: [titulo da tarefa]
+- Entrevistas: [N concluídas] de [M total]
+- Próxima: [[entrevista-X]] (~5-7 min)
+- Tempo restante estimado: ~[(M-N)*7] min
+
+Pra continuar: rode `/entrevistador continua` ou abra a próxima entrevista no Obsidian.
+```
+
+Quando há ≥1 cascata pendente, sempre renderiza esta seção no dashboard (logo após "Tarefas em andamento" e antes de "Rascunhos").

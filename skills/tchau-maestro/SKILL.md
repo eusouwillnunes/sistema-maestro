@@ -350,3 +350,32 @@ O modelo não tem "estado em memória" garantido entre turnos. O dump no termina
 - **Nunca toque no `sessoes.md` legado.** Mesmo na migração opt-in, o legado é preservado; a migração copia conteúdo, não move.
 - **Nunca pule a confirmação de foco.** Mesmo quando a heurística é óbvia, o `AskUserQuestion` é obrigatório.
 - **Sempre salve o registro de fechamento.** Mesmo que a sessão tenha sido curta. Se falhar, use o fluxo de recuperação da seção 8.
+
+---
+
+### Telemetria leve de rascunhos exploratórios (Grupo 9)
+
+No Turno 2 (consolidação de frontmatters), incluir contagem de rascunhos com `status: exploratorio` criados nos últimos 7 dias:
+
+```bash
+# Glob de rascunhos exploratórios criados na última semana
+grep -l "^status: exploratorio" {projeto}/rascunhos/*.md 2>/dev/null
+```
+
+Pra cada rascunho, parse `data-criacao` e contar os ≥7 dias atrás.
+
+Quando o contador semanal é **≥3**, no fim do relatório do tchau-maestro adicionar:
+
+```
+📊 Rascunhos exploratórios desta semana: [N]
+
+Você gerou rascunhos exploratórios sem cadastrar produtos formais. Quer cadastrar algum como entrega formal?
+- /promover [[rascunho-1]]
+- /promover [[rascunho-2]]
+- /promover [[rascunho-3]]
+- ...
+
+(Cadastros ficam catalogados pra reuso e melhoram qualidade das próximas entregas.)
+```
+
+Não bloqueia o fluxo — só sinaliza padrão. Quando contador é <3, não renderiza esta seção.

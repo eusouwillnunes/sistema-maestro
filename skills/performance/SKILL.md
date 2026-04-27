@@ -176,6 +176,32 @@ Antes de executar qualquer tarefa, leia o contexto indicado no Bloco CONTEXTO (m
 
 Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
 
+### Dependências obrigatórias por peça/entrega
+
+Performance é o único especialista que usa os 3 verdictos (NEEDS_DATA, INSUFFICIENT_DATA, BLOCKED) — separa dependências de **Biblioteca** das de **dado cru de campanha**.
+
+| Entrega | Críticas (Biblioteca) | Críticas (Dado cru) | Enriquecedoras | Verdict se ausente |
+|---|---|---|---|---|
+| `diagnostico-campanha` | `produto`, `perfil-publico` | CSV/dashboard com métricas | `perfil-prospect` | NEEDS_DATA Biblioteca · BLOCKED dado cru |
+| `plano-de-teste` | `produto`, `oferta` | Métricas atuais (≥14 dias) | `perfil-prospect`, `prova-social` | NEEDS_DATA · INSUFFICIENT_DATA <14d · BLOCKED sem dado |
+| `analise-de-campanha` | `produto` | Histórico (≥30 dias recomendado) | `perfil-prospect`, `analise-mercado` | NEEDS_DATA · INSUFFICIENT_DATA histórico curto · BLOCKED sem dado |
+| `otimizacao` | `produto`, `oferta` | Snapshot atual + histórico ≥7 dias | `perfil-prospect` | NEEDS_DATA · INSUFFICIENT_DATA <7d · BLOCKED sem snapshot |
+| `relatorio` | `produto` | Dados do período do relatório | — | NEEDS_DATA · INSUFFICIENT_DATA dados parciais · BLOCKED sem dado |
+
+**Críticas** = mínimo viável. Sem isso, reporta verdict apropriado.
+**Enriquecedoras** = melhoram qualidade. Se ausentes, produz + registra `enriquecedoras-ausentes:` no RESULTADO.
+
+> **Menção em identidade ≠ cadastro formal.** Ver [[protocolo-biblioteca]] seção "Cadastro formal".
+
+### Comportamento ao detectar dependência ausente
+
+Tanto em modo Agent quanto Skill, usa AskUserQuestion (nativo do Claude Code).
+
+- **Modo Agent()** — reporta verdict apropriado (NEEDS_DATA / INSUFFICIENT_DATA / BLOCKED) conforme tabela acima. Maestro processa via `fluxo-needs.md` estendido (cascata pra NEEDS_DATA) ou pede dado cru (pra BLOCKED/INSUFFICIENT_DATA).
+- **Modo Skill()** — abre AUQ direto. Pra NEEDS_DATA Biblioteca, delega via `Skill("maestro:entrevistador")`. Pra BLOCKED/INSUFFICIENT_DATA, pede ao usuário colar/anexar dados crus na conversa.
+
+Em ambos, Enriquecedoras ausentes não bloqueiam.
+
 ### Tags de Domínio
 
 Todo artefato de entrega deve ter `tags-dominio` no frontmatter: `produto/<slug>` (derivado de `produto:` via slugify — lowercase + espaços→hífen + sem acentos) e ≥1 `tema/*` escolhido do catálogo (`plugin/core/templates/catalogo-tags.md` + `~/.maestro/templates/catalogo-tags.md`). Ver `protocolo-biblioteca` seção "Tags de Domínio" pra matriz de obrigatoriedade e fluxo de aprovação de tag nova via Maestro.
@@ -403,7 +429,11 @@ ARQUIVOS:
 
 ### Regras adicionais
 - Pode reportar DONE, DONE_WITH_CONCERNS, INSUFFICIENT_DATA, NEEDS_CONTEXT, BLOCKED
-- **NUNCA reporta NEEDS_DATA** — Performance é analista, trabalha com o que foi passado. Se os dados não existem, é INSUFFICIENT_DATA (parcial) ou BLOCKED (impossível)
+- Performance reporta status conforme `protocolo-agent.md`:
+  - **NEEDS_DATA** quando faltar contexto da Biblioteca (produto, perfil, posicionamento)
+  - **INSUFFICIENT_DATA** quando dado cru de campanha foi passado mas é parcial (ex: 7 dias quando precisa de 14)
+  - **BLOCKED** quando dado cru não foi passado (ex: nenhum CSV/dashboard fornecido)
+  - Precedência interna (ver `protocolo-agent.md` seção "Precedência de status"): `BLOCKED por dado cru ausente > NEEDS_DATA por contexto de Biblioteca`. Sem dado cru, cadastro de produto não resolve análise.
 - O campo RESULTADO contém a análise completa com diagnóstico e recomendações
 - Quando identifica que o problema não é o que o usuário pediu (ex: pediu otimizar campanha mas o problema é a oferta), reporta DONE_WITH_CONCERNS
 - Quando salva relatório no vault, lista no campo ARQUIVOS

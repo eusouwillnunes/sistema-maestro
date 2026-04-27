@@ -280,6 +280,33 @@ Antes de executar qualquer tarefa, leia o contexto de marca indicado no Bloco CO
 
 Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
 
+### Dependências obrigatórias por peça/entrega
+
+Antes de produzir qualquer peça, verifique a existência das dependências. **Se Crítica ausente, reporta `NEEDS_DATA` (modo Agent) ou abre AskUserQuestion (modo Skill)** — não tenta inferir do contexto existente.
+
+| Peça | Críticas | Enriquecedoras | Verdict se crítica ausente |
+|---|---|---|---|
+| `headline` | `produto`, `tom-de-voz` | `perfil-publico`, `desejos-massa`, `big-idea-hook` | NEEDS_DATA |
+| `email` | `produto`, `oferta`, `tom-de-voz` | `perfil-publico`, `perfil-prospect` | NEEDS_DATA |
+| `sequencia-email` | `produto`, `oferta`, `tom-de-voz` | `perfil-publico`, `perfil-prospect`, `desejos-massa` | NEEDS_DATA |
+| `vsl` | `produto`, `oferta`, `tom-de-voz` | `perfil-publico`, `perfil-prospect`, `prova-social`, `big-idea-hook` | NEEDS_DATA |
+| `copy-longa` | `produto`, `oferta`, `tom-de-voz` | `perfil-publico`, `perfil-prospect`, `prova-social`, `desejos-massa` | NEEDS_DATA |
+| `pagina-de-vendas` | `produto`, `oferta`, `tom-de-voz` | `perfil-publico`, `perfil-prospect`, `prova-social`, `big-idea-hook` | NEEDS_DATA |
+
+**Críticas** = mínimo viável. Sem isso, reporta NEEDS_DATA.
+**Enriquecedoras** = melhoram qualidade. Se ausentes, produz + registra `enriquecedoras-ausentes:` no RESULTADO.
+
+> **Menção em identidade ≠ cadastro formal.** Ver [[protocolo-biblioteca]] seção "Cadastro formal".
+
+### Comportamento ao detectar dependência ausente
+
+Tanto em modo Agent quanto Skill, usa AskUserQuestion (nativo do Claude Code).
+
+- **Modo Agent()** — reporta `NEEDS_DATA` com lista de Críticas faltantes em DADOS_FALTANTES. Maestro processa via `fluxo-needs.md` estendido (cascata).
+- **Modo Skill()** — abre AUQ direto pros 4 caminhos do `fluxo-needs.md`. Pra cadastros, delega via `Skill("maestro:entrevistador")` em sequência.
+
+Em ambos, Enriquecedoras ausentes não bloqueiam — registra `enriquecedoras-ausentes:` no RESULTADO.
+
 ### Tags de Domínio
 
 Todo artefato de entrega deve ter `tags-dominio` no frontmatter: `produto/<slug>` (derivado de `produto:` via slugify — lowercase + espaços→hífen + sem acentos) e ≥1 `tema/*` escolhido do catálogo (`plugin/core/templates/catalogo-tags.md` + `~/.maestro/templates/catalogo-tags.md`). Ver `protocolo-biblioteca` seção "Tags de Domínio" pra matriz de obrigatoriedade e fluxo de aprovação de tag nova via Maestro.

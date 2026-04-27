@@ -5,6 +5,7 @@ agente: "[PREENCHER]"
 categoria: "[identidade|copy|estrategia|midias|performance|pesquisa|biblioteca|revisao|validacao-plano|geral]"
 status: em-andamento
 bloqueada-por: []
+entrevistas-cascata: []                # Grupo 9 — wikilinks bidirecionais p/ entrevistas-filhas em cascata; vazio quando tarefa não tem cascata
 grupo: "[PREENCHER]"
 prioridade: media
 solicitante: "[PREENCHER]"

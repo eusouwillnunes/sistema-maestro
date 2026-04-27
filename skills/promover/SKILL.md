@@ -38,3 +38,20 @@ Transforma rascunho em entrega formal. Funciona forçando `tipo=Entrega` no Maes
 
 - Inexistente: AskUserQuestion "não achei [[x]]. Buscar por substring, listar rascunhos recentes, ou cancelar?"
 - Ambíguo (match múltiplo): AskUserQuestion listando candidatos
+
+---
+
+### Flag `promovendo` no CONTEXTO (Grupo 9)
+
+Antes de re-despachar especialista pra promover rascunho exploratório, adicionar ao CONTEXTO:
+
+```yaml
+PROMOVENDO_RASCUNHO: true
+RASCUNHO_ORIGEM: [[rascunhos/<slug-original>]]
+```
+
+Especialista detecta a flag e roda Tabela de Dependências de novo (não aceita suposições do rascunho — exige cadastro formal das Críticas).
+
+Se Críticas ainda ausentes: especialista reporta `NEEDS_DATA` normalmente. Maestro abre cascata via `fluxo-needs.md` estendido.
+
+Garante que promoção sempre passa pelo bloqueio. Rascunho exploratório não vira atalho permanente.

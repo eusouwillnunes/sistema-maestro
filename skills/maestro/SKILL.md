@@ -322,3 +322,81 @@ AskUserQuestion(
 Captura **sempre** passa por confirmação tua. Nunca automática.
 
 > Canais 2 (`/feedback-revisor`) e 3 (cap de Revisor na rodada 3) vivem em outros arquivos: `plugin/skills/feedback-revisor/SKILL.md` e `plugin/skills/maestro/fluxo-needs.md` respectivamente.
+
+---
+
+## 11. Catálogo de Dependências
+
+Mapa de nomes simbólicos usados pelas tabelas "Dependências obrigatórias por peça/entrega" dos especialistas. Maestro consulta este catálogo inline pra resolver nome → template path quando recebe NEEDS_DATA. Sem Read adicional.
+
+| Nome simbólico | Template (no plugin) | Instância no projeto | Categoria |
+|---|---|---|---|
+| `produto` | `produto/dossie.md` | `produtos/[slug]/dossie.md` | Por produto |
+| `oferta` | `produto/oferta.md` | `produtos/[slug]/oferta.md` | Por produto |
+| `perfil-prospect` | `produto/perfil-prospect.md` | `produtos/[slug]/perfil-prospect.md` | Por produto |
+| `prova-social` | `produto/prova-social.md` | `produtos/[slug]/prova-social.md` | Por produto |
+| `analise-mercado` | `produto/analise-mercado.md` | `produtos/[slug]/analise-mercado.md` | Por produto |
+| `desejos-massa` | `produto/desejos-massa.md` | `produtos/[slug]/desejos-massa.md` | Por produto |
+| `big-idea-hook` | `produto/big-idea-hook.md` | `produtos/[slug]/big-idea-hook.md` | Por produto |
+| `swipe-file` | `produto/swipe-file.md` | `produtos/[slug]/swipe-file.md` | Por produto |
+| `perfil-publico` | `identidade/perfil-publico.md` | `identidade/perfil-publico.md` | Identidade |
+| `tom-de-voz` | `identidade/tom-de-voz.md` | `identidade/tom-de-voz.md` | Identidade |
+| `posicionamento` | `identidade/posicionamento.md` | `identidade/posicionamento.md` | Identidade |
+| `personalidade-marca` | `identidade/personalidade-marca.md` | `identidade/personalidade-marca.md` | Identidade |
+| `circulo-dourado` | `identidade/circulo-dourado.md` | `identidade/circulo-dourado.md` | Identidade |
+| `manifesto` | `identidade/manifesto.md` | `identidade/manifesto.md` | Identidade |
+| `historia-fundadores` | `identidade/historia-fundadores.md` | `identidade/historia-fundadores.md` | Identidade |
+| `identidade-visual` | `identidade/identidade-visual.md` | `identidade/identidade-visual.md` | Identidade |
+
+**Convenções:**
+- Pasta de TEMPLATE no plugin: `produto/` (singular). Pasta de INSTÂNCIA no vault do projeto: `produtos/[slug]/` (plural, subpasta por slug). Templates clonados pelo Bibliotecário.
+- Dependências de Identidade não têm slug — arquivo único por projeto.
+- Adicionar nome simbólico requer template novo + entrada aqui.
+
+**Categoria** importa pra cascata: dependências "Identidade" rodam antes de "Por produto" (ordem natural de cadastro). Ordem de cascata: **Identidade → Por produto**.
+
+### Pré-computação de DEPENDENCIAS_PRESENTES (Grupo 9)
+
+Antes de despachar qualquer especialista criativo via Agent(), Maestro pré-computa lista de dependências cadastradas no projeto. Resultado vai no bloco `DEPENDENCIAS_PRESENTES` do CONTEXTO (especificação em `protocolo-contexto.md`).
+
+**Como executar (1× por dispatch criativo):**
+
+```bash
+# 1 Glob consolidado pra identidade (sem slug)
+ls {projeto}/identidade/*.md 2>/dev/null
+
+# 1 Glob consolidado pra produtos (com slug por subpasta)
+ls {projeto}/produtos/*/*.md 2>/dev/null
+```
+
+**Parse pra YAML:**
+
+- Pra cada `{projeto}/identidade/X.md` encontrado: adicionar `X` (sem extensão) na lista `DEPENDENCIAS_PRESENTES.identidade`.
+- Pra cada `{projeto}/produtos/Y/Z.md` encontrado: adicionar `Z` (sem extensão) na lista `DEPENDENCIAS_PRESENTES.produtos.Y`.
+
+Exemplo de saída:
+
+```yaml
+DEPENDENCIAS_PRESENTES:
+  identidade:
+    - tom-de-voz
+    - perfil-publico
+  produtos:
+    produto-x:
+      - dossie
+      - oferta
+    produto-y:
+      - dossie
+```
+
+Quando vault está vazio (projeto novo, sem cadastros):
+
+```yaml
+DEPENDENCIAS_PRESENTES:
+  identidade: []
+  produtos: {}
+```
+
+**Custo:** 1 Glob consolidado no Maestro vs N Globs de existência no Especialista. Net positivo a partir de 2+ dispatches/sessão.
+
+**Nota:** Maestro NÃO valida conteúdo dos arquivos (vazios contam como presentes). Se especialista detectar arquivo presente mas vazio, reporta `INSUFFICIENT_DATA`.

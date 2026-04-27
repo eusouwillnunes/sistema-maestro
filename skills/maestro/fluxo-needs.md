@@ -46,18 +46,73 @@ Casos: especialista detecta ambiguidade estratégica que precisa de input humano
 
 ## NEEDS_DATA
 
-Casos: dependência obrigatória ausente (ex: Copywriter precisa de identidade de marca pra escrever copy).
+Casos: Crítica obrigatória ausente reportada por especialista (Grupo 9). Especialista declara em DADOS_FALTANTES tanto Críticas (que bloqueiam) quanto Enriquecedoras (que não bloqueiam mas devem ser sinalizadas no fim).
 
 **Ação:**
 
-1. Ler report identificando exatamente qual dependência.
-2. Abrir `AskUserQuestion` com opções:
-   - **Preencher agora** (disparar Entrevistador ou fluxo de identidade)
-   - **Usar material existente externo** (usuário cola/linka)
-   - **Cancelar entrega e preencher primeiro** (aborta pipeline atual, cria tarefa-dependência)
-   - **Rascunho exploratório com suposições declaradas** (gera saída assumindo hipóteses explícitas — vai pra `rascunhos/` com `status: exploratorio`, não entra no grafo principal, exige revisão antes de promover)
-3. Aplicar escolha.
-4. Se preencher no fluxo, re-despachar especialista após dependência cumprida. Se "Rascunho exploratório" → executar a sub-seção "Transição pro modo exploratório (NEEDS_DATA → Rascunho Exploratório)" logo abaixo.
+1. Ler report identificando lista de Críticas faltantes (`DADOS_FALTANTES.criticas`) e Enriquecedoras ausentes (`DADOS_FALTANTES.enriquecedoras-ausentes`).
+
+2. Resolver cada nome simbólico via Catálogo de Dependências do Maestro (`maestro/SKILL.md` seção "Catálogo de Dependências") → template path + categoria.
+
+3. Ordenar Críticas por categoria: Identidade → Por produto.
+
+4. Calcular tempo total estimado (~7 min/cadastro). Se subset de Críticas é menor (ex: 2 de 4), calcular tempo do subset também ("só críticas mínimas").
+
+5. Abrir `AskUserQuestion` com 5 opções (em ordem):
+
+   ```
+   question: "Pra entregar [peça] do produto [X], faltam [N] cadastros críticos: [lista resumida].
+              Estimativa: [N] entrevistas × ~7 min cada = ~[N×7] min total.
+              Pode pausar a qualquer momento — retomo de onde parou.
+              Como prefere prosseguir?"
+
+   options:
+   - "Preencher tudo agora (~[N×7] min, fica catalogado)"
+   - "Cadastrar só as essenciais (~[K×7] min, enriquecer depois)" — só aparece quando spec da peça permite distinguir um subset menor
+   - "Usar material existente (cole/linke aqui na conversa)"
+   - "Rascunho exploratório com suposições (sem cadastro, expira 30d)"
+   - "Cancelar entrega e cadastrar depois"
+   - "Ver lista detalhada antes de decidir"
+   ```
+
+6. Aplicar escolha:
+
+   - **Opção 1 ou 2 (preencher tudo / só essenciais):** despachar Gerente em modo `criar-cascata` (Fluxo 10 v2 — ver `gerente/SKILL.md`) com payload:
+     ```yaml
+     tarefa-pai: [[tarefa-X]]
+     entrevistas:
+       - nome-simbólico: produto
+         template-path: plugin/core/templates/biblioteca-de-marketing/preenchimento/produto/dossie.md
+         instância-no-projeto: produtos/[slug]/dossie.md
+         ordem-recomendada: 1
+       - ...
+     ```
+     Após Gerente criar N entrevistas e atualizar tarefa pai (`bloqueada-por` + `entrevistas-cascata`), responder ao usuário:
+
+     ```
+     "Criei [N] entrevistas em entrevistas/. Comece pela [primeira] (~7 min).
+      Vou retomar [peça] automaticamente quando você terminar a última.
+      Enriquecedoras ausentes (não bloqueiam, mas considerar pra próxima): [lista]"
+     ```
+
+   - **Opção 3 (material existente):** comportamento atual — usuário cola/linka, Maestro re-despacha especialista com material no CONTEXTO.
+
+   - **Opção 4 (rascunho exploratório):** executar sub-seção "Transição pro modo exploratório (NEEDS_DATA → Rascunho Exploratório)" abaixo (sem mudança).
+
+   - **Opção 5 (cancelar):** comportamento atual — aborta pipeline, cria tarefa-dependência via Gerente.
+
+   - **Opção 6 (ver lista):** Maestro mostra lista detalhada com tempo individual por entrevista:
+     ```
+     "📋 Faltam pra entregar [peça]:
+       1. [perfil-publico] (~5 min) — define quem vai consumir
+       2. [produto] (~7 min) — dossiê com proposta, transformação, preço
+       3. [oferta] (~5 min) — bônus, garantia, urgência
+
+      Total: ~17 min. Pode pausar entre uma e outra."
+     ```
+     Reabrir AUQ com mesmas 5 opções acima (sem a "Ver lista").
+
+7. Quando última entrevista da cascata é concluída, Gerente Fluxo 2 (concluir tarefa) detecta tarefa pai com `bloqueada-por` vazio → muda status pra "pendente" → Maestro re-despacha especialista original com CONTEXTO atualizado (DEPENDENCIAS_PRESENTES agora inclui produto cadastrado).
 
 ### Transição pro modo exploratório (NEEDS_DATA → Rascunho Exploratório)
 

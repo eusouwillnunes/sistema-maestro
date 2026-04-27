@@ -89,17 +89,18 @@ Acionado quando não existe biblioteca no projeto ou o usuário pede para criar.
    - Copiar `plugin/core/templates/_feedback-revisor-template.md` → `memorias/feedback-revisor.md` (cópia literal — registro contínuo de feedbacks do Revisor pra ajuste de calibragem por projeto, Grupo 7)
    - Copiar os 8 templates de identidade de `core/templates/biblioteca-de-marketing/preenchimento/identidade/` para `identidade/` (cada um já vem com `status: vazio` no frontmatter)
    - Criar indexes inline em 3 pastas com schema solto: `social/_social.md`, `referencias/_referencias.md`, `memorias/_memorias.md` usando os modelos inline do scaffold
-   - **Criar os 15 painéis Dataview copiando literalmente os templates oficiais e renomeando `_X-index.md` → `_X.md` no destino** (sufixo `-index` cai). Não inventar conteúdo:
+   - **Criar os 16 painéis Dataview copiando literalmente os templates oficiais e renomeando `_X-index.md` → `_X.md` no destino** (sufixo `-index` cai). Não inventar conteúdo:
 
      **Validação de existência (M5 do spec Grupo E):** antes de copiar cada um, validar via `Read` que o template existe. Se ausente, avisar usuário com:
      > "⚠ Template `<path>` não encontrado — atualize o plugin pra v2.15.0+ pra ativar o painel de `<area>`. Vou continuar o scaffold sem este painel."
      E continuar o scaffold sem abortar. Aviso "não inventar conteúdo" segue valendo — fallback é **omitir o painel**, nunca improvisar.
 
-     **Lista dos 15 painéis (origem → destino):**
+     **Lista dos 16 painéis (origem → destino):**
      - `plugin/core/templates/_tarefas-index.md` → `tarefas/_tarefas.md`
      - `plugin/core/templates/_planos-index.md` → `planos/_planos.md`
      - `plugin/core/templates/_entrevistas-index.md` → `entrevistas/_entrevistas.md`
      - `plugin/core/templates/_rascunhos-index.md` → `rascunhos/_rascunhos.md`
+     - `plugin/core/templates/indexes-area/_cascatas-index.md` → `entrevistas/_cascatas.md`
      - `plugin/core/templates/indexes-area/_produtos-index.md` → `produtos/_produtos.md`
      - `plugin/core/templates/indexes-area/_funis-index.md` → `funis/_funis.md`
      - `plugin/core/templates/indexes-area/_lancamentos-index.md` → `lancamentos/_lancamentos.md`

@@ -138,6 +138,22 @@ Após entregar o resultado, avalie se ele merece virar template reutilizável.
 
 ---
 
+## Cadastro formal
+
+**Menção em identidade ≠ cadastro formal.** Mesmo que um produto, persona ou conceito apareça em algum template da Biblioteca (ex: campo "linhas de produtos" no posicionamento, ou nome de cliente no manifesto), isso NÃO substitui o cadastro formal no template específico.
+
+Exemplo: o posicionamento pode listar 3 linhas de produto que a marca vende. Pra produzir entrega sobre uma dessas linhas (página de vendas, email, oferta), o produto precisa ter `produtos/[slug]/dossie.md` preenchido. Identidade conta o que a marca vende em termos gerais; o cadastro formal tem dados estruturados que alimentam a execução.
+
+Especialistas que precisem de cadastro formal declaram `produto` (ou outra dependência específica) na coluna "Críticas" da sua tabela "Dependências obrigatórias por peça/entrega". Maestro abre cadastro via cascata de entrevistas conforme `fluxo-needs.md`.
+
+**Mensagem padrão amigável (UX):** quando o Maestro precisa explicar a regra ao usuário, usa o template:
+
+> "Você mencionou [conceito] em [arquivo da identidade] (ótimo!). Pra produzir [peça], preciso de um [template específico] dedicado: [campos principais]. Posso abrir o cadastro agora? (~[X] min)"
+
+A frase explica o **porquê** do cadastro extra, não soa burocrática.
+
+---
+
 ## Wikilinks em frontmatter
 
 Todo campo de frontmatter que aponta para outro artefato do vault usa o formato `[[pasta/slug]]` com a pasta-destino do tipo do alvo. Em listas, cada item segue o mesmo formato.

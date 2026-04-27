@@ -188,6 +188,51 @@ Bibliotecário usa `tags-decisoes` pra editar o artefato (trocar/descartar tags)
 
 ---
 
+### Bloco `DEPENDENCIAS_PRESENTES` (Grupo 9)
+
+Maestro pré-computa lista de dependências cadastradas no projeto antes de despachar dispatch criativo. Especialista compara contra sua "Tabela de Dependências obrigatórias por peça/entrega" sem tocar disco — economiza N Globs por dispatch.
+
+**Como Maestro popula:**
+
+1. 1× por dispatch criativo, executar Glob consolidado:
+   ```bash
+   ls {projeto}/identidade/*.md 2>/dev/null
+   ls {projeto}/produtos/*/*.md 2>/dev/null
+   ```
+2. Parse lista pra estrutura YAML:
+
+```yaml
+DEPENDENCIAS_PRESENTES:
+  identidade:
+    - tom-de-voz
+    - perfil-publico
+  produtos:
+    produto-x:
+      - dossie
+      - oferta
+    produto-y:
+      - dossie
+```
+
+3. Injetar no CONTEXTO antes do bloco INSTRUÇÕES.
+
+**Como Especialista consome:**
+
+1. Ler `DEPENDENCIAS_PRESENTES` do CONTEXTO
+2. Cruzar com Tabela de Dependências da peça/entrega solicitada
+3. Se Crítica ausente: reportar `NEEDS_DATA` com lista detalhada
+4. Se Enriquecedora ausente: produzir + incluir `enriquecedoras-ausentes:` no RESULTADO
+
+Quando o bloco está vazio (projeto novo, sem nada cadastrado), o Maestro injeta:
+
+```yaml
+DEPENDENCIAS_PRESENTES:
+  identidade: []
+  produtos: {}
+```
+
+---
+
 ## Checklist Rápido
 
 Antes de despachar um especialista:

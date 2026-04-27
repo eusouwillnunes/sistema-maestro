@@ -180,20 +180,34 @@ Antes de executar qualquer tarefa, leia o contexto de marca indicado no Bloco CO
 
 Se falta contexto essencial e o usuário não tem: solicite que coloque material na pasta `referencias/` ou pergunte diretamente.
 
-### Dependências obrigatórias por tipo de entrega
+### Dependências obrigatórias por peça/entrega
 
-Antes de produzir qualquer entrega, o Estrategista verifica a existência dos arquivos da biblioteca. **Se dependência obrigatória está ausente, reporta `NEEDS_DATA` pra Gerente criar entrevista de cadastro** (não tenta inferir do contexto existente):
+Antes de produzir qualquer entrega, verifique a existência das dependências. **Se Crítica ausente, reporta `NEEDS_DATA` (modo Agent) ou abre AskUserQuestion (modo Skill)** — não tenta inferir do contexto existente.
 
-| Entrega | Dependências obrigatórias | Se ausente |
-|---|---|---|
-| Oferta / Oferta irresistível | `produtos/[produto]/dossie.md` preenchido | NEEDS_DATA: cadastrar produto formal primeiro |
-| Funil de vendas | `produtos/[produto]/dossie.md` + `produtos/[produto]/oferta.md` | NEEDS_DATA: produto e oferta precisam existir |
-| Lançamento | `produtos/[produto]/dossie.md` + `produtos/[produto]/oferta.md` + `produtos/[produto]/perfil-prospect.md` | NEEDS_DATA: pacote de produto incompleto |
-| Lead magnet | `produtos/[produto]/dossie.md` (produto destino) | NEEDS_DATA: qual produto o lead magnet vai alimentar? |
-| Escada de valor | pelo menos 1 produto cadastrado em `produtos/[produto]/` | NEEDS_DATA: sem produtos, não há escada |
-| Campanha | `produtos/[produto]/dossie.md` + `produtos/[produto]/oferta.md` | NEEDS_DATA: campanha precisa de produto e oferta |
+| Peça/Entrega | Críticas | Enriquecedoras | Verdict se crítica ausente |
+|---|---|---|---|
+| `oferta` | `produto` (dossiê preenchido) | `analise-mercado`, `prova-social` | NEEDS_DATA |
+| `funil` | `produto`, `oferta` | `perfil-prospect`, `analise-mercado` | NEEDS_DATA |
+| `lancamento` | `produto`, `oferta`, `perfil-prospect` | `analise-mercado`, `prova-social` | NEEDS_DATA |
+| `lead-magnet` | `produto` (destino) | `perfil-publico`, `desejos-massa` | NEEDS_DATA |
+| `escada-de-valor` | ≥1 produto cadastrado | `posicionamento`, `analise-mercado` | NEEDS_DATA |
+| `campanha` | `produto`, `oferta` | `perfil-prospect`, `analise-mercado` | NEEDS_DATA |
 
-**Importante:** menções a produtos dentro da identidade de marca (ex: campo "linhas de produtos" no posicionamento) **NÃO substituem** o cadastro formal em `produtos/[produto]/`. A identidade conta o que a marca vende em termos gerais; o produto formal tem dossiê, oferta, perfil de prospect — dados que alimentam a execução.
+**Críticas** = mínimo viável pra produzir algo decente. Sem isso, reporta NEEDS_DATA.
+**Enriquecedoras** = melhoram qualidade. Se ausentes, agente pode produzir mas registra `enriquecedoras-ausentes:` no RESULTADO.
+
+> **Menção em identidade ≠ cadastro formal.** Ver princípio em [[protocolo-biblioteca]] seção "Cadastro formal".
+
+### Comportamento ao detectar dependência ausente
+
+Tanto em modo Agent quanto Skill, especialista usa AskUserQuestion (AUQ é nativo do Claude Code, funciona em qualquer modo).
+
+- **Modo Agent()** — reporta `NEEDS_DATA` com lista de Críticas faltantes no bloco DADOS_FALTANTES do report. Maestro processa via `fluxo-needs.md` estendido (cascata).
+- **Modo Skill()** — abre AUQ direto pros 4 caminhos do `fluxo-needs.md`. Pra cadastros, delega via `Skill("maestro:entrevistador")` em sequência.
+
+Em ambos os modos, dependências **Enriquecedoras** ausentes não bloqueiam — registra no RESULTADO como `enriquecedoras-ausentes: [lista]` pro Maestro mostrar ao usuário no fim.
+
+**Importante:** menções a produtos dentro da identidade de marca (ex: campo "linhas de produtos" no posicionamento) **NÃO substituem** o cadastro formal em `produtos/[produto]/`. Ver princípio em [[protocolo-biblioteca]].
 
 ### Tags de Domínio
 

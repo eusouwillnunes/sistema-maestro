@@ -5,6 +5,7 @@ objetivo: "[PREENCHER]"
 agente-solicitante: "[PREENCHER]"
 template-destino: "[PREENCHER]"
 tarefa-relacionada: "[PREENCHER — caminho relativo]"
+parte-de-cascata: false                 # Grupo 9 — true quando criada via Fluxo 10 v2 (modo criar-cascata)
 status: pendente
 motivo: needs_data
 dados-existentes: ""
