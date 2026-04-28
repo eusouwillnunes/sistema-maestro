@@ -90,7 +90,23 @@ Dispare em um **único bloco** após o Turno 1 concluir:
     {projeto}/memorias/feedback-revisor.md 2>/dev/null || echo 0
   ```
 
-Turno 2 tem **3 tool calls** (1 Read + 2 Bash), independente do tamanho do vault — escala O(1) em tool calls, não O(N).
+- `Bash` adicional pra contar **violações B-S55-47** (tarefas-filhas categoria revisao com correção pós-Revisor aplicada por agente errado — escaparam ao tripwire ou foram detectadas após o fato):
+
+  ```bash
+  # Conta tarefas categoria=revisao com agente!=usuario E _ultima-correcao-por=maestro/null E status!=aprovado-com-pendencia
+  # Heurística: encontrar arquivos que casam categoria revisao + agente especialista + autoria errada
+  for f in {projeto}/tarefas/*.md; do
+    [ -f "$f" ] || continue
+    grep -q "^categoria: revisao" "$f" 2>/dev/null || continue
+    grep -q "^agente: usuario" "$f" 2>/dev/null && continue
+    grep -q "^status: aprovado-com-pendencia" "$f" 2>/dev/null && continue
+    if grep -qE "^_ultima-correcao-por: (maestro|~|null)$" "$f" 2>/dev/null || ! grep -q "^_ultima-correcao-por:" "$f" 2>/dev/null; then
+      echo "$f"
+    fi
+  done | wc -l
+  ```
+
+Turno 2 tem **4 tool calls** (1 Read + 3 Bash), independente do tamanho do vault — escala O(1) em tool calls, não O(N).
 
 ### Turno 3 — Montagem e interação (sequencial, sem mais I/O)
 
@@ -169,6 +185,11 @@ Bom dia! Aqui o estado do projeto **[Nome da Empresa]**:
 
 > [!warning] Pendências de qualidade: [pendencias_qualidade] tarefa(s) com pendência aceita ou em revisão.
 > Abrir `_qa-reprovacoes.md` pra revisar.
+
+[Se violacoes_maestro ≥ 1, renderizar bloco abaixo. violacoes_maestro = contagem do Bash dedicado no Turno 2 (categoria revisao + agente especialista + _ultima-correcao-por=maestro/null + status≠aprovado-com-pendencia). Se violacoes_maestro == 0: omitir o bloco. Origem: B-S55-47 — Maestro aplicou correção em vez do especialista.]
+
+> [!danger] Violações B-S55-47 detectadas: [violacoes_maestro] tarefa(s) com correção aplicada pelo agente errado.
+> Abrir `_violacoes-maestro.md` pra investigar — Maestro aplicou correção em vez do especialista que produziu o artefato. Voz autoral comprometida em [violacoes_maestro] caso(s).
 
 ## O que pode ser feito agora
 [Lista de tarefas pendentes (não bloqueadas), ordenadas por prioridade]

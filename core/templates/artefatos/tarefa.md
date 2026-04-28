@@ -14,8 +14,9 @@ titulo: "[Título da tarefa]"
 tipo: tarefa
 agente: "[agente destino]"
 categoria: "[identidade|copy|estrategia|midias|performance|pesquisa|biblioteca|revisao|validacao-plano|geral]"
-status: em-andamento
+status: em-andamento                       # valores: em-andamento | concluida | cancelada | aprovado-com-pendencia
 bloqueada-por: []                          # quando preenchido: lista de "[[tarefas/<slug>]]"
+_ultima-correcao-por: ~                    # auditoria do sistema — preenchido pelo Gerente em tarefas-filhas categoria=revisao. Ignorar se você é o usuário (campo prefixado `_` = interno)
 grupo: "[grupo]"
 prioridade: media
 solicitante: "[nome]"

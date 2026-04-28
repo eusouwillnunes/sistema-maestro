@@ -357,3 +357,49 @@ A regra "todo despacho de especialista passa pelo Gerente" se aplica a **conteú
 **Pesquisa é conteúdo criativo, não operação mecânica.** Pesquisas vão pra `pesquisas/`, viram referência consultada depois e contêm texto autoral em pt-br. Toda pesquisa, inclusive a inicial do onboarding (step 2.9 / 2B.5 do `maestro-onboarding`), passa pelo pipeline completo via `fluxo-entrega.md`.
 
 **Bibliotecário e Entrevistador como exceções formais.** Skills paralelas ao hub (como `maestro-onboarding`) podem invocá-los direto via `Skill()`. Esta é a única forma legítima de invocação fora do hub do Maestro.
+
+---
+
+## 8. Quem aplica correções pós-Revisor
+
+**Regra absoluta:** toda correção pós-Revisor passa pelo especialista que produziu o artefato. Sem exceção, sem gradiente "menor". Origem: B-S55-47 da Sessão 56 (6 reincidências escaladas).
+
+### Fluxo canônico (revisão necessária)
+
+1. Especialista da tarefa pai produz artefato → DONE
+2. Revisor reprova → reporta `NEEDS_REVISION` com lista de correções
+3. Maestro despacha Gerente (`FLUXO: criar-revisao`) → cria **tarefa-filha** de categoria `revisao` com agente herdado (rodadas 1-2) ou `agente: usuario` (rodada 3, ver `fluxo-needs.md`)
+4. Maestro despacha especialista da tarefa-filha via `Agent()` com bloco CONTEXTO incluindo correções do Revisor
+5. Especialista aplica via `Edit` no `caminho-do-artefato` existente, re-DONE
+6. Re-Revisor → APPROVED (ou novo ciclo, max 3 rodadas)
+7. Maestro despacha Gerente (`FLUXO: concluir-tarefa`) com payload incluindo `_ultima-correcao-por: <slug-especialista>` — Gerente persiste no frontmatter da tarefa-filha
+
+### Tripwire (Gerente Fluxo 2 — concluir-tarefa)
+
+Quando a tarefa sendo fechada tem TODAS as condições:
+- `categoria: revisao` **E**
+- `agente != "usuario"` **E**
+- `_ultima-correcao-por` no payload é `"maestro"` OU ausente OU `null` **E**
+- `status` não é `aprovado-com-pendencia`
+
+→ Gerente retorna `BLOCKED` com `referencia-tecnica: B-S55-47` + `hint-pro-maestro` pra traduzir pro usuário em linguagem natural (ver `plugin/skills/maestro/limites-maestro.md` seção 4).
+
+Detalhes da implementação em `plugin/skills/gerente/SKILL.md` Fluxo 2.
+
+### Caso fronteira: pendência aceita (rodada 3 do ciclo)
+
+Quando o ciclo de revisão chega na rodada 3 sem aprovação, Maestro abre `AskUserQuestion` obrigatório:
+- "Aceitar como está com pendência registrada"
+- "Reescrever do zero"
+- "Cancelar tarefa"
+
+Se usuário escolhe "aceitar com pendência", a tarefa-filha de revisão recebe `status: aprovado-com-pendencia` (campo já existente em `fluxo-entrega.md`). Maestro confirma pro usuário: *"Salvei como está. Anotei a pendência em memorias/pendencias-aceitas.md pra revisar depois."* Tripwire não dispara.
+
+### Cobertura limitada
+
+O tripwire cobre o **fluxo principal** (Entrega + Plano com tarefas-filhas). Refinamento não passa pelo Gerente (não cria tarefa) — defesa do refinamento é só texto + TodoWrite. **Não cobre** despachos sem tarefa: Bibliotecário em scaffold, Entrevistador invocado por especialista dentro de pipeline ativo, Pesquisador em validação descartável de API. Esses casos seguem a regra absoluta por convenção (texto no hub) — auditoria contínua via painel `_violacoes-maestro-index.md`.
+
+### Por que essa regra existe
+
+- **Voz autoral:** Maestro genérico não tem o contexto de marca/tom/persona que o especialista carrega — correções diretas dele despersonalizam o texto
+- **Aprendizado:** ver "QA e Revisor como auditores; especialista original aplica correções" no CLAUDE.md

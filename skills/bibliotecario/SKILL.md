@@ -112,6 +112,7 @@ Acionado quando não existe biblioteca no projeto ou o usuário pede para criar.
      - `plugin/core/templates/indexes-area/_identidade-index.md` → `identidade/_identidade.md`
      - `plugin/core/templates/indexes-area/_qa-reprovacoes-index.md` → `_qa-reprovacoes.md` (raiz do projeto)
      - `plugin/core/templates/indexes-area/_pendencias-aceitas-index.md` → `_pendencias-aceitas.md` (raiz do projeto)
+     - `plugin/core/templates/indexes-area/_violacoes-maestro-index.md` → `_violacoes-maestro.md` (raiz do projeto — auditoria contínua de B-S55-47)
 
    - Esses painéis têm callout `[!info]`, queries Dataview e frontmatter específico. Sem os templates reais, as features de painéis Dataview não funcionam.
 

@@ -187,11 +187,35 @@ Acionado pelo Maestro após aprovação humana da entrega.
 
 **Modelo: Sonnet.**
 
-1. Receber do Maestro: tarefa a concluir (título ou caminho) + caminho do artefato final (se pesquisa; outras já têm no campo `resultado:` da tarefa).
+1. Receber do Maestro: tarefa a concluir (título ou caminho) + caminho do artefato final (se pesquisa; outras já têm no campo `resultado:` da tarefa) + opcionalmente `_ultima-correcao-por: <slug-especialista>` no payload (apenas pra tarefas-filhas de revisão que tiveram ciclo).
 
-2. Ler documento da tarefa — obter `data-inicio`, `parte-de`, `categoria`.
+2. Ler documento da tarefa — obter `data-inicio`, `parte-de`, `categoria`, `agente`, `_ultima-correcao-por` (se já existe no frontmatter).
 
-3. Atualizar frontmatter da tarefa: `status: concluida`, `data-conclusao` = agora, `concluido-por: sistema` (indica que a transição foi via fluxo do Maestro/Gerente). Se `resultado:` é `pendente` (caso pesquisa), preencher com o wiki-link recebido. Se já é wiki-link válido, não mexer.
+**2.bis VALIDAÇÃO TRIPWIRE B-S55-47:**
+
+Se a tarefa sendo fechada tem TODAS as condições:
+- `categoria: revisao` (é tarefa-filha de ciclo de validação) **E**
+- `agente != "usuario"` (rodada 3 tem agente=usuario por design do Fluxo 3 step 2; bypassa tripwire — caso de pendência aceita ou reescrita pelo usuário) **E**
+- `_ultima-correcao-por` no payload é `"maestro"` OU ausente OU `null` **E**
+- `status` no frontmatter atual NÃO é `aprovado-com-pendencia`
+
+→ **REJEITAR** fechamento. Retornar `BLOCKED` no report:
+
+```
+status: BLOCKED
+motivo: "Correção pós-Revisor aplicada por agente errado"
+detalhes:
+  tarefa-de-revisao: "<slug-filha>"
+  agente-esperado: "<agente-da-tarefa>"
+  _ultima-correcao-por: "<valor-recebido | omitido>"
+sugestao: "Re-despachar especialista <agente-esperado> pra aplicar correção; capturar slug em _ultima-correcao-por antes de re-chamar concluir-tarefa"
+referencia-tecnica: "B-S55-47"
+hint-pro-maestro: "TRADUZIR esta mensagem pro usuário em linguagem natural — ver plugin/skills/maestro/limites-maestro.md seção 4"
+```
+
+Maestro recebe BLOCKED, lê `limites-maestro.md` e re-executa o passo certo (re-despacha especialista pra aplicar correção). Não prosseguir com os passos 3+ enquanto autoria estiver errada.
+
+3. Atualizar frontmatter da tarefa: `status: concluida`, `data-conclusao` = agora, `concluido-por: sistema` (indica que a transição foi via fluxo do Maestro/Gerente). Se `resultado:` é `pendente` (caso pesquisa), preencher com o wiki-link recebido. Se já é wiki-link válido, não mexer. **Se** o payload incluiu `_ultima-correcao-por: <slug>` com valor diferente de `~`/null/omitido, persistir esse valor no frontmatter; senão, omitir o campo (não escrever `~` — evita poluir tarefas que não tiveram ciclo).
 
 4. Marcar `[x]` em TODOS os itens da seção "Validações" (seção "Sub-tarefas" já foi marcada pelo especialista durante a execução — não mexer).
 
@@ -224,15 +248,17 @@ Acionado pelo Maestro após aprovação humana da entrega.
 
 ### Fluxo 3: CRIAR TAREFA DE REVISÃO
 
-Acionado pelo Maestro quando QA ou Revisor reportam problemas.
+Acionado pelo Maestro quando QA ou Revisor reportam problemas. **FLUXO key:** `criar-revisao`.
 
 **Modelo: Sonnet.**
+
+> Tarefas-filhas criadas aqui são o ponto de captura do **tripwire B-S55-47** (ver Fluxo 2 acima). O Maestro deve sempre re-despachar o **especialista** da tarefa-filha pra aplicar a correção (rodadas 1-2). Na rodada 3, agente vira `usuario` por design do passo 2 abaixo — tripwire bypassa esse caso.
 
 Passos:
 1. Recebe achados do QA/Revisor, tarefa original, agente executor, rodada.
 2. Determina executor (especialista em rodadas 1-2, usuário na 3ª).
 3. Carrega `plugin/core/templates/checklists/delta-revisao.md` (categoria `revisao` no novo modelo).
-4. Cria documento em `{projeto}/tarefas/` com categoria `revisao`, referência à tarefa original via wiki-link.
+4. Cria documento em `{projeto}/tarefas/` com categoria `revisao`, referência à tarefa original via wiki-link, e inicializa `_ultima-correcao-por: ~` no frontmatter da filha (Maestro vai atualizar ao despachar Fluxo 2 da filha após o ciclo).
 5. **Novo:** se a tarefa original tem `parte-de: [[planos/<slug>]]`, a tarefa de revisão também herda esse campo.
 6. ~~Atualiza `_tarefas.md`~~ — painel Dataview reflete tarefa de revisão nova automaticamente.
 7. Reporta ao Maestro.
