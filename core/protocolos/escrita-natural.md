@@ -9,11 +9,18 @@ tags:
 > [!info] Protocolo compartilhado do sistema MAESTRO.
 > Este documento é referenciado pelo Agente Revisor e por todos os agentes que produzem saída textual.
 
+> [!important] O Revisor aponta. Quem corrige é o especialista.
+> O Agente Revisor identifica padrões artificiais e **reporta achados** ao Maestro. Ele NUNCA edita o artefato — preserva voz autoral. A correção é aplicada pelo especialista que produziu o texto (Copywriter, Marca, Estrategista, etc.) numa rodada de revisão própria.
+>
+> **Como ler este protocolo:** toda menção a "reescrever", "substituir", "cortar", "corrigir" descreve o que o Revisor **aponta** ao especialista — não o que o Revisor faz. Linguagem do tipo "REPROVA", "bloqueante", "threshold ≥1" descreve **veredicto do Revisor**, não ação dele sobre o arquivo.
+
 ## 1. Objetivo
 
 Garantir que **todo texto produzido pelo sistema MAESTRO** pareça escrito por humano, respeitando a identidade de marca original. Se o leitor suspeitar que foi gerado por IA, o texto perdeu credibilidade.
 
 Padrões IA modernos (estruturas que se popularizaram em 2024+) são frequentemente **técnicas legítimas de copy** quando usadas com propósito. O que separa técnica de muleta é **densidade + uso reflexo**, não a presença pontual.
+
+**Exceção pra padrões Bloqueantes (B-01..B-09):** a regra "densidade + uso reflexo, não presença pontual" vale pros padrões de Alerta (A-XX). Padrões Bloqueantes são presença pura — basta ≥1 ocorrência GLOBAL no documento pra Revisor reprovar, sem importar distribuição entre seções.
 
 ---
 
@@ -36,13 +43,34 @@ Padrões IA modernos (estruturas que se popularizaram em 2024+) são frequenteme
 
 ### 3.1 Travessão como muleta
 
-#### B-01 — Travessão como muleta
+> [!danger] Categoria bloqueante = presença pura
+> ZERO travessões em copy de marketing. Threshold global, não local. Não importa se "distribuído por seções" — conta o documento inteiro. Revisor aponta a violação; especialista reescreve.
+
+#### B-01 — Travessão (em-dash)
 **Severidade:** Bloqueante
-**Descrição:** Uso de travessão (—) pra encaixar explicações, apartes ou comentários quando ponto, vírgula, dois-pontos ou parênteses resolvem.
-**Exemplo problemático:** "Essa ferramenta — que foi criada pensando em você — vai mudar o jeito — sim, o jeito — como você trabalha."
-**Direção de correção:** Reescrever sem travessão. Ponto final, vírgula, dois-pontos ou parênteses quase sempre funcionam.
+**Threshold:** ≥1 ocorrência GLOBAL no documento → Revisor REPROVA. Não importa distribuição.
+**Descrição:** Travessão (—) é recurso acadêmico/jornalístico, não de copywriting. IA usa como muleta pra encaixar explicações, apartes e comentários dentro da mesma frase sem pensar em estrutura. O problema não é a quantidade: é o reflexo.
+
+**Pergunta-gatilho que o especialista deve fazer ao reescrever:**
+> "Ponto final resolve aqui?"
+> Se sim, usa ponto final. Se o aparte é importante, ele merece frase própria. Se não é, corta.
+
+**Exemplo do que o Revisor aponta como problemático (travessão por reflexo):**
+> "Essa ferramenta — que foi desenvolvida por especialistas — permite que você crie campanhas — de qualquer tipo — em minutos. O processo — que antes levava semanas — agora é simples — e qualquer pessoa consegue fazer."
+
+**Exemplo do tipo de reescrita que o especialista entrega (cada ideia na sua frase):**
+> "Essa ferramenta foi desenvolvida por especialistas. Com ela, você cria campanhas de qualquer tipo em minutos. O processo que antes levava semanas agora é simples. Qualquer pessoa consegue fazer."
+
+*Nenhum travessão foi necessário. Ponto final resolveu tudo.*
+
+**Calibração contra falso negativo de densidade:** documento longo com 30 travessões distribuídos por 8 seções é o **mesmo bug** que documento curto com 30 travessões num parágrafo. Threshold é GLOBAL. Caso real: `circulo-dourado.md` da CBI of Miami (30+ travessões aprovados pelo Revisor v2 pré-fix — falso negativo classificado em B-S55-48).
+
+**Apontamento do Revisor ao especialista:** "Reescrever sem travessão. Ponto final, vírgula, dois-pontos ou parênteses quase sempre funcionam."
 
 ### 3.2 Clichês prontos
+
+> [!danger] Substituições obrigatórias — sem exceção
+> Padrões B-02 a B-08 são clichês IA puros e metáforas gastas. Categoria bloqueante = ZERO em copy de marketing. Quando o Revisor identifica qualquer ocorrência, **aponta substituição** ao especialista; especialista reescreve antes de re-entregar. Revisor não edita o arquivo.
 
 #### B-02 — "É importante ressaltar que..."
 **Severidade:** Bloqueante
@@ -81,12 +109,16 @@ Padrões IA modernos (estruturas que se popularizaram em 2024+) são frequenteme
 **Descrição:** Frase pronta de promessa misteriosa.
 **Direção de correção:** "entender", "aprender", "descobrir" (com objeto específico).
 
-### 3.4 Acentuação
+### 3.4 Acentuação pt-br
+
+> [!danger] Inegociável
+> Texto sem acentuação correta em português do Brasil é REPROVADO pelo Revisor. Revisor reporta as palavras afetadas; especialista corrige TODAS antes de re-entregar. Aplica-se a todo conteúdo: entregas de especialistas, templates preenchidos, documentos de pesquisa, respostas ao usuário.
 
 #### B-09 — Acentuação pt-br faltando
 **Severidade:** Bloqueante
-**Descrição:** Palavras como "é", "não", "próximo", "fundação", "só", "já", "também", "você", "análise", "estratégia", "conteúdo" sem acento.
-**Direção de correção:** Corrigir TODAS as ocorrências antes de prosseguir.
+**Threshold:** ≥1 ocorrência → Revisor REPROVA. Sem exceção.
+**Lista monitorada (não exaustiva):** "é", "não", "próximo", "fundação", "só", "já", "também", "você", "análise", "estratégia", "conteúdo", "está", "três", "público", "sério", "história", "técnica", "última", "média"
+**Apontamento do Revisor ao especialista:** "Corrigir TODAS as ocorrências de palavras sem acento listadas no achado antes de re-entregar."
 
 ---
 
@@ -364,3 +396,35 @@ Bullet novo na seção apropriada (Bloqueante ou Alerta) com mesmo formato do co
 ## 9. Acentuação obrigatória em português do Brasil
 
 Todo texto produzido DEVE usar acentuação correta em português do Brasil. Esta regra é inegociável (vide B-09).
+
+---
+
+## 10. Apêndice — Exemplos de Reescrita
+
+> Os exemplos abaixo ilustram o **antes** (texto que o Revisor aponta como problemático) e o **depois** (tipo de reescrita que o especialista entrega após ler o achado). Não são edits feitos pelo Revisor.
+
+### 10.1 Copy de produto
+
+**❌ Antes (Revisor aponta como problemático):**
+
+> "É com grande entusiasmo que apresentamos nossa solução inovadora. Além disso, é importante ressaltar que essa ferramenta extraordinária vai transformar completamente sua experiência de marketing, permitindo que você mergulhe nesse universo de possibilidades infinitas."
+
+**✅ Depois (especialista reescreve):**
+
+> "Essa ferramenta faz uma coisa que as outras não fazem: monta sua campanha em 15 minutos usando os dados que você já tem. Sem template genérico. Sem achismo."
+
+**Padrões corrigidos:** B-02 ("é importante ressaltar"), B-05 ("Além disso"), B-06 ("mergulhe nesse universo"), A-02 ("solução inovadora"), A-05 ("extraordinária").
+
+---
+
+### 10.2 Email de lançamento
+
+**❌ Antes (Revisor aponta como problemático):**
+
+> "Nesse sentido, vale destacar que desenvolvemos uma metodologia única que certamente vai revolucionar a forma como você trabalha. Portanto, não perca essa oportunidade extraordinária de desvendar os segredos do marketing digital."
+
+**✅ Depois (especialista reescreve):**
+
+> "Criamos um método que corta o caminho. Em vez de ficar testando o que funciona por meses, você aplica um processo que já rodou em 12 lançamentos. O curso te mostra como."
+
+**Padrões corrigidos:** B-04 ("Nesse sentido"), B-03 ("vale destacar"), B-08 ("desvendar os segredos"), A-03 ("certamente"), A-04 ("Portanto"), A-05 ("extraordinária", "revolucionar").
