@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/maestro-orquestra.py\""
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/maestro-orquestra.py\""
           }
         ]
       }
