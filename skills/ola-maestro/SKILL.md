@@ -194,12 +194,12 @@ Bom dia! Aqui o estado do projeto **[Nome da Empresa]**:
 [Se pendencias_qualidade ≥ 1, renderizar bloco abaixo. pendencias_qualidade = contagem no grep do Turno 2 de tarefas com `status: aprovado-com-pendencia` OU (`categoria: revisao` E status diferente de `concluida`/`cancelada`). Se pendencias_qualidade == 0: omitir o bloco.]
 
 > [!warning] Pendências de qualidade: [pendencias_qualidade] tarefa(s) com pendência aceita ou em revisão.
-> Abrir `_qa-reprovacoes.md` pra revisar.
+> Abrir `tarefas/_qa-reprovacoes.md` pra revisar.
 
 [Se violacoes_maestro ≥ 1, renderizar bloco abaixo. violacoes_maestro = contagem do Bash dedicado no Turno 2 (categoria revisao + agente especialista + _ultima-correcao-por=maestro/null + status≠aprovado-com-pendencia). Se violacoes_maestro == 0: omitir o bloco. Origem: B-S55-47 — Maestro aplicou correção em vez do especialista.]
 
 > [!danger] Violações B-S55-47 detectadas: [violacoes_maestro] tarefa(s) com correção aplicada pelo agente errado.
-> Abrir `_violacoes-maestro.md` pra investigar — Maestro aplicou correção em vez do especialista que produziu o artefato. Voz autoral comprometida em [violacoes_maestro] caso(s).
+> Abrir `tarefas/_violacoes-maestro.md` pra investigar — Maestro aplicou correção em vez do especialista que produziu o artefato. Voz autoral comprometida em [violacoes_maestro] caso(s).
 
 ## O que pode ser feito agora
 [Lista de tarefas pendentes (não bloqueadas), ordenadas por prioridade]

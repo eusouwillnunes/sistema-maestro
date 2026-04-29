@@ -393,7 +393,7 @@ Quando o ciclo de revisão chega na rodada 3 sem aprovação, Maestro abre `AskU
 - "Reescrever do zero"
 - "Cancelar tarefa"
 
-Se usuário escolhe "aceitar com pendência", a tarefa-filha de revisão recebe `status: aprovado-com-pendencia` (campo já existente em `fluxo-entrega.md`). Maestro confirma pro usuário: *"Salvei como está. Anotei a pendência em memorias/pendencias-aceitas.md pra revisar depois."* Tripwire não dispara.
+Se usuário escolhe "aceitar com pendência", a tarefa-filha de revisão recebe `status: aprovado-com-pendencia` (campo já existente em `fluxo-entrega.md`). Maestro confirma pro usuário: *"Salvei como está. Anotei no histórico de pendências aceitas pra você revisar depois."* Tripwire não dispara.
 
 ### Cobertura limitada
 

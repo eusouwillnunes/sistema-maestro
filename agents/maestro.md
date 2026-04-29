@@ -5,7 +5,7 @@ description: >
   analisa a natureza da tarefa, roteia para o agente especialista correto,
   supervisiona a execução, valida o resultado e entrega com qualidade.
   Acionado automaticamente em toda mensagem.
-model: claude-opus-4-6
+model: claude-opus-4-7
 skills:
   - maestro
 ---

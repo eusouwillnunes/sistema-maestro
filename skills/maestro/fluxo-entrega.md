@@ -64,7 +64,7 @@ Marcar item 1 como `in_progress` antes do primeiro dispatch. Nunca começar com 
 5. **Na 3a reprova, abortar pipeline e perguntar ao usuário via `AskUserQuestion`:**
    - **Revisar o pedido** (usuário reescreve)
    - **Ver o último rascunho** (entrega parcial pra inspeção)
-   - **Forçar entrega com pendência** (loga `status: aprovado-com-pendencia` + seção "Pendências aceitas pelo usuário" + append em `memorias/pendencias-aceitas.md` — ver fluxo-needs.md seção governança). Maestro confirma: "Salvei como está. Anotei a pendência em memorias/pendencias-aceitas.md pra revisar depois."
+   - **Forçar entrega com pendência** (loga `status: aprovado-com-pendencia` + seção "Pendências aceitas pelo usuário" + append em `memorias/pendencias-aceitas/historico.md` — ver fluxo-needs.md seção governança). Maestro confirma: "Salvei como está. Anotei no histórico de pendências aceitas pra você revisar depois."
 6. Quando QA aprova a tarefa-filha, despachar Gerente `concluir-tarefa` da filha com payload `_ultima-correcao-por: <slug-especialista>`. Tripwire do Gerente (ver `protocolo-agent.md` §8) valida autoria — retorna BLOCKED se autoria errada.
 
 ### Revisor reprova

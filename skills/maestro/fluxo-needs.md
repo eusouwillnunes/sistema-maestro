@@ -189,7 +189,7 @@ Essa opção só aparece após 3 rodadas de reprovação em QA ou Revisor (ver `
 
 ### Registro
 
-Cada uso registrado em `memorias/pendencias-aceitas.md` com:
+Cada uso registrado em `memorias/pendencias-aceitas/historico.md` com:
 - Data
 - Artefato
 - Checklist item que reprovou

@@ -336,7 +336,7 @@ Executar silenciosamente (sem mensagens detalhadas para cada item):
    - `maestro/memorias/sessoes/` (pasta vazia; `_sessoes.md` é criado pelo /tchau-maestro na primeira sessão)
    - `maestro/memorias/decisoes.md`
    - `maestro/memorias/preferencias-classificacao.md` — copia de `core/templates/_preferencias-classificacao-template.md` (v2.12.0, Bug 4). Maestro preenche ao longo do uso conforme você responde AskUserQuestion de ambiguidade. Após 3 escolhas iguais pro mesmo padrão, vira preferência aplicada automaticamente com opção de override.
-   - `maestro/memorias/pendencias-aceitas.md` — copia de `core/templates/_pendencias-aceitas-template.md` (v2.12.0, Bug 4). Registra longitudinalmente usos da opção "forçar entrega com pendência" em QA/Revisor. Após 3 usos, Maestro bloqueia a opção e força revisão estrutural do checklist.
+   - `maestro/memorias/pendencias-aceitas/historico.md` — copia de `core/templates/_pendencias-aceitas-historico-template.md` (v2.12.0 origem, v2.23.2 reorganizado). Registra longitudinalmente usos da opção "forçar entrega com pendência" em QA/Revisor. Após 3 usos, Maestro bloqueia a opção e força revisão estrutural do checklist.
    - `maestro/memorias/agentes/` (pasta vazia)
 
    O arquivo `memorias/decisoes.md` começa vazio e será preenchido automaticamente conforme você toma decisões estratégicas durante o uso do Maestro (arquétipo, formato de lançamento, tom de voz, etc.). O sistema reusa escolhas anteriores pra manter coerência entre entregas.
@@ -808,7 +808,7 @@ Executar silenciosamente:
    - `maestro/memorias/sessoes/` (pasta vazia; `_sessoes.md` é criado pelo /tchau-maestro na primeira sessão)
    - `maestro/memorias/decisoes.md`
    - `maestro/memorias/preferencias-classificacao.md` — copia de `core/templates/_preferencias-classificacao-template.md` (v2.12.0, Bug 4). Maestro preenche ao longo do uso conforme você responde AskUserQuestion de ambiguidade. Após 3 escolhas iguais pro mesmo padrão, vira preferência aplicada automaticamente com opção de override.
-   - `maestro/memorias/pendencias-aceitas.md` — copia de `core/templates/_pendencias-aceitas-template.md` (v2.12.0, Bug 4). Registra longitudinalmente usos da opção "forçar entrega com pendência" em QA/Revisor. Após 3 usos, Maestro bloqueia a opção e força revisão estrutural do checklist.
+   - `maestro/memorias/pendencias-aceitas/historico.md` — copia de `core/templates/_pendencias-aceitas-historico-template.md` (v2.12.0 origem, v2.23.2 reorganizado). Registra longitudinalmente usos da opção "forçar entrega com pendência" em QA/Revisor. Após 3 usos, Maestro bloqueia a opção e força revisão estrutural do checklist.
    - `maestro/memorias/agentes/` (pasta vazia)
 
    O arquivo `memorias/decisoes.md` começa vazio e será preenchido automaticamente conforme você toma decisões estratégicas durante o uso do Maestro (arquétipo, formato de lançamento, tom de voz, etc.). O sistema reusa escolhas anteriores pra manter coerência entre entregas.

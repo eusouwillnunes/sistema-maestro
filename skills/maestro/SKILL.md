@@ -274,7 +274,7 @@ Só salve após confirmação explícita do usuário.
 ## 9. Referências
 
 - Protocolos compartilhados: `plugin/core/protocolos/` (agent, contexto, biblioteca, interação, escrita-natural, sub-tarefas)
-- Templates de memória: `plugin/core/templates/_preferencias-classificacao-template.md` + `_pendencias-aceitas-template.md`
+- Templates de memória: `plugin/core/templates/_preferencias-classificacao-template.md` + `_pendencias-aceitas-historico-template.md`
 - Documentação da arquitetura: `docs/features/bug4-pipeline-obrigatorio.md`
 - Spec: `docs/superpowers/specs/2026-04-23-bug4-pipeline-obrigatorio-design.md`
 - Plano de implementação: `docs/superpowers/plans/2026-04-23-bug4-pipeline-obrigatorio-plan.md`

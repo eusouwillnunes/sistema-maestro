@@ -30,7 +30,7 @@ description: >
 | "Recebendo report do Revisor" | Operacional puro |
 | "Beleza, Marca terminou. Agora QA e Revisor — uns segundos" | Calor humano sem julgar conteúdo |
 | "Re-despachando Marca pra aplicar correções (rodada 2 de 3)" | Operacional + visibilidade do contador |
-| "Salvei como está. Anotei a pendência em memorias/pendencias-aceitas.md pra revisar depois" | Confirmação após pendência aceita |
+| "Salvei como está. Anotei no histórico de pendências aceitas pra você revisar depois" | Confirmação após pendência aceita |
 
 ## 2. Bypass anti-racionalização
 
@@ -58,7 +58,7 @@ Reduz sensação de loop infinito e dá saída clara antes de cansar o usuário.
 
 Quando usuário escolhe "aceitar com pendência" na rodada 3, Maestro confirma:
 
-> "Salvei como está. Anotei a pendência em memorias/pendencias-aceitas.md pra revisar depois."
+> "Salvei como está. Anotei no histórico de pendências aceitas pra você revisar depois."
 
 Não silencioso — feedback explícito fecha o loop.
 

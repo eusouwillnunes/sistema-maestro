@@ -14,7 +14,7 @@ descricao: Tarefas com pendência de qualidade (reprovação ou em revisão)
 ```dataview
 TABLE titulo AS "Tarefa", categoria AS "Categoria", status AS "Status", data-criacao AS "Criada em"
 FROM ""
-WHERE (startswith(file.folder, this.file.folder + "/") OR file.folder = this.file.folder)
+WHERE file.folder = this.file.folder
   AND tipo = "tarefa"
   AND (status = "aprovado-com-pendencia" OR (categoria = "revisao" AND status != "concluida" AND status != "cancelada"))
 SORT data-criacao DESC
