@@ -100,6 +100,21 @@ Aplicar na ordem:
 
 10. **Apresentar resumo visual ao usuário** — conforme seção 4.
 
+10b. **Verificação de saúde do hook PreToolUse** — antes do output final, ler `~/.maestro/hook-errors.log` se existir:
+
+   ```bash
+   if [ -f ~/.maestro/hook-errors.log ]; then
+     count=$(wc -l < ~/.maestro/hook-errors.log)
+     # Se o filtro por timestamp da sessão for inviável, usar tail das últimas 50 linhas
+     ultimas=$(tail -50 ~/.maestro/hook-errors.log | grep -c "hook-error\|hook-warning")
+   fi
+   ```
+
+   - Se `count == 0` ou arquivo não existe: omitir aviso (caso normal).
+   - Se `ultimas > 0` (houve falha desde a penúltima sessão), adicionar ao output:
+
+     > ⚠ Detectei N falha(s) no hook de defesa nesta sessão. Logs em `~/.maestro/hook-errors.log`. A defesa de escrita do Maestro pode estar inativa — vale verificar com o suporte se o problema persistir.
+
 11. **Sugerir próximos passos com justificativa** — explicar por que aquela sugestão é a melhor (ex: "desbloqueia 3 tarefas").
     - **Feedback do Revisor (Grupo 7):** se o contador de feedbacks novos capturados nesta sessão é ≥3, adicionar item:
       `Processar feedback do Revisor (N entradas novas) — rode /maestro-revisar-memorias enquanto o contexto está fresco`

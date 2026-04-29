@@ -37,6 +37,16 @@ Esta skill é acionada quando:
 
 Antes de tudo, detectar projeto ativo conforme `core/protocolos/protocolo-ativacao.md`. O mapa abaixo assume que `{projeto}` já está resolvido.
 
+### Passo prévio: GC do cache de projeto-ativo
+
+Antes da detecção do projeto ativo, executar uma única vez:
+
+```bash
+find ~/.maestro/projeto-ativo-cache/ -name "*.md" -mtime +7 -delete 2>/dev/null
+```
+
+Isso limpa caches de janelas que ficaram >7 dias sem uso (não polui detecção de projeto ativo em sessões novas com dados antigos). Sem efeito se diretório não existir. Custo: <50ms por sessão.
+
 ### Turno 1 — Descoberta e leitura consolidada (paralelo, sem dependências)
 
 Dispare as 7 tool calls abaixo em um **único bloco**:

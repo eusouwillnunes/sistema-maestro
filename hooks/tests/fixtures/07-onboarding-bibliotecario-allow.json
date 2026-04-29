@@ -1,0 +1,11 @@
+{
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/tmp/maestro-test-vault/cbi-of-miami.md",
+    "content": "---\ntipo: index\n---\n"
+  },
+  "session_id": "test-session-07",
+  "cwd": "/tmp/maestro-test-vault",
+  "agent_id": "subagent-bib-001",
+  "agent_type": "maestro:bibliotecario"
+}

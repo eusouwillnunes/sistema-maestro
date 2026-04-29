@@ -1,0 +1,10 @@
+{
+  "tool_name": "Edit",
+  "tool_input": {
+    "file_path": "/tmp/maestro-test-vault/rascunhos/headline-x.md",
+    "old_string": "status: aberto",
+    "new_string": "status: promovido"
+  },
+  "session_id": "test-session-09",
+  "cwd": "/tmp/maestro-test-vault"
+}

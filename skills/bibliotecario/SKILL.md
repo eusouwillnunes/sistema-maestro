@@ -359,6 +359,58 @@ ARQUIVOS:
 ---END-REPORT---
 ```
 
+### Fluxo CRIAR_CLAUDE_PROJETO
+
+Aciona quando o Maestro hub despacha o Bibliotecário no onboarding pra criar/editar o `CLAUDE.md` do projeto na raiz do vault, adicionando a seção `## Maestro` que sinaliza que o Sistema Maestro está ativo.
+
+**Modelo: Haiku** (operação mecânica — checa existência, escreve/anexa seção fixa).
+
+**Recebe no CONTEXTO:**
+- `path-projeto`: caminho absoluto da raiz do projeto
+
+**Passos:**
+
+1. Construir path: `{path-projeto}/CLAUDE.md`
+2. Verificar via `Read`:
+   - **Se NÃO existe:** criar com a seção Maestro completa (passo 3a)
+   - **Se existe E já tem `## Maestro`:** retornar `ALREADY_EXISTS` no report (idempotência)
+   - **Se existe MAS não tem `## Maestro`:** anexar a seção ao final (passo 3b)
+
+3a. **Criar novo:** `Write` com conteúdo:
+
+```markdown
+## Maestro
+> Sistema Maestro ativo. Configuração e memórias: maestro/config.md
+> Memórias de usuário: ~/.maestro/memorias/
+```
+
+3b. **Anexar:** `Edit` adicionando o mesmo bloco ao final do arquivo existente.
+
+4. Reportar `OK` ao Maestro hub com path do arquivo + ação tomada (`criado` / `anexado` / `ja-existe`).
+
+**Restrições:**
+
+- Idempotente: nunca duplica seção `## Maestro` se já existir.
+- Não toca em outras seções do CLAUDE.md do usuário.
+- Não cria sub-pastas — opera só no arquivo.
+
+**Formato de report:**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+CLAUDE.md do projeto:
+  - path: "{path-projeto}/CLAUDE.md"
+  - acao: "[criado | anexado | ja-existe]"
+
+ARQUIVOS:
+  - criado: "{path-projeto}/CLAUDE.md" (se acao=criado)
+  - editado: "{path-projeto}/CLAUDE.md" (se acao=anexado)
+---END-REPORT---
+```
+
 ---
 
 ## 4. Formato de Entrega

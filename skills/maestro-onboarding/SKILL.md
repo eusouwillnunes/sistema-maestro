@@ -346,15 +346,21 @@ Executar silenciosamente (sem mensagens detalhadas para cada item):
    - Preencher `Vault:` com o caminho do CWD
    - Preencher `Projeto iniciado em:` com a data atual
    - Manter `onboarding-completo: false` (será atualizado no final)
-4. **CLAUDE.md do projeto:** verificar se o CLAUDE.md do projeto do usuário tem seção `## Maestro`:
-   - Se não existe CLAUDE.md: criar com a seção Maestro
-   - Se existe mas sem seção Maestro: adicionar ao final
-   - Conteúdo:
-     ```
-     ## Maestro
-     > Sistema Maestro ativo. Configuração e memórias: maestro/config.md
-     > Memórias de usuário: ~/.maestro/memorias/
-     ```
+4. **CLAUDE.md do projeto:** despachar Bibliotecário pra criar/anexar seção Maestro:
+
+   ```python
+   Agent(
+     subagent_type="maestro:bibliotecario",
+     prompt="""
+     CONTEXTO:
+     path-projeto: {CWD}
+
+     FLUXO: CRIAR_CLAUDE_PROJETO
+     """
+   )
+   ```
+
+   O Bibliotecário cria `{CWD}/CLAUDE.md` (ou anexa seção `## Maestro` se já existir). Hook PreToolUse libera porque Bibliotecário é subagente (tem `agent_id`). Idempotente — se Bibliotecário retornar `ALREADY_EXISTS`, prosseguir silencioso.
 5. **Memórias de usuário:** verificar se `~/.maestro/memorias/_index.md` existe. Se não existe, criar a estrutura `~/.maestro/` (conforme passo 2.3.5).
 6. **Cache de projeto ativo:** persistir o projeto recém-criado (ver protocolo-ativacao.md Sub-fluxo 1.5):
 
@@ -403,7 +409,7 @@ Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
   - label: "Depois", description: "Pula por enquanto. Você cria quando quiser pedindo 'cria minha biblioteca'"
 
 **Se sim:**
-- Chamar o Bibliotecário via `Skill(maestro:bibliotecario)` para fazer scaffold dentro da pasta da empresa
+- Despachar o Bibliotecário via `Agent(subagent_type="maestro:bibliotecario", prompt="FLUXO: CRIAR\nCONTEXTO:\nnome-empresa: {nome-coletado-no-passo-2.1}\npath-projeto: {CWD}")` para fazer scaffold dentro da pasta da empresa. Hook PreToolUse libera porque Bibliotecário é subagente.
 - Informar: "Biblioteca criada! Você pode preencher os templates quando quiser. O sistema funciona mesmo sem eles preenchidos."
 
 **Se não/depois:**
@@ -807,15 +813,21 @@ Executar silenciosamente:
 
    O arquivo `memorias/decisoes.md` começa vazio e será preenchido automaticamente conforme você toma decisões estratégicas durante o uso do Maestro (arquétipo, formato de lançamento, tom de voz, etc.). O sistema reusa escolhas anteriores pra manter coerência entre entregas.
 
-3. **CLAUDE.md do projeto:** verificar se o CLAUDE.md do projeto tem seção `## Maestro`:
-   - Se não existe CLAUDE.md: criar com a seção Maestro
-   - Se existe mas sem seção Maestro: adicionar ao final
-   - Conteúdo:
-     ```
-     ## Maestro
-     > Sistema Maestro ativo. Configuração e memórias: maestro/config.md
-     > Memórias de usuário: ~/.maestro/memorias/
-     ```
+3. **CLAUDE.md do projeto:** despachar Bibliotecário pra criar/anexar seção Maestro:
+
+   ```python
+   Agent(
+     subagent_type="maestro:bibliotecario",
+     prompt="""
+     CONTEXTO:
+     path-projeto: {CWD}
+
+     FLUXO: CRIAR_CLAUDE_PROJETO
+     """
+   )
+   ```
+
+   O Bibliotecário cria `{CWD}/CLAUDE.md` (ou anexa seção `## Maestro` se já existir). Hook PreToolUse libera porque Bibliotecário é subagente (tem `agent_id`). Idempotente — se Bibliotecário retornar `ALREADY_EXISTS`, prosseguir silencioso.
 4. **Atualização de permissões existentes (patch silencioso):**
    - Se o projeto já tem `.claude/settings.local.json`, abra o arquivo e verifique se `permissions.allow` contém `WebSearch` e `WebFetch(domain:*)`. Se faltar alguma das duas, adicione ao array. Não pergunte consentimento — o usuário já autorizou o padrão de permissões no onboarding completo anterior. Apenas informe: "Permissões atualizadas com WebSearch e WebFetch (necessárias para o Pesquisador)."
    - Se o projeto não tem `settings.local.json`, criar o arquivo completo com o bloco de permissões padrão (mesma lista do onboarding completo, seção 2.4).
@@ -846,7 +858,7 @@ Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
   - label: "Criar agora (Recomendado)", description: "Monta a estrutura com todos os templates prontos pra preencher"
   - label: "Depois", description: "Pula por enquanto. Você cria quando quiser pedindo 'cria minha biblioteca'"
 
-**Se sim:** chamar o Bibliotecário via `Skill(maestro:bibliotecario)` para fazer scaffold dentro da pasta da empresa.
+**Se sim:** despachar o Bibliotecário via `Agent(subagent_type="maestro:bibliotecario", prompt="FLUXO: CRIAR\nCONTEXTO:\nnome-empresa: {nome-coletado-no-passo-2B.1}\npath-projeto: {CWD}")` para fazer scaffold dentro da pasta da empresa. Hook PreToolUse libera porque Bibliotecário é subagente.
 
 **Se não/depois:** informar: "Sem problema! Quando quiser, é só pedir."
 

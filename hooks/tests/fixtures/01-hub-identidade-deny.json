@@ -1,0 +1,9 @@
+{
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/tmp/maestro-test-vault/identidade/circulo-dourado.md",
+    "content": "..."
+  },
+  "session_id": "test-session-01",
+  "cwd": "/tmp/maestro-test-vault"
+}

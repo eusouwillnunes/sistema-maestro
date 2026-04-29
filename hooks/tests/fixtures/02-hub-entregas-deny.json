@@ -1,0 +1,10 @@
+{
+  "tool_name": "Edit",
+  "tool_input": {
+    "file_path": "/tmp/maestro-test-vault/entregas/copy-x.md",
+    "old_string": "x",
+    "new_string": "y"
+  },
+  "session_id": "test-session-02",
+  "cwd": "/tmp/maestro-test-vault"
+}

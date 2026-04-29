@@ -1,0 +1,9 @@
+{
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/tmp/maestro-test-vault/rascunhos/teste.md",
+    "content": "..."
+  },
+  "session_id": "test-session-03",
+  "cwd": "/tmp/maestro-test-vault"
+}
