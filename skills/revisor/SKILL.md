@@ -51,6 +51,43 @@ Aplicar adições, desativações (`DESATIVAR: <id>`) e ajustes de limiar (`LIMI
 
 ## Fluxo de Trabalho
 
+### 0. Modo de operação (Camadas 1 + 2 da defesa B-S59-1)
+
+**a. Bloco TAREFA tem `caminho-do-artefato:` E `caminho-do-canario:`?**
+
+- **SIM → modo "audit-on-file":**
+
+  i. Path do artefato ausente após parse → `NEEDS_DATA` "caminho-do-artefato ausente no TAREFA"
+
+  ii. Read no artefato com timeout efetivo de 5s (medir tempo decorrido — abortar se passar):
+     - Erro / arquivo não existe → `NEEDS_DATA` "caminho-do-artefato inválido: {path}"
+     - Conteúdo vazio (0 bytes ou só whitespace) → `NEEDS_DATA` "artefato vazio em {path}"
+     - Timeout → `NEEDS_DATA` "tempo limite no Read de {path} — possível sincronização em andamento"
+
+  iii. Path do canário ausente após parse → `NEEDS_DATA` "caminho-do-canario ausente no TAREFA"
+
+  iv. Read no canário com timeout 5s:
+     - Erro / arquivo não existe → `NEEDS_DATA` "caminho-do-canario inválido: {path}"
+     - Conteúdo vazio → `NEEDS_DATA` "canário vazio em {path}"
+     - Timeout → `NEEDS_DATA` "tempo limite no Read do canário"
+
+  v. Extrair `token:` e `md5-esperado:` do frontmatter do canário:
+     - Qualquer um ausente → `NEEDS_DATA` "canário malformado: token ou md5-esperado ausente"
+
+  vi. Calcular MD5 do artefato via Bash:
+     ```
+     md5sum {path-artefato} | cut -d' ' -f1
+     # Fallback Windows: certutil -hashfile {path-artefato} MD5 | sed -n 2p | tr -d ' '
+     ```
+     - Diverge de `md5-esperado:` extraído no passo v → `NEEDS_DATA` "MD5 do artefato diverge do canário (artefato pode ter mudado)"
+
+  vii. Sucesso → seguir pra passo 1. **OBRIGATÓRIO: citar `[VERIF] {token} | MD5 {md5-esperado}` como 1ª linha do RESULTADO**, antes de qualquer outro conteúdo.
+
+- **NÃO → modo "audit-on-text":**
+  - Pular passos i-vii. Texto inline do bloco TAREFA é o material a revisar.
+  - **NÃO citar [VERIF]** (não há canário em audit-on-text).
+  - Seguir pra passo 1.
+
 1. Receber o texto para revisão
 2. Verificar se há identidade de marca vinculada — se sim, anotar o que preservar
 
@@ -232,4 +269,6 @@ ARQUIVOS:
 - O Revisor reporta DONE quando o texto está natural (aprovado)
 - Reporta DONE_WITH_CONCERNS quando detecta problemas — com achados e instruções para o especialista corrigir
 - O Revisor NÃO corrige o texto diretamente — apenas diagnostica e instrui
-- NUNCA reporta NEEDS_DATA, NEEDS_CONTEXT, INSUFFICIENT_DATA ou BLOCKED
+- Reporta `NEEDS_DATA` **APENAS** no caso 0.a do Fluxo de Trabalho — modo audit-on-file com path/canário/MD5 ausente/inválido/vazio/timeout/divergente. Em qualquer outro caso (incluindo "não tenho certeza se o texto é IA"), reporta `DONE` ou `DONE_WITH_CONCERNS`.
+- NUNCA reporta `NEEDS_CONTEXT`, `INSUFFICIENT_DATA` ou `BLOCKED`.
+- Em modo audit-on-file, **SEMPRE** cita `[VERIF] {token} | MD5 {md5-esperado}` como 1ª linha do RESULTADO, antes de qualquer outro conteúdo.

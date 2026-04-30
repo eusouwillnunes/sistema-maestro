@@ -24,7 +24,7 @@ Todo agente rodando como Agent() DEVE reportar um destes status ao final da exec
 | `DONE` | Tarefa concluída com sucesso | Segue pro Ciclo de Validação (QA → Revisor) |
 | `DONE_WITH_CONCERNS` | Concluído mas com ressalvas | Lê as ressalvas, decide se valida ou ajusta antes do Ciclo |
 | `PARTIAL` | Operação executada com sucesso em parte das escritas planejadas, falhou antes de concluir o resto | Arquivos escritos seguem contrato normal; pendentes não foram tocados. Maestro instrui usuário a repetir o pedido pra finalizar. Em modo recuperação, agente completa só o que falta |
-| `NEEDS_DATA` | Faltam dados que não existem em lugar nenhum | Cria entrevista(s) e/ou pesquisa(s), bloqueia a tarefa |
+| `NEEDS_DATA` | Faltam dados que não existem em lugar nenhum **OU** path do artefato/canário inválido **OU** token/MD5 do canário diverge do TAREFA | Cria entrevista(s)/pesquisa(s) **OU** Maestro investiga path/canário antes de re-despacho |
 | `NEEDS_CONTEXT` | Precisa de informação que existe mas não foi passada | Re-despacha com mais contexto (sem criar entrevista) |
 | `INSUFFICIENT_DATA` | Dado foi passado mas é insuficiente pra produzir com qualidade | Cria entrevista de aprofundamento e/ou pesquisa complementar |
 | `NEEDS_DECISION` | Há ponto(s) de decisão estratégica ambíguo(s) que exigem escolha do usuário | Executa Fluxo 5.11 — monta AskUserQuestion com opções, re-despacha com bloco DECISOES |
@@ -32,7 +32,7 @@ Todo agente rodando como Agent() DEVE reportar um destes status ao final da exec
 
 ### Diferenças-chave
 
-- **NEEDS_DATA** → o dado **não existe em lugar nenhum** — precisa ser coletado do usuário ou pesquisado
+- **NEEDS_DATA** → o dado **não existe em lugar nenhum** — precisa ser coletado do usuário ou pesquisado. **Ou** problema técnico de despacho de Revisor/QA: path do artefato ausente/inválido/vazio/timeout, path do canário ausente/inválido/malformado, token divergente, MD5 do artefato divergente. Maestro investiga sem criar entrevista.
 - **NEEDS_CONTEXT** → o dado **provavelmente existe** (num template, memória ou arquivo) mas o agente não recebeu
 - **INSUFFICIENT_DATA** → o dado **foi passado** mas não tem profundidade ou qualidade suficiente
 - **PARTIAL** → a execução **começou**, mas não terminou. Parte das escritas foi feita; o resto não. Diferente de `NEEDS_CONTEXT`: `PARTIAL` reporta estado parcial após executar; `NEEDS_CONTEXT` reporta antes de executar, pedindo input
@@ -158,6 +158,10 @@ Caminho do artefato: [caminho/absoluto/do/arquivo-a-editar.md]
   # de retornar texto no RESULTADO. O arquivo já tem frontmatter e
   # seções-base criadas pelo Gerente. O RESULTADO do report passa a
   # trazer apenas um resumo curto (1-3 frases) + o caminho.
+Caminho do canário: [{projeto}/memorias/auditoria/canarios-ativos/{slug}.md]
+  # Apenas pra Revisor/QA em audit-on-file. Subagent lê artefato + canário.
+  # Cita `[VERIF] {token} | MD5 {md5-esperado}` como 1a linha do RESULTADO.
+  # Maestro grep pós-dispatch (Seção 9 deste protocolo).
 Formato de entrega: [Markdown Obsidian-first com frontmatter YAML e wiki-links]
 Protocolo de report: Seguir o formato definido em protocolo-agent.md (seção 2)
 ---END-TAREFA---
@@ -234,6 +238,8 @@ Material de referência:
 ```
 
 ### Quando `caminho-do-artefato` está presente no bloco TAREFA
+
+Pra **Revisor e QA**, presença de `caminho-do-artefato:` E `caminho-do-canario:` dispara modo "audit-on-file" (Camadas 1 + 2 da defesa B-S59-1 — ver Seção 9). Quando ausentes, Revisor opera em "audit-on-text" (texto inline — `fluxo-refinamento.md`).
 
 Comportamento do agente:
 
@@ -415,3 +421,105 @@ O tripwire cobre o **fluxo principal** (Entrega + Plano com tarefas-filhas). Ref
 
 - **Voz autoral:** Maestro genérico não tem o contexto de marca/tom/persona que o especialista carrega — correções diretas dele despersonalizam o texto
 - **Aprendizado:** ver "QA e Revisor como auditores; especialista original aplica correções" no CLAUDE.md
+
+---
+
+## 9. Despacho de Revisor/QA — defesa anti-hallucination (B-S59-1)
+
+Defesa em camadas pra dispatch audit-on-file. Princípio: canário em arquivo separado + challenge MD5 prova matematicamente que subagent leu artefato e canário, sem violar princípio "Maestro nunca escreve no vault de conteúdo".
+
+### 9.1 Lifecycle do canário (4 passos obrigatórios)
+
+**Passo 1 — Pre-dispatch (gerar token + MD5 + escrever canário):**
+
+```bash
+# Lazy-init (vault antigo pode não ter — DE-19)
+mkdir -p {projeto}/memorias/auditoria/canarios-ativos/
+
+# Gerar token (DE-13)
+TOKEN="VERIF-$(python -c "import secrets; print(secrets.token_hex(3).upper()[:6])")"
+# Fallback se Python ausente:
+# TOKEN="VERIF-$(printf '%06X' $((RANDOM*RANDOM % 16777216)))"
+
+# Calcular MD5 do artefato
+MD5=$(md5sum {path-artefato} | cut -d' ' -f1)
+# Fallback Windows: MD5=$(certutil -hashfile {path-artefato} MD5 | sed -n 2p | tr -d ' ')
+
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+SLUG={slug-tarefa}
+CANARIO={projeto}/memorias/auditoria/canarios-ativos/${SLUG}.md
+
+# Write canário
+cat > "$CANARIO" <<EOF
+---
+tarefa: $SLUG
+artefato: {path-artefato-relativo}
+token: $TOKEN
+timestamp: $TIMESTAMP
+md5-esperado: $MD5
+---
+Canário de verificação ativo. Subagente cita: [VERIF] $TOKEN | MD5 $MD5 na 1ª linha do RESULTADO.
+EOF
+```
+
+Se Write OU md5sum falhar (DE-18) → Maestro retorna `NEEDS_DATA` ao invocador, **não despacha**.
+
+**Passo 2 — Dispatch:**
+
+Bloco TAREFA inclui:
+
+```
+Caminho do artefato: {path-artefato}
+Caminho do canário: {projeto}/memorias/auditoria/canarios-ativos/{slug}.md
+```
+
+Subagent (Revisor/QA) lê os 2 arquivos.
+
+**Passo 3 — Validação (pós-dispatch):**
+
+```bash
+PRIMEIRA_LINHA=$(echo "$REPORT" | grep -m1 "^\[VERIF\]")
+ESPERADO="[VERIF] $TOKEN | MD5 $MD5"
+if [ "$PRIMEIRA_LINHA" != "$ESPERADO" ]; then
+  SUSPEITO=1
+fi
+```
+
+- Match exato → leu (token + MD5 ambos provados).
+- Diferente, ausente ou só parcial → suspeito de hallucination.
+- Status `NEEDS_DATA` no report → falha legítima. Maestro investiga path/canário. Se 2x NEEDS_DATA seguidos → AUQ pro usuário.
+
+**Passo 4 — Cleanup (pós-validação, sempre):**
+
+```bash
+rm "$CANARIO"
+```
+
+Roda mesmo se suspeito (não deixa órfão). Se `rm` falhar, próximo `/ola-maestro` cleanup pega (filtro >5min — DE-17).
+
+### 9.2 Retry em caso de suspeita
+
+Re-despacha **só os suspeitos**, sequencial. Cada retry: novo TOKEN, novo MD5 (artefato pode ter mudado), novo Write canário, novo dispatch, nova validação, novo cleanup.
+
+**Cap de retries: 1.** Calibrado na Fase 0 do plano com medida real de dispatch Revisor (p95 ≈102s — pior caso de 2 retries sequenciais excederia tolerância de espera). Reavaliar quando hardware/modelo melhorar.
+
+Cap atingido sem sucesso → BLOCKED com `referencia-tecnica: B-S59-1`. Maestro traduz pelo `limites-maestro.md` Seção 7 e abre AUQ DE-7.
+
+### 9.3 Log obrigatório
+
+Toda vez que defesa dispara retry OU loud-fail retorna NEEDS_DATA, Maestro escreve em `memorias/auditoria/historico.md`:
+
+```
+- {YYYY-MM-DD HH:MM} — defesa-anti-hallucination | agente: {revisor|qa} | causa: {token|md5|path|canario} | retry: {sucesso|falha} | tarefa: [[{slug}]]
+```
+
+Timestamp via `date +"%Y-%m-%d %H:%M"` (ver `protocolo-timestamp.md`).
+
+### 9.4 Aplicabilidade
+
+- **Audit-on-file** (TAREFA tem `caminho-do-artefato:` E `caminho-do-canario:`): canário + loud-fail aplicam.
+- **Audit-on-text** (refinamento — `fluxo-refinamento.md` despacha Revisor com texto inline, sem path): SEM canário. Cobertura só Camada 2 + 3. Gap documentado.
+
+### 9.5 Modo de operação do Revisor/QA
+
+`caminho-do-artefato:` E `caminho-do-canario:` no bloco TAREFA disparam audit-on-file. Ausência de qualquer um → modo audit-on-text (Revisor) ou `NEEDS_DATA` (QA — sempre opera audit-on-file).

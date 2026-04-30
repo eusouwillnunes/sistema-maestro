@@ -47,6 +47,44 @@ find ~/.maestro/projeto-ativo-cache/ -name "*.md" -mtime +7 -delete 2>/dev/null
 
 Isso limpa caches de janelas que ficaram >7 dias sem uso (não polui detecção de projeto ativo em sessões novas com dados antigos). Sem efeito se diretório não existir. Custo: <50ms por sessão.
 
+### Turno 0 — Cleanup de canários órfãos (B-S59-1)
+
+Tokens de verificação são transitórios — Maestro escreve em `memorias/auditoria/canarios-ativos/{slug}.md` pre-dispatch e remove pós-validação. Se Maestro crashar entre os 2 passos, fica órfão.
+
+1. Glob `{projeto}/memorias/auditoria/canarios-ativos/*.md` (escopo restrito, sem `**` — exclui `.obsidian/`/`.claude/` por construção).
+
+2. Bash (`xargs -I {}` processa item por item — FD-safe por construção):
+
+```
+ls {projeto}/memorias/auditoria/canarios-ativos/*.md 2>/dev/null > tmp/canarios-existentes.txt
+total=$(wc -l < tmp/canarios-existentes.txt)
+
+if [ "$total" -gt 0 ]; then
+  xargs -a tmp/canarios-existentes.txt -I {} bash -c '
+    ts=$(grep "^timestamp:" "{}" | sed "s/timestamp:\s*//")
+    ts_epoch=$(date -d "$ts" +%s 2>/dev/null || echo 0)
+    limite=$(date -d "5 minutes ago" +%s)
+    if [ "$ts_epoch" -lt "$limite" ] && [ "$ts_epoch" -gt 0 ]; then
+      echo "{}" >> tmp/canarios-orfaos.txt
+    fi
+  '
+fi
+
+orfaos=$(wc -l < tmp/canarios-orfaos.txt 2>/dev/null || echo 0)
+```
+
+3. Pra cada arquivo em `tmp/canarios-orfaos.txt`: `rm` o arquivo.
+
+4. Se quantidade > 0:
+   - Log em `memorias/auditoria/historico.md`:
+     ```
+     - {YYYY-MM-DD HH:MM} — cleanup-canarios-orfaos | quantidade: {N}
+     ```
+   - Mensagem ao usuário (`limites-maestro.md` Seção 7.1):
+     > "Limpei N tokens de auditoria pendentes (resíduo de sessão anterior). Pode ignorar — é automático."
+
+Se quantidade = 0, silencioso (sem mensagem ao usuário).
+
 ### Turno 1 — Descoberta e leitura consolidada (paralelo, sem dependências)
 
 Dispare as 7 tool calls abaixo em um **único bloco**:
@@ -117,6 +155,30 @@ Dispare em um **único bloco** após o Turno 1 concluir:
   ```
 
 Turno 2 tem **4 tool calls** (1 Read + 3 Bash), independente do tamanho do vault — escala O(1) em tool calls, não O(N).
+
+### Checagem — defesa anti-hallucination (B-S59-1)
+
+Antes de montar o dashboard final, contar disparos da defesa nos últimos 7 dias.
+
+1. Glob `{projeto}/memorias/auditoria/historico.md`.
+2. Se existe, Bash:
+
+```
+date_threshold=$(date -d "7 days ago" +"%Y-%m-%d")
+last_7d=$(grep "defesa-anti-hallucination" {projeto}/memorias/auditoria/historico.md 2>/dev/null \
+  | awk -v d="$date_threshold" '$2 >= d' \
+  | wc -l)
+echo "Disparos de defesa últimos 7 dias: $last_7d"
+```
+
+3. Se `last_7d >= 3`, adicionar bloco de aviso ao dashboard:
+
+```markdown
+> [!warning] Defesa anti-hallucination disparou {last_7d} vezes na semana
+> Pode indicar regressão — verifique [[_defesa-anti-hallucination]] em `memorias/auditoria/`.
+```
+
+Se `last_7d < 3`, dashboard normal sem o aviso.
 
 ### Turno 3 — Montagem e interação (sequencial, sem mais I/O)
 

@@ -55,7 +55,12 @@ tags: [meta, scaffold, biblioteca]
 │   ├── referencias/
 │   │   └── _referencias.md
 │   ├── memorias/
-│   │   └── _memorias.md
+│   │   ├── _memorias.md
+│   │   └── auditoria/
+│   │       ├── historico.md
+│   │       ├── _defesa-anti-hallucination.md
+│   │       └── canarios-ativos/
+│   │           └── .gitkeep
 │   ├── tarefas/
 │   │   └── _tarefas.md
 │   ├── planos/
@@ -180,6 +185,10 @@ Memórias dos agentes — feedbacks, preferências e padrões identificados.
    | `plugin/core/templates/indexes-area/_pendencias-aceitas-index.md` | `memorias/_pendencias-aceitas.md` |
    | `plugin/core/templates/_pendencias-aceitas-historico-template.md` | `memorias/pendencias-aceitas/historico.md` |
    | `plugin/core/templates/_feedback-revisor-template.md` | `memorias/feedback-revisor.md` |
+   | `plugin/core/templates/memorias/auditoria/historico.md` | `memorias/auditoria/historico.md` |
+   | `plugin/core/templates/memorias/auditoria/_defesa-anti-hallucination.md` | `memorias/auditoria/_defesa-anti-hallucination.md` |
+
+   Criar também `memorias/auditoria/canarios-ativos/` (vazia — pasta transitória pra defesa anti-hallucination, B-S59-1; arquivos individuais entram/saem em runtime).
 
    Além disso, criar `maestro/checklists/` (vazia) + `maestro/checklists/README.md` (cópia literal de `plugin/core/templates/_readme-checklists-projeto.md`).
 

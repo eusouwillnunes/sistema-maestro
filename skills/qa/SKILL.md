@@ -20,6 +20,42 @@ Verificar checklists. **NÃO reescrever.** Apenas diagnosticar o que passou e o 
 
 ## 2. Fluxo de Trabalho
 
+### 0. Modo de operação (Camadas 1 + 2 da defesa B-S59-1)
+
+QA opera **sempre em audit-on-file** — lê `resultado:` da tarefa (path do artefato) + `caminho-do-canario:` do bloco TAREFA.
+
+**a. Documento da tarefa tem campo `resultado:` apontando pra arquivo E TAREFA tem `caminho-do-canario:`?**
+
+- **SIM:**
+
+  i. `resultado:` ausente após parse do documento da tarefa → `NEEDS_DATA` "resultado: ausente no documento da tarefa"
+
+  ii. Read no path apontado por `resultado:` com timeout efetivo de 5s:
+     - Erro / arquivo não existe → `NEEDS_DATA` "resultado: aponta pra arquivo invalido: {path}"
+     - Conteúdo vazio → `NEEDS_DATA` "artefato vazio em {path}"
+     - Timeout → `NEEDS_DATA` "tempo limite no Read de {path}"
+
+  iii. Path do canário ausente no TAREFA → `NEEDS_DATA` "caminho-do-canario ausente no TAREFA"
+
+  iv. Read no canário com timeout 5s:
+     - Erro / arquivo não existe → `NEEDS_DATA` "caminho-do-canario inválido: {path}"
+     - Conteúdo vazio → `NEEDS_DATA` "canário vazio em {path}"
+     - Timeout → `NEEDS_DATA` "tempo limite no Read do canário"
+
+  v. Extrair `token:` e `md5-esperado:` do frontmatter do canário:
+     - Qualquer um ausente → `NEEDS_DATA` "canário malformado: token ou md5-esperado ausente"
+
+  vi. Calcular MD5 do artefato via Bash:
+     ```
+     md5sum {path-do-resultado} | cut -d' ' -f1
+     # Fallback Windows: certutil -hashfile {path} MD5 | sed -n 2p | tr -d ' '
+     ```
+     - Diverge de `md5-esperado:` → `NEEDS_DATA` "MD5 do artefato diverge do canário"
+
+  vii. Sucesso → seguir pra passo 1. **OBRIGATÓRIO: citar `[VERIF] {token} | MD5 {md5-esperado}` como 1ª linha do RESULTADO**.
+
+- **NÃO →** `NEEDS_DATA` "resultado: ausente OU caminho-do-canario ausente — QA exige ambos"
+
 1. **Receber:** report do especialista no bloco `---TAREFA---` + documento da tarefa (com checklist parcial embutido na seção `## Validações`) + caminho do artefato em `resultado:`
 2. **Ler artefato:** abrir o arquivo apontado por `resultado:`. Extrair `tags-dominio:` do frontmatter
 3. **Carregar critérios de peça (condicional):** se `tags-dominio` tem `peca/{x}`, fazer Read paralelo:
@@ -171,6 +207,7 @@ ARQUIVOS:
 ```
 
 #### Regras adicionais
-- QA NUNCA reporta NEEDS_DATA, NEEDS_CONTEXT ou INSUFFICIENT_DATA — esses status são para agentes que produzem conteúdo
-- QA NUNCA reporta BLOCKED — se não conseguir verificar, reporta DONE_WITH_CONCERNS explicando o problema
+- QA reporta `NEEDS_DATA` **APENAS** no caso 0.a do Fluxo de Trabalho — `resultado:` ausente/inválido/vazio/timeout, canário ausente/malformado/MD5 divergente. Esses são problemas de **despacho**, não de avaliação de checklist.
+- QA NUNCA reporta `NEEDS_CONTEXT`, `INSUFFICIENT_DATA` ou `BLOCKED` — pra problemas que não são de path/canário, reporta `DONE_WITH_CONCERNS` explicando.
+- QA **SEMPRE** cita `[VERIF] {token} | MD5 {md5-esperado}` como 1ª linha do RESULTADO.
 - O campo CONCERNS é usado para feedback ao especialista sobre o que precisa corrigir

@@ -127,3 +127,33 @@ A `permissionDecisionReason` lista 5 caminhos. Mapeamento típico:
 - Rascunho exploratório → permitido escrita direta em `rascunhos/<slug>.md`
 
 Se não tiver certeza, abrir `AskUserQuestion` listando 2-3 caminhos prováveis.
+
+## 7. Tradução de defesa anti-hallucination (B-S59-1)
+
+### 7.1 Mensagens canônicas
+
+| Momento | Mensagem ao usuário |
+|---|---|
+| Defesa disparou (vai refazer) | "Uma revisão não pegou seu documento. Refazendo agora — pode levar uns 30 segundos." |
+| Retry deu certo | "Pronto, agora deu certo." |
+| Retry falhou (cap atingido) | AUQ obrigatório com 3 opções: <br>• "Salvar sem revisão (pode ter erros de IA)" <br>• "Pular essa parte (fica sem revisão registrada)" <br>• "Tentar revisar mais uma vez (pode demorar)" |
+| NEEDS_DATA por path/canário/MD5 inválido | "Achei um problema com o arquivo que ia revisar. Vou ver se consigo corrigir." |
+| Cleanup órfãos no `/ola-maestro` (qty>0) | "Limpei N tokens de auditoria pendentes (resíduo de sessão anterior). Pode ignorar — é automático." |
+
+### 7.2 Lista proibida
+
+NUNCA mencione, em mensagem que vai pro usuário humano:
+
+`tool_uses`, `B-S59-1`, `referencia-tecnica`, `Agent()`, "paralelo", "sequencial", "artefato", "X de N", "canário", `VERIF-`, `caminho-do-canario`, `_token-verificacao`, `MD5`, `hash`, `md5-esperado`, `hallucination`, `alucinação`.
+
+### 7.3 Permitido
+
+"revisão", "revisar", "documento", "refazendo agora", "tentando de novo", estimativa em segundos, "Pronto", "deu certo", "tokens de auditoria" (em mensagem de cleanup — termo neutro).
+
+### 7.4 Comportamento do Maestro durante retry
+
+- **Não silenciar:** sempre exibir aviso de 7.1 quando retry inicia.
+- **Cap atingido:** sempre AUQ (3 opções acima), nunca consumir BLOCKED sem perguntar.
+- **Confirmação no sucesso:** sempre exibir "Pronto, agora deu certo." quando retry passa.
+- **Log obrigatório:** independente de sucesso ou falha, escrever linha em `memorias/auditoria/historico.md` (formato em `protocolo-agent.md` Seção 9.3).
+- **Cleanup do canário sempre:** após validação (sucesso ou suspeita), `rm` do arquivo do canário.
