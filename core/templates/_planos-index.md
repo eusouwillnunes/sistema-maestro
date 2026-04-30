@@ -22,10 +22,24 @@ GROUP BY status
 
 ---
 
+## ⚠️ Em revisão — ação necessária
+
+> [!warning] Planos aguardando seu feedback (Gate 2)
+> Responda no chat com **aprovar**, **ajustar**, **regerar** ou **cancelar**. Cap de 3 voltas em ajustes.
+
+```dataview
+TABLE solicitante, voltas-em-revisao as Voltas, data-criacao as Criação
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "plano" AND status = "em-revisao"
+SORT data-criacao DESC
+```
+
+---
+
 ## Rascunho
 
 ```dataview
-TABLE solicitante, data-criacao as Criação
+TABLE solicitante, voltas-em-revisao as Voltas, data-criacao as Criação
 FROM ""
 WHERE file.folder = this.file.folder AND tipo = "plano" AND status = "rascunho"
 SORT data-criacao DESC
@@ -96,3 +110,13 @@ FROM ""
 WHERE file.folder = this.file.folder AND corrige != null
 SORT data-criacao DESC
 ```
+
+---
+
+> [!tip] 💡 Pesquisa rápida
+>
+> No Obsidian, use Quick Switcher (Cmd+K / Ctrl+K) ou Search com operadores:
+> - `status:em-revisao` — planos esperando seu feedback
+> - `status:rascunho` — planos aguardando primeira leitura
+> - `voltas-em-revisao:3` — planos no limite do cap de voltas
+> - `parte-de:[[planos/X]]` — todas tarefas do plano X

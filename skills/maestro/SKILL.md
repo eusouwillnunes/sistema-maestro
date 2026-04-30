@@ -87,7 +87,7 @@ O Maestro **substitui literalmente** a string `{projeto}` por caminho absoluto r
 | Rascunho | **APENAS:** slash command `/rascunho` OU resposta explícita do usuário a um `AskUserQuestion` anterior escolhendo Rascunho | 3 itens, sem QA/Revisor, em `rascunhos/` |
 | Refinamento | Artefato existente + verbo de edição (ambos obrigatórios) | 4 itens, só Revisor |
 | Entrega | Default | 5 itens, pipeline completo |
-| Plano | Unidade conceitual (funil/campanha/lançamento) ou múltiplas entregas | 4 itens, materializa tarefas-filhas |
+| Plano | Unidade conceitual (funil/campanha/lançamento), múltiplas entregas coordenadas, ou cardinalidade explícita ≥2 | 8 itens, 2 gates (overview + plano escrito), materializa tarefas-filhas no aprove |
 | Cancelamento | Verbo "cancela/cancelar" + referência a tarefa/plano existente | 5 itens M1-M5 |
 
 > **⛔ Armadilha crítica:** a coluna "Pipeline" descreve o comportamento INTERNO de cada tipo. Palavras que aparecem lá ("sem QA", "sem tarefa", "sem validação") **NÃO** são gatilhos de classificação — quando o **usuário** diz essas palavras no pedido, é sinal de **bypass**, que sempre cai em "combinação ambígua" abaixo. Nunca classifique como Rascunho só porque o usuário disse "sem QA" ou "sem tarefa".
@@ -171,7 +171,7 @@ Detalhes de cada tipo nas sub-skills (ler via `Read`, não via `Skill()`):
 - `plugin/skills/maestro/fluxo-entrega.md` — pipeline de 5 itens
 - `plugin/skills/maestro/fluxo-refinamento.md` — 4 itens, só Revisor
 - `plugin/skills/maestro/fluxo-rascunho.md` — 3 itens, sem validação
-- `plugin/skills/maestro/fluxo-plano.md` — 4 itens, materializa tarefas-filhas
+- `plugin/skills/maestro/fluxo-plano.md` — 8 itens, 2 gates explícitos (Gate 1 overview no chat, Gate 2 plano no vault), materializa tarefas-filhas após aprovar Gate 2
 - `plugin/skills/maestro/fluxo-cancelamento.md` — 5 itens M1-M5
 - `plugin/skills/maestro/fluxo-needs.md` — NEEDS_CONTEXT/DECISION/DATA + governança de pendência
 

@@ -11,25 +11,85 @@ tags:
 
 ## Objetivo
 
-Definir como o especialista-dono de um tipo de plano decompõe um pedido em tarefas atômicas e devolve o resultado em memória pro Maestro alimentar o Checkpoint 1.
+Definir como o especialista-dono de um tipo de plano decompõe um pedido em tarefas atômicas e devolve o resultado em memória pro Maestro alimentar o Gate 1 (overview no chat) e, após aprovação, o Gate 2 (plano escrito no vault).
 
 ---
 
 ## Quando este modo é acionado
 
-O Maestro despacha o especialista em modo "Decompor plano" quando:
-- Classifica o pedido como **plano** (composto — 2+ tarefas ou dependências) na Fase 1.
-- Identifica o tipo de plano via mapa de roteamento do `fluxo-plano.md`.
-- Despacha o especialista-dono via `Agent()` com bloco CONTEXTO específico (ver `protocolo-contexto.md`, rota "Decompor plano") + instrução `MODO: decompor-plano`.
+O Maestro despacha o especialista em uma de **três variantes** do modo Decompor plano:
+
+| MODO | Quando | Saída esperada |
+|---|---|---|
+| `decompor-plano-fase-1` | Classificação como Plano + identificação do especialista (Fase 1 do `fluxo-plano.md`) | Overview no chat (Objetivo / Contexto / Peças) |
+| `decompor-plano-fase-2` | Após Gate 1 aprovado pelo usuário | Bloco `DECOMPOSICAO-PLANO` completo (raciocínio + tabela + modo de execução) |
+| `decompor-plano-em-revisao` | Após Gate 2 com escolha "Ajustar estratégico" pelo usuário | Bloco `DECOMPOSICAO-PLANO` revisto incorporando feedback |
+
+Em todos os 3 modos:
+- Bloco CONTEXTO segue `protocolo-contexto.md` rota "Decompor plano".
+- Chamadas 1 e 2 do mesmo plano usam **CONTEXTO idêntico** — prompt cache hit ~80%.
+- Iteração em Gate 1 ("Ajustar") = nova chamada de fase-1 com `INSTRUÇÃO: AJUSTE PEDIDO: [texto]` + última versão do overview. Cache hit também.
 
 ---
 
-## Formato do retorno: bloco RESUMO-PRO-PLAN-MODE
+## Fase 1 — Overview no chat (`MODO: decompor-plano-fase-1`)
 
-O especialista devolve dentro do report do Agent() um bloco delimitado:
+Especialista produz no chat (não em arquivo) uma resposta com 3 campos fixos:
+
+```markdown
+**Objetivo:** [1-3 frases — o que o usuário quer atingir com o plano]
+
+**Contexto utilizado:**
+- [[area/wikilink-1]]
+- [[area/wikilink-2]]
+- [[memorias/decisoes]] (decisões 044, 052)
+
+**Peças do plano:**
+1. [slug-da-peca-1] (Agente: Marca)
+2. [slug-da-peca-2] (Agente: Copywriter)
+
+Antes de eu gravar o plano completo no Obsidian, deixa eu confirmar:
+- O **objetivo** está certo?
+- O **contexto** que vou usar está certo? (faltou algum arquivo importante?)
+- As **peças** que vou criar fazem sentido?
+```
+
+**Regras:**
+- Termo "Peças do plano" (não "Entregáveis").
+- Cada peça mostra o agente entre parênteses (transparência pro usuário).
+- Especialista NÃO escreve em `planos/*.md` na Fase 1 — só responde no chat.
+- Maestro conduz Gate 1 (AUQ separado em mensagem 2). Iteração "Ajustar" = nova chamada fase-1 com `INSTRUÇÃO: AJUSTE PEDIDO: [texto]`.
+
+---
+
+## Fase 1.5 — Pré-validação de contexto (bloqueante)
+
+Antes de produzir overview, especialista verifica critérios críticos por tipo de plano:
+
+| Tipo de plano | Critérios críticos |
+|---|---|
+| Lançamento, funil, escada-de-valor, lead-magnet | Identidade preenchida (círculo-dourado + posicionamento mínimo) · produto referenciado existe |
+| Campanha de copy, sequência email, VSL, página de vendas | Identidade preenchida · produto referenciado · pesquisa de público (recomendado) |
+| Calendário editorial, mix social | Identidade preenchida · pesquisa de público |
+| Plataforma de marca, naming, identidade | Briefing claro · pesquisa de mercado/concorrentes (se aplicável) |
+| Plano de tráfego | Identidade preenchida · produto referenciado · pixel/contas verificadas |
+| Pesquisa multi-fonte | Briefing claro · escopo definido (mercado / audiência / concorrente) |
+
+**Se algum critério crítico falta:**
+- Especialista reporta `NEEDS_CONTEXT` (info do usuário direto) ou `NEEDS_DATA` (info via entrevista/pesquisa) conforme `protocolo-agent.md`.
+- Maestro encaminha conforme protocolo padrão.
+- **Não conta como volta de em-revisao** — bloqueio pré-fluxo.
+
+**Se contexto OK:** especialista segue pra produzir overview.
+
+---
+
+## Formato do retorno: bloco DECOMPOSICAO-PLANO (Fase 2)
+
+O especialista devolve dentro do report do Agent() um bloco delimitado quando rodando `MODO: decompor-plano-fase-2` ou `decompor-plano-em-revisao`:
 
 ```
----RESUMO-PRO-PLAN-MODE---
+---DECOMPOSICAO-PLANO---
 ## Raciocínio da decomposição
 
 [3-5 linhas explicando: por que essa decomposição, qual modelo/funil/campanha foi assumido,
@@ -47,7 +107,7 @@ dependências-chave entre tarefas. Linguagem natural, sem formatação extra.]
 [paralelo | paralelo-com-batches | sequencial | sob-demanda]
 
 Razão: [linguagem simples explicando a inferência]
----END-RESUMO-PRO-PLAN-MODE---
+---END-DECOMPOSICAO-PLANO---
 ```
 
 ### Colunas obrigatórias da tabela
@@ -76,20 +136,23 @@ Estrategista, Copywriter e Marca não têm colunas opcionais por contrato — ex
 | Dependências cobrem ≥60% das filhas (cadeia longa) | **sequencial** |
 | Não inferível | omitir o campo "Modo de execução inferido"; Maestro decide com base no estado |
 
-`sob-demanda` **nunca** é recomendação automática — só aparece como opção pro usuário no AUQ #2 do CK2.
+`sob-demanda` **nunca** é recomendação automática — só aparece como opção pro usuário no AUQ #2 da Fase 4 (materialização pós-Gate 2).
 
 ---
 
 ## Regras invariantes
 
-1. **Não escrever arquivo nenhum.** Decomposição é em memória. Persistência é responsabilidade do Gerente em Fluxo 4b (despachado depois pelo Maestro se usuário aprovar no CK1).
-2. **Não tocar cascas.** Cascas só nascem na Fase 6 (Gerente Fluxo 5). Especialista não cria, não preenche, não referencia path de casca.
-3. **Reportar `NEEDS_CONTEXT` se faltar informação crítica.** Exemplos:
+1. **NUNCA chamar Write/Edit/MultiEdit em `planos/*.md`.** Decomposição é em memória. Persistência é responsabilidade do Gerente (Fluxo 4b). Hook PreToolUse libera tudo de subagent — esta convenção é a defesa principal contra escrita não-orquestrada. Cross-grep do final reviewer verifica violações.
+2. **Não tocar cascas.** Cascas só nascem na Fase 4 (Gerente Fluxo 5, após Gate 2 aprovado). Especialista não cria, não preenche, não referencia path de casca.
+3. **Reportar `NEEDS_CONTEXT` ou `NEEDS_DATA` se faltar informação crítica** (Fase 1.5 acima). Exemplos:
    - Identidade de marca vazia e o tipo de plano depende dela (lançamento, funil).
    - Produto referenciado não existe no vault.
    - Pesquisa de audiência ausente quando o pedido pede tom específico.
-4. **Devolver tudo em memória dentro do report.** Maestro guarda o último report até a escolha do usuário no CK1.
-5. **Especialista pode oferecer alternativas.** Se houver 2+ decomposições válidas (ex: lançamento semente vs meteórico), reportar a recomendada na tabela e mencionar as alternativas no raciocínio. Maestro pode oferecer escolha via AUQ no CK1 se o usuário ajustar.
+4. **Devolver tudo em memória dentro do report.** Fase 1 retorna overview no chat; Fase 2 retorna bloco `DECOMPOSICAO-PLANO`. Maestro guarda último report até decisão do usuário no Gate correspondente.
+5. **Especialista pode oferecer alternativas no raciocínio.** Se houver 2+ decomposições válidas (ex: lançamento semente vs meteórico), reportar a recomendada na tabela e mencionar alternativas. Maestro pode oferecer escolha via AUQ.
+6. **Plano sem tarefas no bloco `DECOMPOSICAO-PLANO` é inválido.** Maestro rejeita na Fase 2.5 e re-despacha (não conta como volta de em-revisao).
+7. **Pré-validação Fase 1.5 é obrigatória.** Antes do overview, especialista checa critérios críticos do tipo de plano. Faltou crítico → reporta NEEDS_CONTEXT/NEEDS_DATA, sem produzir overview.
+8. **Alternativas no raciocínio são bem-vindas, não obrigatórias.** Quando aplicável, registrar na seção `## Alternativas consideradas` do bloco — Maestro pode oferecer escolha ao usuário no Gate 2.
 
 ---
 
@@ -103,14 +166,23 @@ Modos "Entrega" e "Rascunho" do mesmo especialista continuam em Opus (criação 
 
 ---
 
-## Iteração no Checkpoint 1
+## Iteração nos gates
 
-Se o usuário escolher "Ajustar" no CK1, Maestro despacha o mesmo especialista de novo com:
-- Bloco CONTEXTO idêntico (prompt cache hit espera ~80% redução de custo).
-- Bloco `INSTRUÇÃO DO USUÁRIO:` com o ajuste pedido em texto livre.
-- Última versão do `RESUMO-PRO-PLAN-MODE` pra contexto.
+**Gate 1 — "Ajustar" no overview:** Maestro re-despacha em `MODO: decompor-plano-fase-1` com:
+- Bloco CONTEXTO idêntico (prompt cache hit ~80%).
+- `INSTRUÇÃO DO USUÁRIO:` com ajuste em texto livre.
+- Última versão do overview pra contexto.
 
-Especialista re-decompõe e devolve nova versão. Loop tem cap de 5 iterações (decisão do hub do Maestro, não do protocolo) — após 5, Maestro força AUQ "Regerar / Cancelar / Continuar mesmo assim".
+Especialista re-decompõe overview. Sem cap formal aqui (cada iter é Sonnet barato + cache hit). Maestro decide quando escalar pra "Regerar?" (heurística do hub).
+
+**Gate 2 — "Ajustar estratégico" pós-decomposição:** Maestro re-despacha em `MODO: decompor-plano-em-revisao` com:
+- Bloco CONTEXTO idêntico.
+- `INSTRUÇÃO DO USUÁRIO: FEEDBACK: [texto]` + plano atual + overview original.
+- Especialista produz novo bloco `DECOMPOSICAO-PLANO` incorporando feedback.
+
+Cap de 3 voltas (D7 da spec). Maestro recalcula contador via grep do Histórico antes de cada AUQ — recurso anti-burla via edit manual no Properties. Após 3, AUQ extra: "Continuar (regera) / Aprovar como está / Cancelar".
+
+**Ajuste mecânico no Gate 2** (renomear, trocar agente, +/- tarefa, reordenar) NÃO despacha especialista — vai direto pro Gerente (Fluxo 4-ajuste-mecanico). NÃO conta como volta.
 
 ---
 

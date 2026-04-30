@@ -84,7 +84,7 @@ Dispare em um **único bloco** após o Turno 1 concluir:
 
   ```bash
   grep -HE "^(status|agente|titulo|objetivo|parte-de|prioridade|resultado|bloqueada-por|data-conclusao|data-inicio|data-cancelamento|motivo-cancelamento|template-destino|agente-solicitante|solicitante|grupo|categoria|expira-em|tags-dominio|tipo):" \
-    {projeto}/tarefas/*.md {projeto}/entrevistas/*.md {projeto}/rascunhos/*.md 2>/dev/null || true
+    {projeto}/tarefas/*.md {projeto}/entrevistas/*.md {projeto}/rascunhos/*.md {projeto}/planos/*.md 2>/dev/null || true
   ```
 
   - `-H` prefixa o nome do arquivo em cada linha pra permitir agrupamento posterior
@@ -342,6 +342,30 @@ Ao final do dashboard, aplicar higiene dos rascunhos usando os dados extraídos 
    - **Se ≤3:** manter listagem plana de arquivos (comportamento atual).
 
 Política inegociável: rascunho vencido bloqueia criação de novos até o usuário decidir.
+
+---
+
+## 7.5 Política de plano aguardando Gate 2
+
+Após o Turno 2 (Bash grep), filtrar planos com `tipo: plano` em 2 estados que pedem ação do usuário:
+
+**Planos em rascunho com `data-aprovacao: ~`** (Gate 2 pendente — usuário precisa abrir, ler e responder):
+
+```markdown
+> [!warning] Plano aguardando sua leitura
+> [[planos/<slug>]] criado em <data-criacao> — Gate 2 pendente.
+>
+> Quando estiver pronto, abre o plano no Obsidian e me diz no chat: **aprovar**, **ajustar**, **regerar** ou **cancelar**.
+```
+
+**Planos em `em-revisao`** (usuário deu feedback estratégico, especialista re-decompôs, agora aguarda nova leitura):
+
+```markdown
+> [!warning] Plano em revisão (volta N de 3)
+> [[planos/<slug>]] aguardando seu próximo feedback.
+```
+
+`N` é o valor do frontmatter `voltas-em-revisao`. Posicionar callouts logo após "Tarefas em andamento" e antes de "Rascunhos". Se houver ≥1 plano em qualquer um dos dois estados, sempre renderiza esta seção.
 
 ---
 

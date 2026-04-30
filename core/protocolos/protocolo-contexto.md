@@ -153,16 +153,16 @@ Tags de domínio sugeridas pelo Maestro:
 
 ### Modo de invocação
 
-`MODO: decompor-plano` no bloco INSTRUÇÃO. Especialista identifica pelo modo qual fluxo seguir (decomposição vs entrega vs rascunho).
+`MODO: decompor-plano-fase-1` (overview no chat) ou `decompor-plano-fase-2` (bloco completo) ou `decompor-plano-em-revisao` (re-decomposição com feedback) no bloco INSTRUÇÃO. Especialista identifica pelo modo qual fluxo seguir (decomposição vs entrega vs rascunho). Ver `protocolo-decompor-plano.md` pra detalhes dos 3 modos.
 
-### Iteração (CK1 — Ajustar)
+### Iteração nos gates
 
-Quando o usuário pede ajuste no CK1, o Maestro re-despacha o mesmo especialista com:
+Quando o usuário pede ajuste no Gate 1, o Maestro re-despacha o mesmo especialista com:
 - Bloco CONTEXTO idêntico (prompt cache hit reduz custo ~80%).
 - Bloco `AJUSTE PEDIDO:` com texto livre do usuário.
-- Última versão do `RESUMO-PRO-PLAN-MODE` pra contexto.
+- Última versão do overview pra contexto.
 
-Cap de 5 iterações no loop (decisão do hub).
+Sem cap formal no Gate 1 (cada iter é Sonnet barato + cache hit). Cap de **3 voltas** vale apenas em em-revisao (Gate 2 ajuste estratégico) — Maestro recalcula via grep do Histórico.
 
 ---
 

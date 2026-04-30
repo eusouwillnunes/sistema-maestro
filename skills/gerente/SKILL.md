@@ -31,9 +31,12 @@ Este agente é acionado quando a tarefa envolver:
 | Palavra-chave | Contexto |
 |---|---|
 | cria tarefa, nova tarefa, registra tarefa | Criação de tarefa atômica (Fluxo 1) |
-| cria plano, persiste plano | Persistência de plano-rascunho após CK1 (Fluxo 4b) — recebe RESUMO-PRO-PLAN-MODE do especialista |
-| ajusta plano, adiciona tarefa, remove tarefa, reconcilia plano | Ajustes em CK2 do Fluxo de Plano v2 (Fluxos 4c, 4d, 4e, 4f) |
-| materializa plano, plano aprovado | Após usuário aprovar no CK2 — cria as tarefas-filhas vinculadas (Fluxo 5) |
+| cria plano, persiste plano | Persistência de plano-rascunho após Gate 1 (Fluxo 4b) — recebe DECOMPOSICAO-PLANO do especialista + overview aprovado |
+| revisa plano, ajuste estratégico do plano | Re-decomposição em em-revisao após Gate 2 ajustar (Fluxo 4-revisao) |
+| regera plano, plano novo do zero | Cancelar atual e abrir novo (Fluxo 4-regerar) |
+| reativa plano, voltar plano cancelado | Recuperação de plano cancelado (Fluxo 4-reativar) |
+| ajusta plano, adiciona tarefa, remove tarefa, reconcilia plano | Ajustes mecânicos no Gate 2 do Fluxo de Plano (Fluxos 4c, 4d, 4e, 4f) |
+| materializa plano, plano aprovado | Após usuário aprovar no Gate 2 — cria as tarefas-filhas vinculadas (Fluxo 5) |
 | conclui tarefa, fecha tarefa, marca como concluída | Conclusão, pode disparar fusões determinísticas (Fluxo 2) |
 | conclui plano, plano aprovado na validação | Caso raro de invocação direta (Fluxo 7 — normalmente disparado via fusão no Fluxo 2) |
 | cria plano de correção, usuário rejeitou validação | Após coleta de feedback na validação final (Fluxo 8) |
@@ -225,6 +228,16 @@ Maestro recebe BLOCKED, lê `limites-maestro.md` e re-executa o passo certo (re-
 
 7. ~~Atualizar `_tarefas.md`~~ — painel Dataview reflete mudança de status e desbloqueios automaticamente.
 
+**7.bis — Setar `data-inicio` do plano-pai (se aplicável):**
+
+Se a tarefa concluída tem `parte-de: "[[planos/<slug>]]"`:
+1. Ler frontmatter do plano-pai.
+2. Se `data-inicio: ~` (ainda vazio):
+   - Capturar `$TS_NOW` via `Bash date -u +%Y-%m-%dT%H:%M:%SZ`.
+   - Atualizar frontmatter do plano: `data-inicio: $TS_NOW`, `status: em-execucao`.
+   - Append no Histórico do plano: `| $TS_NOW | em-execucao | sistema | 1ª tarefa-filha em-andamento (cascade) |`.
+3. Se `data-inicio` já preenchido, não fazer nada.
+
 8. **Fusão determinística A — detectar última tarefa de plano.** Se a tarefa tem `parte-de: [[planos/<slug>]]` (não é `~`):
    - Ler o arquivo do plano.
    - Consultar quantas tarefas do plano ainda estão em `pendente`, `em-andamento` ou `bloqueada`.
@@ -265,53 +278,158 @@ Passos:
 
 ---
 
-### Fluxo 4b: PERSISTIR PLANO-RASCUNHO
+### Fluxo 4b: PERSISTIR PLANO-RASCUNHO (após Gate 1)
 
-Acionado pelo Maestro após o usuário aprovar no Checkpoint 1 do Fluxo de Plano v2 (Grupo B). O Maestro recebeu o `RESUMO-PRO-PLAN-MODE` do especialista decompositor (Estrategista, Copywriter, Marca, Mídias Sociais, Performance ou Pesquisador) e despacha o Gerente pra persistir.
+Acionado pelo Maestro após o usuário aprovar no **Gate 1** do Fluxo de Plano (2 gates). O Maestro recebeu **overview aprovado** + bloco `DECOMPOSICAO-PLANO` do especialista decompositor (Estrategista, Copywriter, Marca, Mídias Sociais, Performance ou Pesquisador) e despacha o Gerente pra persistir.
 
 **Modelo: Sonnet.**
 
-**Importante:** este fluxo NÃO decompõe — apenas persiste o que o especialista já decompôs. A decomposição estratégica migrou pros especialistas via `protocolo-decompor-plano.md` (Fase 2 do Fluxo de Plano v2).
+**Importante:** este fluxo NÃO decompõe — apenas transcreve o que o especialista decidiu. Decomposição vive nos especialistas via `protocolo-decompor-plano.md`.
 
 1. Receber do Maestro:
    - Briefing original do usuário (Pedido original).
-   - Bloco `RESUMO-PRO-PLAN-MODE` retornado pelo especialista (raciocínio + tabela de tarefas + modo de execução inferido).
-   - Especialista decompositor que produziu o resumo (pra registrar no Histórico).
+   - **Overview aprovado no Gate 1** (Objetivo + Contexto utilizado + Peças do plano).
+   - Bloco `DECOMPOSICAO-PLANO` retornado pelo especialista (raciocínio + tabela de tarefas + modo de execução).
+   - Especialista decompositor que produziu o bloco (pra registrar no frontmatter `agente-decompositor` + Histórico).
    - Solicitante (do contexto da sessão).
    - Grupo opcional.
 
-2. Gerar nome do arquivo do plano: `YYYY-MM-DD-HHMM-[slug].md` em `{projeto}/planos/`. Slug derivado do título resumido do plano (extraído do raciocínio).
+2. **Capturar timestamp ANTES da escrita** (B-S55-37): rodar `Bash date -u +%Y-%m-%dT%H:%M:%SZ` e guardar resultado em variável local `$TS_NOW`. Se Bash retornar string vazia, retry 1 vez. Se segunda tentativa também vazia, abortar com erro pro Maestro.
 
-3. Criar arquivo do plano usando `plugin/core/templates/artefatos/plano.md`:
-   - **Frontmatter operacional (todos preenchidos pelo Gerente):**
+3. Gerar nome do arquivo: `YYYY-MM-DD-HHMM-[slug].md` em `{projeto}/planos/`. Usa `$TS_NOW` parsed pra YYYY-MM-DD-HHMM. Slug derivado do título do plano (extraído do raciocínio ou do briefing).
+
+4. Criar arquivo usando `plugin/core/templates/artefatos/plano.md`:
+   - **Frontmatter operacional (todos preenchidos):**
      - `status: rascunho`
-     - `grupo: [slug recebido]` ou `~` se não veio
+     - `grupo: [slug recebido]` ou `~`
      - `solicitante: [nome recebido]`
-     - `data-criacao: [timestamp ISO 8601 agora]`
+     - `data-criacao: $TS_NOW`
      - `data-aprovacao: ~`
      - `data-conclusao: ~`
      - `data-cancelamento: ~`
      - `motivo-cancelamento: ~`
      - `corrige: ~`
      - `correcoes: []`
-     - `regera: ~` (preencher com wiki-link do plano-anterior cancelado se Maestro passou esse contexto — caso do CK2 Regerar)
+     - `regera: ~` (preencher com wiki-link do plano-anterior cancelado se Maestro passou contexto — Gate 2 Regerar)
+     - `agente-decompositor: [especialista]` (estrategista | copywriter | marca | midias-sociais | performance | pesquisador)
+     - `modo-execucao: [paralelo|sequencial|paralelo-com-batches|sob-demanda]` (lido do bloco DECOMPOSICAO-PLANO seção "Modo de execução")
+     - `data-inicio: ~` (preenche depois quando 1ª filha vira em-andamento — Fluxo 2)
+     - `voltas-em-revisao: 0`
+     - `contexto-utilizado:` lista YAML com wikilinks transcritos do overview seção "Contexto utilizado" (cada item entre aspas: `- "[[area/wikilink-1]]"`)
      - `tags: ["#maestro/plano"]`
    - **Corpo:**
+     - Seção `## Objetivo`: 1-3 frases transcritas literalmente do overview Gate 1.
+     - Seção `## Contexto utilizado`: lista de wikilinks idêntica à do frontmatter (sincronizada — frontmatter é a fonte de verdade pra Graph View).
+     - Seção `## Peças do plano`: lista numerada `1. slug (Agente: Especialista)` transcrita do overview.
      - Seção `## Pedido original`: briefing literal do usuário.
-     - Seção `## Raciocínio da decomposição`: transcrição literal do raciocínio do bloco `RESUMO-PRO-PLAN-MODE`.
-     - Seção `## Tarefas previstas (rascunho — edite aqui pra ajustar)`: transcrição literal da tabela do bloco `RESUMO-PRO-PLAN-MODE` (com colunas `# | Tarefa | Agente | Tipo de artefato | Depende de`).
-     - Seção `## Histórico de alterações`: 1 linha — `| [timestamp] | criado (rascunho) | N tarefas decompostas pelo [especialista decompositor] |`.
-     - Seção `## Feedback da validação final`: deixar vazia (preenchida só em planos de correção).
+     - Seção `## Raciocínio da decomposição`: transcrição literal do raciocínio do bloco `DECOMPOSICAO-PLANO`.
+     - Seção `## Tarefas previstas (rascunho — edite aqui pra ajustar)`: transcrição literal da tabela do bloco (colunas `# | Tarefa | Agente | Tipo de artefato | Depende de`).
+     - Seção `## Histórico de alterações`: 2 linhas iniciais —
+       ```
+       | $TS_NOW | criado (rascunho) | [solicitante] | N tarefas decompostas pelo [especialista decompositor] |
+       | $TS_NOW | gate-1-aprovado   | [solicitante] | Objetivo/Contexto/Peças confirmados                   |
+       ```
+     - Seção `## Feedback da validação final`: vazia (preenchida só em planos de correção).
 
-4. ~~Atualizar `_planos.md`~~ — painel Dataview reflete plano novo automaticamente.
+5. Reportar ao Maestro: `PLANO-PERSISTIDO: [caminho]`. Aguarda Maestro convidar pro Gate 2 — **não materializa tarefas-filhas ainda**.
 
-5. Reportar ao Maestro: `PLANO-PERSISTIDO: [caminho]`. Aguarda Maestro avançar pro Checkpoint 2 — **não materializa tarefas-filhas ainda**.
+> **NUNCA escrever** `total-tarefas:` ou `tarefas-concluidas:` no frontmatter (B-S55-50 — Dataview agrega dinamicamente).
 
 ---
 
-### Fluxo 4c: AJUSTAR TAREFA NO PLANO (CK2)
+### Fluxo 4-revisao: RE-DECOMPOR PLANO EM EM-REVISAO (após Gate 2 ajustar estratégico)
 
-Acionado pelo Maestro durante o Checkpoint 2 do Fluxo de Plano v2 quando o usuário pede ajuste em tarefa-filha do plano (renomear, trocar agente, mexer em `Depende de`, mudar campo operacional do plano). Filhas ainda não foram materializadas — só existe `plano.md`.
+Acionado pelo Maestro quando usuário escolhe "Ajustar estratégico" no Gate 2. Plano já existe em `rascunho`; usuário deu feedback em texto livre. Re-despacha especialista pra produzir nova decomposição.
+
+**Modelo: Sonnet.**
+
+1. Receber do Maestro:
+   - Caminho do `plano.md` existente.
+   - Texto livre do feedback do usuário.
+   - Bloco `DECOMPOSICAO-PLANO` novo retornado pelo especialista (já re-despachado pelo Maestro em `MODO: decompor-plano-em-revisao` antes de chamar este Fluxo).
+
+2. Capturar timestamp via `Bash date -u +%Y-%m-%dT%H:%M:%SZ` em `$TS_NOW`.
+
+3. **Recalcular `voltas-em-revisao` via grep do Histórico** (proteção contra burla via Properties):
+   - `grep -c "gate-2-feedback" {caminho-do-plano}` (count de eventos na tabela do Histórico).
+   - Ler `voltas-em-revisao` atual do frontmatter.
+   - **Usar o maior dos dois + 1** como novo valor.
+
+4. Atualizar `plano.md`:
+   - Frontmatter: `status: em-revisao`, `voltas-em-revisao: $NOVO_CONTADOR`.
+   - Corpo seção `## Raciocínio da decomposição`: substituir pelo raciocínio novo do bloco.
+   - Corpo seção `## Tarefas previstas`: substituir pela tabela nova.
+   - Corpo seção `## Histórico de alterações`: append nova linha:
+     ```
+     | $TS_NOW | gate-2-feedback | [solicitante] | Volta $NOVO_CONTADOR de 3: "[trecho do feedback até 80 chars]" |
+     ```
+
+5. Reportar ao Maestro: `PLANO-EM-REVISAO: [caminho] (volta $NOVO_CONTADOR de 3)`.
+
+> **Cap de 3 voltas** é enforced pelo Maestro (hub) ANTES de despachar este fluxo. Gerente apenas escreve. Se Maestro chama este fluxo com `$NOVO_CONTADOR > 3`, é bug — reportar `NEEDS_CONTEXT: cap excedido` sem escrever.
+
+---
+
+### Fluxo 4-regerar: REGERAR PLANO DO ZERO (Gate 2 Regerar)
+
+Acionado pelo Maestro quando usuário escolhe "Regerar" no Gate 2. Cancela plano atual e abre novo do zero (não conta como volta de em-revisao).
+
+**Modelo: Sonnet.**
+
+1. Receber do Maestro: caminho do plano atual + bloco `DECOMPOSICAO-PLANO` novo (Maestro já re-despachou especialista em `MODO: decompor-plano-fase-2` do zero).
+
+2. Capturar `$TS_NOW` via `Bash date -u +%Y-%m-%dT%H:%M:%SZ`.
+
+3. **Cancelar plano atual:**
+   - Atualizar frontmatter: `status: cancelado`, `motivo-cancelamento: regerado`, `data-cancelamento: $TS_NOW`.
+   - Append no Histórico:
+     ```
+     | $TS_NOW | gate-2-regerado | [solicitante] | Plano regerado — novo plano em [[planos/<slug-novo>]] |
+     ```
+
+4. **Criar plano novo** seguindo Fluxo 4b (passos 2-5), com 1 diferença:
+   - Frontmatter `regera: "[[planos/<slug-anterior>]]"` (wikilink pro plano cancelado).
+   - Histórico inclui linha extra: `| $TS_NOW | regerado-de | [solicitante] | Vem de [[planos/<slug-anterior>]] |`.
+
+5. Reportar ao Maestro: `PLANO-REGERADO: [caminho-novo] (anterior: [caminho-cancelado])`.
+
+---
+
+### Fluxo 4-reativar: REATIVAR PLANO CANCELADO
+
+Acionado pelo Maestro quando usuário pede pra reativar plano que foi cancelado (sem ser por regeração). Volta status pra `rascunho` ou `em-revisao` conforme estado anterior.
+
+**Modelo: Sonnet.**
+
+1. Receber do Maestro: caminho do plano cancelado.
+
+2. Ler frontmatter atual. Validar:
+   - `status` deve ser `cancelado` (senão reportar `NEEDS_CONTEXT`).
+   - `motivo-cancelamento` NÃO deve ser `regerado` (plano regerado não reativa — usuário deve abrir novo).
+
+3. Capturar `$TS_NOW`.
+
+4. **Inferir status anterior** via grep do Histórico:
+   - Se última linha pré-cancelamento tem evento `gate-2-feedback` → restaurar `status: em-revisao`.
+   - Senão → restaurar `status: rascunho`.
+
+5. Atualizar frontmatter:
+   - `status: [rascunho|em-revisao]` (inferido).
+   - `data-cancelamento: ~`.
+   - `motivo-cancelamento: ~`.
+
+6. Append no Histórico:
+   ```
+   | $TS_NOW | gate-2-reativado | [solicitante] | Plano reativado pra status [novo-status] |
+   ```
+
+7. Reportar ao Maestro: `PLANO-REATIVADO: [caminho] (status: [novo-status])`.
+
+---
+
+### Fluxo 4c: AJUSTAR TAREFA NO PLANO (Gate 2 — Ajuste mecânico)
+
+Acionado pelo Maestro durante o **Gate 2** quando o usuário escolhe "Ajustar mecânico" (renomear tarefa, trocar agente, mexer em `Depende de`, mudar campo operacional). Filhas ainda não foram materializadas. **Não incrementa `voltas-em-revisao`** — ajuste mecânico não conta como volta.
 
 **Modelo: Sonnet.**
 
@@ -331,9 +449,9 @@ Acionado pelo Maestro durante o Checkpoint 2 do Fluxo de Plano v2 quando o usuá
 
 ---
 
-### Fluxo 4d: ADICIONAR TAREFA AO PLANO (CK2)
+### Fluxo 4d: ADICIONAR TAREFA AO PLANO (Gate 2 — Ajuste mecânico)
 
-Acionado pelo Maestro durante o Checkpoint 2 quando usuário pede pra adicionar uma tarefa nova ao plano. Filhas ainda não foram materializadas.
+Acionado pelo Maestro durante o **Gate 2** quando usuário pede pra adicionar uma tarefa nova ao plano. Filhas ainda não foram materializadas. **Não incrementa `voltas-em-revisao`** — ajuste mecânico não conta como volta.
 
 **Modelo: Sonnet.**
 
@@ -354,9 +472,9 @@ Acionado pelo Maestro durante o Checkpoint 2 quando usuário pede pra adicionar 
 
 ---
 
-### Fluxo 4e: REMOVER TAREFA DO PLANO (CK2)
+### Fluxo 4e: REMOVER TAREFA DO PLANO (Gate 2 — Ajuste mecânico)
 
-Acionado pelo Maestro durante o Checkpoint 2 quando usuário pede pra remover uma tarefa do plano. Filhas ainda não foram materializadas — sem cascata.
+Acionado pelo Maestro durante o **Gate 2** quando usuário pede pra remover uma tarefa do plano. Filhas ainda não foram materializadas — sem cascata. **Não incrementa `voltas-em-revisao`** — ajuste mecânico não conta como volta.
 
 **Modelo: Sonnet.**
 
@@ -374,9 +492,9 @@ Acionado pelo Maestro durante o Checkpoint 2 quando usuário pede pra remover um
 
 ---
 
-### Fluxo 4f: RECONCILIAR PLANO EDITADO À MÃO (CK2)
+### Fluxo 4f: RECONCILIAR PLANO EDITADO À MÃO (Gate 2 — Ajuste mecânico)
 
-Acionado pelo Maestro durante o Checkpoint 2 quando usuário edita `plano.md` à mão no Obsidian e volta dizendo "ajustei à mão, revalida".
+Acionado pelo Maestro durante o **Gate 2** quando usuário edita `plano.md` à mão no Obsidian e volta dizendo "ajustei à mão, revalida". **Não incrementa `voltas-em-revisao`**.
 
 **Modelo: Sonnet.**
 
@@ -397,25 +515,25 @@ Acionado pelo Maestro durante o Checkpoint 2 quando usuário edita `plano.md` à
 
 6. Se passou na validação: atualizar Histórico com linha `| [timestamp] | reconciliação manual | estado atual revalidado, N tarefas listadas, M dependências |`.
 
-7. Reportar ao Maestro: `PLANO-RECONCILIADO: [caminho]` + contadores (N tarefas, M dependências) pra Maestro reapresentar Checkpoint 2.
+7. Reportar ao Maestro: `PLANO-RECONCILIADO: [caminho]` + contadores (N tarefas, M dependências) pra Maestro reapresentar Gate 2.
 
-**Sem diff preciso linha-a-linha:** o sistema não preserva snapshot anterior. Reconciliação valida consistência interna do estado atual em vez de calcular delta — suficiente pro propósito (garantir que CK2 reapresenta um plano íntegro).
+**Sem diff preciso linha-a-linha:** o sistema não preserva snapshot anterior. Reconciliação valida consistência interna do estado atual em vez de calcular delta — suficiente pro propósito (garantir que Gate 2 reapresenta um plano íntegro).
 
 ---
 
 ### Fluxo 5: MATERIALIZAR PLANO APROVADO
 
-Acionado pelo Maestro após o usuário aprovar no Checkpoint 2 do Fluxo de Plano v2 (Grupo B).
+Acionado pelo Maestro após o usuário aprovar no **Gate 2** do Fluxo de Plano (2 gates).
 
 **Modelo: Sonnet.**
 
 1. Receber do Maestro: caminho do plano aprovado.
 
-2. Ler o arquivo do plano — extrair a tabela textual da seção `## Tarefas previstas (rascunho — edite aqui pra ajustar)` (que pode ter sido editada à mão pelo usuário no CK2).
+2. Ler o arquivo do plano — extrair a tabela textual da seção `## Tarefas previstas (rascunho — edite aqui pra ajustar)` (que pode ter sido editada à mão pelo usuário no Gate 2).
 
-3. Atualizar frontmatter do plano: `status: aprovado`, `data-aprovacao` = agora.
+3. Capturar `$TS_NOW` via `Bash date -u +%Y-%m-%dT%H:%M:%SZ`. Atualizar frontmatter do plano: `status: aprovado`, `data-aprovacao: $TS_NOW`.
 
-4. Registrar no Histórico do plano: `| [timestamp] | aprovado | N tarefas a materializar |`.
+4. Registrar no Histórico do plano: `| $TS_NOW | gate-2-aprovado | [solicitante] | N tarefas a materializar — modo de execução: [modo] |`.
 
 5. Para cada linha da tabela textual (cada tarefa-filha):
    a. Seguir os passos 4-11 do Fluxo 1 (carregar padrão, gerar nomes, criar tarefa + casca usando a tabela de campos operacionais).
@@ -450,6 +568,8 @@ Acionado pelo Maestro após o usuário aprovar no Checkpoint 2 do Fluxo de Plano
 7. ~~Atualizar `_tarefas.md` e `_planos.md`~~ — painéis Dataview refletem mudança automaticamente.
 
 8. Reportar ao Maestro: `TAREFAS-MATERIALIZADAS: [N criadas]` + lista de wiki-links das filhas + tarefas prontas pra executar (pendentes sem bloqueio) + tarefas bloqueadas.
+
+> **Nota sobre `data-inicio`:** este campo do plano é preenchido pelo **Fluxo 2 (concluir tarefa)** quando a 1ª tarefa-filha do plano vira `em-andamento`, não aqui. Em materialização, `data-inicio` permanece `~`.
 
 ---
 
@@ -521,9 +641,9 @@ Acionado pelo Maestro após usuário rejeitar a validação final e fornecer fee
 
 6. ~~Atualizar `_planos.md`~~ — painel Dataview reflete plano de correção novo automaticamente.
 
-7. Montar `RESUMO-PRO-PLAN-MODE` compacto (formato canônico em `plugin/core/protocolos/protocolo-decompor-plano.md` — colunas obrigatórias `# | Tarefa | Agente | Tipo de artefato | Depende de`). Plano de correção é caso especial: Gerente decompõe o feedback do usuário (não os especialistas), porque já há ciclo de correção formalizado pós-validação final.
+7. Montar `DECOMPOSICAO-PLANO` compacto (formato canônico em `plugin/core/protocolos/protocolo-decompor-plano.md` — colunas obrigatórias `# | Tarefa | Agente | Tipo de artefato | Depende de`). Plano de correção é caso especial: Gerente decompõe o feedback do usuário (não os especialistas), porque já há ciclo de correção formalizado pós-validação final.
 
-8. Reportar ao Maestro: `PLANO-CRIADO: [caminho do plano-correcao]` + `RESUMO-PRO-PLAN-MODE: |` + conteúdo.
+8. Reportar ao Maestro: `PLANO-CRIADO: [caminho do plano-correcao]` + `DECOMPOSICAO-PLANO: |` + conteúdo.
 
 ---
 
@@ -981,15 +1101,15 @@ Quando executado como Agent() (sem interação direta com o usuário), siga esta
 2. Leia o bloco `---CONTEXTO---` para dados do projeto ativo (caminho, solicitante, grupo)
 3. Verifique se o caminho do projeto e o diretório de tarefas existem
 4. Se o diretório `{projeto}/tarefas/` não existir → reportar `NEEDS_CONTEXT` com o caminho esperado
-5. Identifique o fluxo a executar entre os disponíveis: CRIAR-TAREFA (Fluxo 1), CONCLUIR-TAREFA (Fluxo 2), CRIAR-REVISAO (Fluxo 3), PERSISTIR-PLANO-RASCUNHO (Fluxo 4b), AJUSTAR-PLANO (Fluxos 4c/4d/4e/4f), MATERIALIZAR-PLANO (Fluxo 5), CRIAR-TAREFA-VALIDACAO (Fluxo 6), CONCLUIR-PLANO (Fluxo 7), CRIAR-PLANO-CORRECAO (Fluxo 8), ADICIONAR-POS-APROVACAO (Fluxo 9), CRIAR-ENTREVISTA (Fluxo 10), CONSULTAR (Fluxo 11), CANCELAR-TAREFA (Fluxo 12), CANCELAR-PLANO (Fluxo 13)
+5. Identifique o fluxo a executar entre os disponíveis: CRIAR-TAREFA (Fluxo 1), CONCLUIR-TAREFA (Fluxo 2), CRIAR-REVISAO (Fluxo 3), PERSISTIR-PLANO-RASCUNHO (Fluxo 4b), RE-DECOMPOR-PLANO-EM-REVISAO (Fluxo 4-revisao), REGERAR-PLANO (Fluxo 4-regerar), REATIVAR-PLANO (Fluxo 4-reativar), AJUSTAR-PLANO-MECANICO (Fluxos 4c/4d/4e/4f), MATERIALIZAR-PLANO (Fluxo 5), CRIAR-TAREFA-VALIDACAO (Fluxo 6), CONCLUIR-PLANO (Fluxo 7), CRIAR-PLANO-CORRECAO (Fluxo 8), ADICIONAR-POS-APROVACAO (Fluxo 9), CRIAR-ENTREVISTA (Fluxo 10), CONSULTAR (Fluxo 11), CANCELAR-TAREFA (Fluxo 12), CANCELAR-PLANO (Fluxo 13)
 
 ### Durante a execução
 
 - Siga os fluxos definidos neste documento sem pular etapas
 - NUNCA invente dados — use apenas o que foi fornecido no bloco TAREFA/CONTEXTO
 - **Decomposição NÃO é responsabilidade do Gerente** — migrou pros 6 especialistas via `protocolo-decompor-plano.md`. Gerente persiste (Fluxo 4b) e materializa (Fluxo 5) o que o especialista decompôs.
-- Em persistência (Fluxo 4b), recebe RESUMO-PRO-PLAN-MODE do especialista e cria plano.md em rascunho — não materializa filhas
-- Em materialização (Fluxo 5), lê tabela textual do plano.md (que pode ter sido editada à mão no CK2) e cria N tarefas-filhas + N cascas
+- Em persistência (Fluxo 4b), recebe DECOMPOSICAO-PLANO do especialista e cria plano.md em rascunho — não materializa filhas
+- Em materialização (Fluxo 5), lê tabela textual do plano.md (que pode ter sido editada à mão no Gate 2) e cria N tarefas-filhas + N cascas
 
 ### Ao concluir
 
@@ -1100,11 +1220,11 @@ RESULTADO:
 Plano persistido: [título]
 Arquivo: [caminho]
 Tarefas previstas: [N]
-Raciocínio: [resumo curto, transcrito do RESUMO-PRO-PLAN-MODE do especialista]
+Raciocínio: [resumo curto, transcrito do DECOMPOSICAO-PLANO do especialista]
 
 PLANO-PERSISTIDO: [caminho absoluto do plano]
 TABELA-DE-TAREFAS: |
-  [Tabela transcrita literalmente do RESUMO-PRO-PLAN-MODE do especialista decompositor.
+  [Tabela transcrita literalmente do DECOMPOSICAO-PLANO do especialista decompositor.
    Colunas obrigatórias: # | Tarefa | Agente | Tipo de artefato | Depende de]
 
   | # | Tarefa | Agente | Tipo de artefato | Depende de |
@@ -1116,6 +1236,63 @@ TABELA-DE-TAREFAS: |
 
 ARQUIVOS:
   - criado: "[caminho do plano]"
+---END-REPORT---
+```
+
+**Plano em revisão (Fluxo 4-revisao):**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Plano em revisão: [título]
+Arquivo: [caminho]
+Especialista re-despachado: [nome]
+Volta atual: $NOVO_CONTADOR de 3
+Tarefas atualizadas: M
+
+PLANO-EM-REVISAO: [caminho absoluto] (volta $NOVO_CONTADOR de 3)
+
+ARQUIVOS:
+  - modificado: "[caminho do plano]"
+---END-REPORT---
+```
+
+**Plano regerado (Fluxo 4-regerar):**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Plano regerado: [título novo]
+Plano novo: [caminho-novo]
+Plano anterior cancelado: [caminho-anterior] (motivo: regerado)
+
+PLANO-REGERADO: [caminho-novo]
+PLANO-ANTERIOR: [caminho-anterior]
+
+ARQUIVOS:
+  - criado: "[caminho-novo]"
+  - modificado: "[caminho-anterior]"
+---END-REPORT---
+```
+
+**Plano reativado (Fluxo 4-reativar):**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Plano reativado: [título]
+Status restaurado: [rascunho | em-revisao]
+
+PLANO-REATIVADO: [caminho] (status: rascunho|em-revisao)
+
+ARQUIVOS:
+  - modificado: "[caminho do plano]"
 ---END-REPORT---
 ```
 
@@ -1176,7 +1353,7 @@ Corrige: [[planos/<slug-original>]]
 Tarefas de correção planejadas: [N]
 
 PLANO-CRIADO: [caminho absoluto]
-RESUMO-PRO-PLAN-MODE: |
+DECOMPOSICAO-PLANO: |
   [formato compacto com tabela]
 
 ARQUIVOS:

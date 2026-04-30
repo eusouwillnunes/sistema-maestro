@@ -1,25 +1,72 @@
-# Fluxo de Plano v2
+# Fluxo de Plano (2 gates)
 
-Sub-skill lida pelo Maestro via `Read` quando o classificador retorna `tipo=Plano`.
+Sub-skill lida pelo Maestro via `Read` quando o classificador retorna `tipo=Plano`. Substituiu o `EnterPlanMode` nativo por 2 gates explícitos com AUQs estruturados (Sessão 60, spec `2026-04-29-fluxo-plano-2-gates-design`).
 
 Plano = conjunto de tarefas coordenadas (lançamento, campanha, funil, escada-de-valor, lead-magnet, calendário social, plano de tráfego, pesquisa multi-fonte, ou múltiplas entregas enumeradas). Cada tarefa-filha depois roda como `Entrega` com seu próprio fluxo.
 
+> [!important] Defesa textual contra escrita direta em `planos/`
+> Especialistas **NUNCA** chamam Write/Edit/MultiEdit em `planos/*.md`. Decisão registrada em `protocolo-decompor-plano.md` Regra invariante 1. Defesa é convencional (template + protocolo + agent files), NÃO via hook (PreToolUse libera tudo de subagent — `maestro-orquestra.py:105-106`). Final reviewer cross-grepa Write em `planos/` fora do Gerente em todo merge.
+
 ## Concorrência: 1 plano por vez
 
-Maestro processa **um plano por vez**. Se segundo pedido de plano chegar antes do primeiro fechar (em qualquer checkpoint), Maestro avisa:
+Maestro processa **um plano por vez**. Se segundo pedido de plano chegar antes do primeiro fechar (em qualquer gate), Maestro avisa:
 
-> "Plano X aguardando no Checkpoint Y. Aguarde fechar ou cancele primeiro."
+> "Plano X aguardando no Gate Y. Aguarda fechar ou cancela pra seguir?"
 
-Oferece `AskUserQuestion` com 2 opções: "Aguardar plano X fechar" / "Cancelar plano X e seguir com novo pedido".
+`AskUserQuestion` com 2 opções: "Aguardar plano X fechar" / "Cancelar plano X e seguir com novo pedido".
 
-## TodoWrite obrigatório (6 itens fixos)
+**Recuperação após sessão fechada entre gates:** `/ola-maestro` detecta planos em `rascunho` com `data-aprovacao: ~` (Gate 2 pendente) e avisa o usuário ao retornar.
 
-1. `Brainstorm de escopo com usuário`
-2. `Especialista decompõe plano em memória`
-3. `Checkpoint 1 — usuário valida overview`
-4. `Gerente persiste plano.md (rascunho)`
-5. `Checkpoint 2 — usuário valida plano escrito`
-6. `Gerente materializa N tarefas-filhas + escolhe modo de execução`
+## TodoWrite obrigatório (8 itens fixos)
+
+1. `Aviso de classificação implícita ao usuário (se aplicável)`
+2. `Especialista executa Fase 1.5 (pré-validação de contexto)`
+3. `Especialista produz overview no chat (Fase 1)`
+4. `Gate 1 — usuário valida Objetivo / Contexto / Peças`
+5. `Especialista produz bloco DECOMPOSICAO-PLANO (Fase 2)`
+6. `Maestro valida bloco (Fase 2.5: raciocínio + tabela ≥1 + agentes válidos)`
+7. `Gerente persiste plano.md em rascunho (Fluxo 4b)`
+8. `Gate 2 — usuário valida plano escrito + materializa filhas (se aprovado)`
+
+> [!warning] Gate 1 SEMPRE roda, sem exceção.
+> Mesmo em pedidos detalhados ou repetidos, o overview no chat é obrigatório. Skip explícito ou heurístico abre zona de racionalização do modelo (D9 da spec).
+
+## Detecção implícita de plano
+
+Classificador detecta plano-worthy SEM o usuário precisar dizer "criar plano". Pedidos com **conceitos compostos** disparam automaticamente `tipo=Plano`.
+
+| Pedido do usuário | Classificação | Especialista decompositor |
+|---|---|---|
+| "criar lançamento da Mentoria X" | Plano (composto) | Estrategista |
+| "fazer campanha de Black Friday" | Plano (composto) | Estrategista |
+| "montar funil de webinário" | Plano (composto) | Estrategista |
+| "criar plano de tráfego" | Plano (composto) | Performance |
+| "preencher identidade da empresa" | Plano (multi-entrega no mesmo domínio) | Marca |
+| "criar 5 emails de aquecimento" | Plano (multi-entrega) | Copywriter |
+| "calendário editorial do mês" | Plano (multi-entrega) | Mídias Sociais |
+| "escrever uma headline" | Entrega (não-plano) | Copywriter via `fluxo-entrega.md` |
+| "fazer 1 reel" | Entrega (não-plano) | Mídias Sociais via `fluxo-entrega.md` |
+
+**Regra de fronteira:**
+- 2+ artefatos coordenados → Plano.
+- 1 artefato isolado → Entrega.
+- Cross-domain (2+ domínios estratégicos) → Plano com Estrategista decompositor.
+
+**Casos ambíguos:** "criar headline e subheadline" trata 2 elementos coordenados como Plano. Modificador permissivo do usuário ("é coisa simples, não precisa de plano") rebaixa pra Entrega.
+
+## Aviso de classificação implícita
+
+Quando classificador decide Plano automático em pedido onde usuário não disse "plano", Maestro avisa **antes de despachar especialista**:
+
+> *"Certo! Vou estruturar isso como um plano (N peças coordenadas). Se você prefere entregas soltas sem estrutura formal, me avisa agora: 'não precisa de plano, só quero as N peças mesmo'."*
+
+**Quando exibir:**
+- ✅ Pedidos com conceitos compostos ("lançamento", "campanha", "calendário", "funil", "identidade")
+- ✅ Pedidos com cardinalidade explícita ≥2 ("3 emails", "5 posts")
+- ❌ Pedidos com palavra "plano" explícita (usuário sabe)
+- ❌ Cross-domain óbvios (lançamento + tráfego + email — sempre plano)
+
+Após o aviso, Maestro aguarda 1 turno do usuário. Sem objeção → segue com Plano. Modificador permissivo → rebaixa pra Entrega.
 
 ## Roteamento por tipo de plano
 
@@ -40,107 +87,124 @@ Maestro classifica o tipo de plano no brainstorm da Fase 1 e despacha o especial
 
 ## Passo a passo
 
-### Fase 1 — Brainstorm de escopo
+### Fase 1.5 — Pré-validação de contexto (especialista)
 
-1. Identificar o tipo de plano a partir do pedido + dialogar com o usuário pra fechar:
-   - Objetivo do plano
-   - Prazo aproximado
-   - Quantas "peças" ou "estágios"
-   - Restrições (orçamento, canais, tom)
-2. Usar `AskUserQuestion` quando houver opções finitas (ex: escolha de funil — VSL, webinar, escada).
-3. Classificar o tipo de plano e identificar o especialista-dono via mapa.
-4. Marcar item 1 `completed` quando escopo estiver claro o suficiente pro especialista decompor.
+1. Despachar especialista-dono via `Agent()` em `MODO: decompor-plano-fase-1`:
+   - Bloco CONTEXTO completo (5 templates de identidade + decisões + pesquisas) conforme `protocolo-contexto.md` rota "Decompor plano".
+   - Bloco INSTRUÇÃO: `MODO: decompor-plano-fase-1` + briefing do usuário + tipo de plano identificado.
+2. Especialista checa critérios críticos por tipo (tabela em `protocolo-decompor-plano.md` Fase 1.5).
+3. **Se critério crítico falta:** especialista reporta `NEEDS_CONTEXT` ou `NEEDS_DATA`. Maestro encaminha conforme `fluxo-needs.md`. **Não conta como volta de em-revisao.** Quando contexto for resolvido, voltar pro passo 1.
+4. **Se contexto OK:** especialista segue pra Fase 1.
 
-### Fase 2 — Decomposição em memória (Especialista-dono)
+### Fase 1 — Especialista produz overview no chat
 
-1. Despachar o especialista-dono via `Agent()` com:
-   - Bloco CONTEXTO conforme `protocolo-contexto.md` rota "Decompor plano" (padrão dos 6 + extensões do especialista).
-   - Bloco INSTRUÇÃO contendo `MODO: decompor-plano` + briefing do usuário + tipo de plano identificado.
-2. Especialista segue `protocolo-decompor-plano.md` e devolve bloco `---RESUMO-PRO-PLAN-MODE---` com raciocínio + tabela + modo de execução inferido.
-3. Maestro guarda o último report até a escolha do usuário no Checkpoint 1.
-4. Marcar item 2 `completed` quando especialista retornou.
+1. Mesma chamada da Fase 1.5 (especialista já está rodando).
+2. Especialista produz no chat (não em arquivo) resposta com 3 campos fixos: Objetivo / Contexto utilizado / Peças do plano. Formato canônico em `protocolo-decompor-plano.md` Fase 1.
+3. Maestro guarda overview em memória até Gate 1.
+4. Marcar item 3 do TodoWrite `completed`.
 
-### Fase 3 — Checkpoint 1 (overview rápido)
+### Gate 1 — Maestro valida overview com usuário
 
-**Canal de aprovação:**
+**Mensagem 1 (recap):** Maestro repete overview do especialista no chat (mesmo conteúdo, sem reformatar).
 
-- **Primário:** `EnterPlanMode` nativo do Claude Code, alimentado com o bloco `RESUMO-PRO-PLAN-MODE` formatado em Markdown. Detecção de capability em runtime.
-- **Fallback:** se `EnterPlanMode` não disponível, `AskUserQuestion` com 3 opções:
-  - **Seguir** — vai pra Fase 4
-  - **Ajustar** — entra em loop conversacional (cap de 5 iterações)
-  - **Cancelar** — encerra sem rastro no vault
+**Mensagem 2 (AUQ separada):**
 
-**Loop "Ajustar" (cap de 5 iterações):**
+`AskUserQuestion` com 3 sub-perguntas + 3 opções:
 
-1. Maestro pergunta "o que ajustar?" em texto livre.
-2. Re-despachar mesmo especialista via `Agent()` com:
-   - Bloco CONTEXTO idêntico ao despacho original (prompt cache hit ~80% redução).
-   - Bloco INSTRUÇÃO contendo `MODO: decompor-plano` + `AJUSTE PEDIDO: [texto livre do usuário]` + última versão do `RESUMO-PRO-PLAN-MODE`.
-3. Especialista re-decompõe, devolve nova versão.
-4. Maestro reapresenta Checkpoint 1.
-5. **Cap:** após 5 iterações, força `AskUserQuestion`: "Regerar / Cancelar / Continuar mesmo assim (custo nota)".
+| Pergunta | Opção 1 | Opção 2 | Opção 3 |
+|---|---|---|---|
+| O **objetivo** está certo? | sim | ajustar | cancelar |
+| O **contexto** está certo? | sim | ajustar | cancelar |
+| As **peças** fazem sentido? | sim | ajustar | cancelar |
 
-**Marcar item 3 `completed`** quando usuário escolher Seguir ou Cancelar.
+(Se Claude Code não suporta 3 perguntas independentes, usar AUQ única "Aprovar tudo / Ajustar / Cancelar" + texto livre se Ajustar.)
 
-### Fase 4 — Persistir plano.md (Gerente)
+**Cancelar no Gate 1:** plano ainda não existe no vault. Encerra sem rastro.
+
+**Ajustar:** texto livre do usuário. Maestro re-despacha especialista em `MODO: decompor-plano-fase-1` com `INSTRUÇÃO: AJUSTE PEDIDO: [texto]` + último overview. Cache hit ~80%. Volta pro Gate 1.
+
+**Aprovar:** marcar item 4 do TodoWrite `completed`. Avança pra Fase 2.
+
+### Fase 2 — Especialista produz bloco DECOMPOSICAO-PLANO
+
+1. **Segunda chamada do especialista** via `Agent()` em `MODO: decompor-plano-fase-2`:
+   - Bloco CONTEXTO **idêntico** ao da Fase 1 → prompt cache hit ~80% redução.
+   - Bloco INSTRUÇÃO: `MODO: decompor-plano-fase-2` + overview aprovado (pra especialista lembrar promessas) + briefing original.
+2. Especialista produz bloco delimitado `---DECOMPOSICAO-PLANO--- ... ---END-DECOMPOSICAO-PLANO---` com raciocínio + tabela + modo de execução.
+3. Maestro guarda bloco em memória até Fase 2.5.
+4. Marcar item 5 do TodoWrite `completed`.
+
+### Fase 2.5 — Maestro valida bloco
+
+Maestro checa programaticamente:
+
+- Raciocínio preenchido (não-vazio).
+- Tabela tem ≥1 linha de tarefa.
+- Cada tarefa tem agente válido (estrategista | copywriter | marca | midias-sociais | performance | pesquisador).
+- Cada tarefa tem tipo de artefato válido (existe em `plugin/core/templates/artefatos/`).
+- Modo de execução é um de: paralelo | paralelo-com-batches | sequencial | sob-demanda.
+
+**Falha em qualquer:** Maestro re-despacha especialista pra refazer com `INSTRUÇÃO: bloco inválido — corrigir [item]`. **Não conta como volta de em-revisao** — é validação técnica.
+
+**Sucesso:** marcar item 6 `completed`. Avança pra Fase 3.
+
+### Fase 3 — Gerente persiste plano.md em rascunho
 
 1. Despachar Gerente em **Fluxo 4b** via `Agent()` passando:
-   - Briefing original do usuário (Pedido original).
-   - Bloco `RESUMO-PRO-PLAN-MODE` aprovado.
-   - Especialista decompositor (pra registrar no Histórico).
+   - Briefing original.
+   - Overview aprovado no Gate 1.
+   - Bloco `DECOMPOSICAO-PLANO` validado.
+   - Especialista decompositor (pra registrar).
    - Solicitante (do contexto).
-   - `regera: "[[planos/<slug-anterior>]]"` se este plano vem de "Regerar" no CK2 anterior; senão `~`.
-2. Gerente cria `plano.md` em rascunho com tabela textual de tarefas previstas no corpo. **Não materializa filhas ainda.**
-3. Marcar item 4 `completed` quando Gerente retorna `PLANO-PERSISTIDO: [caminho]`.
+   - `regera: "[[planos/<slug-anterior>]]"` se este plano vem de "Regerar" no Gate 2 anterior; senão `~`.
+2. Gerente captura `Bash date` ANTES da escrita, escreve plano.md alinhado com template canônico, registra `gate-1-aprovado` no Histórico.
+3. Marcar item 7 `completed` quando Gerente retorna `PLANO-PERSISTIDO: [caminho]`.
 
-### Fase 5 — Checkpoint 2 (revisão do plano persistido)
+### Gate 2 — Maestro convida usuário pra revisar plano escrito
 
-**Mensagem do Maestro pro usuário:**
+**Mensagem 1 (convite com wikilink + slug literal):**
 
 ```
-✅ Plano pronto pra revisão.
-
-📄 [[planos/<slug>]]
-   Dá uma lida no plano. Quando voltar, me diz o que prefere.
-
-Estado:
-- Plano em rascunho, ainda sem tarefas-filhas materializadas
-- N tarefas previstas no documento
-- M dependências detectadas
-
-💡 Recomendação de execução: [MODO]
-   Razão: [justificativa em linguagem simples]
+Plano pronto pra revisão em [[planos/<slug>]] ({projeto}/planos/<slug>.md).
+Abre no Obsidian (leva 2-5 min). Quando voltar, me diz: aprova, quer ajustar, regerar, ou cancela?
 ```
 
-**`AskUserQuestion` #1 — 4 opções:**
+**Mensagem 2 (AUQ separada — 4 opções):**
 
-- **Aprovar** → vai pra Fase 6 + AUQ #2 (modo de execução)
-- **Ajustar** → loop conversacional com mapa "quem aplica"
-- **Regerar** → cancela plano.md (sem cascata, filhas não existem) + cria novo com `regera: "[[planos/<slug-anterior>]]"`. Volta pra Fase 2.
-- **Cancelar** → cancela plano.md, encerra
-
-**Mapa "quem aplica" no loop Ajustar:**
-
-| Tipo de ajuste | Quem o Maestro despacha |
+| Opção | Resultado |
 |---|---|
-| Renomear título da tarefa-filha N | Gerente — Fluxo 4c |
-| Trocar agente responsável | Gerente — Fluxo 4c |
-| Adicionar tarefa nova | Gerente — Fluxo 4d |
-| Remover tarefa | Gerente — Fluxo 4e |
-| Reordenar / mexer em `Depende de` | Gerente — Fluxo 4c |
-| Mudar campo operacional do plano | Gerente — Fluxo 4c |
-| Mudar `tipo:` do plano (estrutural) | Gerente — Fluxo 4f → reporta NEEDS_CONTEXT → Maestro pergunta refazer decomposição |
-| "Repensa essa abordagem" / "muda a estratégia da tarefa N" | Especialista-dono em modo decompor-plano (re-roda Fase 2) |
-| Edição manual no Obsidian + "ajustei à mão, revalida" | Gerente — Fluxo 4f |
+| **Aprovar** | Maestro despacha Fluxo 5 (materializa filhas), `status: aprovado`, Histórico: `gate-2-aprovado` |
+| **Ajustar** | AUQ secundária com mapa "quem aplica" — mecânico (Gerente direto) ou estratégico (re-despacha especialista) |
+| **Regerar** | Cancela plano atual (`status: cancelado`, `motivo: regerado`) + cria novo via Fluxo 4-regerar com `regera:` apontando pro anterior. **Não conta como volta.** |
+| **Cancelar** | Plano vira `cancelado`, `motivo-cancelamento` preenchido, Histórico: `gate-2-cancelado`. Encerra. |
 
-Após cada ajuste, reapresentar Checkpoint 2. Sai do loop só com Aprovar / Regerar / Cancelar. Sem cap duro (cada iter é Sonnet barato), mas após 5 ciclos sugerir "talvez seja melhor Regerar?".
+**AUQ secundária do "Ajustar" — mapa "quem aplica":**
 
-**Marcar item 5 `completed`** quando usuário escolher Aprovar / Regerar / Cancelar.
+| Tipo de ajuste | Quem aplica | Conta como volta? |
+|---|---|---|
+| Renomear tarefa | Gerente Fluxo 4c (mecânico) | ❌ |
+| Trocar agente | Gerente Fluxo 4c (mecânico) | ❌ |
+| Adicionar tarefa | Gerente Fluxo 4d (mecânico) | ❌ |
+| Remover tarefa | Gerente Fluxo 4e (mecânico) | ❌ |
+| Reordenar `Depende de` | Gerente Fluxo 4c (mecânico) | ❌ |
+| Mudar campo operacional do plano | Gerente Fluxo 4c (mecânico) | ❌ |
+| "Repensa essa abordagem" / "muda estratégia da peça N" | Especialista re-decompõe (Fluxo 4-revisao) | ✅ +1 |
+| Editou plano à mão e pediu revalidar | Gerente Fluxo 4f (mecânico) | ❌ |
 
-### Fase 6 — Materializar tarefas-filhas (Gerente) + modo de execução
+**Cap de 3 voltas em-revisao** (apenas ajuste estratégico):
 
-1. Despachar Gerente em **Fluxo 5** via `Agent()` passando caminho do plano aprovado.
-2. Gerente materializa N tarefas-filhas + N cascas (com campos operacionais conforme tabela), substitui seção textual por Dataview, arquiva tabela no Histórico.
+- Volta 1-3: AUQ Gate 2 mostra "Ajustar (volta N de 3)".
+- Tentativa de volta 4: AUQ extra:
+  > "Você já ajustou 3 vezes. Continuar (regera plano novo do zero) / Aprovar como está / Cancelar?"
+
+**Maestro recalcula contador via grep do Histórico** (anti-burla):
+- Antes de cada AUQ Gate 2, rodar `grep -c "gate-2-feedback" {caminho-do-plano}`.
+- Usar o maior valor entre o frontmatter `voltas-em-revisao` e o count do Histórico.
+
+### Fase 4 — Materializar tarefas-filhas (Aprovar no Gate 2)
+
+1. Despachar Gerente em Fluxo 5 via `Agent()` passando caminho do plano aprovado.
+2. Gerente materializa N tarefas-filhas + cascas, escreve `data-aprovacao` + `status: aprovado` + `gate-2-aprovado` no Histórico.
 3. Maestro mostra: `✅ Tarefas criadas.`
 4. **AskUserQuestion #2 — modo de execução (4 opções):**
    - **Paralelo** — todas em paralelo simultâneo
@@ -164,19 +228,21 @@ Após cada ajuste, reapresentar Checkpoint 2. Sai do loop só com Aprovar / Rege
    - **Sequencial:** Agent() pra 1ª filha; próxima só depois de fechar
    - **Sob demanda:** sair do plano; usuário dispara tarefa por tarefa quando quiser
 
-7. Cada tarefa-filha **roda como Entrega completa** — TodoWrite próprio de 5 itens, pipeline completo. Ver `fluxo-entrega.md`.
+7. Cada tarefa-filha **roda como Entrega completa** via `fluxo-entrega.md`.
 
-8. Tracking do plano continua em `plano.md` (Gerente atualiza checkbox de cada tarefa via Fluxo 2 conforme completam).
+8. Tracking continua em `plano.md` (Gerente atualiza via Fluxo 2 conforme completam).
 
-9. Marcar item 6 `completed` após escolha do modo de execução.
+9. Marcar item 8 `completed` após escolha do modo de execução.
 
 ## Regras absolutas
 
 1. **Plano NÃO passa por QA nem Revisor no nível do plano** — validação acontece em cada tarefa-filha quando executa.
-2. **Plano sem tarefas no `RESUMO-PRO-PLAN-MODE`** = inválido; Maestro deve abortar Fase 2 e pedir novo briefing.
-3. **Aprovação do usuário é explícita** via `EnterPlanMode` (CK1) ou `AskUserQuestion` (CK1 fallback + CK2) — nunca prosseguir sem.
-4. **Checkpoint 1 é em memória** — zero rastro no vault se rejeitar.
-5. **Checkpoint 2 cancela só plano.md** — filhas não existem ainda, sem cascata.
+2. **Plano sem tarefas no `DECOMPOSICAO-PLANO`** = inválido (regra 6 do `protocolo-decompor-plano.md`). Maestro rejeita na Fase 2.5 e re-despacha. **Não conta como volta.**
+3. **Aprovação do usuário é explícita** via `AskUserQuestion` em ambos os gates — nunca prosseguir sem.
+4. **Gate 1 é em memória** — zero rastro no vault se cancelar.
+5. **Gate 2 cancela só plano.md** — filhas não existem ainda, sem cascata.
 6. **Tarefa-filha cancelada não invalida o plano**; tarefa-filha bloqueada (NEEDS_*) pausa o plano.
 7. **Cross-domain → Estrategista** (decompositor universal). Usuário não escolhe arquitetura.
-8. **Cap de 5 iterações no loop Ajustar do CK1** — após 5, força AUQ Regerar/Cancelar/Continuar.
+8. **Cap de 3 voltas em em-revisao** — após 3, AUQ extra (Continuar regera / Aprovar / Cancelar). Maestro recalcula contador via grep do Histórico (anti-burla via Properties).
+9. **Gate 1 SEMPRE roda**, sem skip explícito ou heurístico (D9 da spec).
+10. **Especialista NUNCA chama Write/Edit em `planos/*.md`** — defesa textual (D13 da spec). Final reviewer cross-grepa.

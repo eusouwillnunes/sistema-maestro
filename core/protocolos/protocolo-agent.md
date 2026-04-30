@@ -163,18 +163,30 @@ Protocolo de report: Seguir o formato definido em protocolo-agent.md (seção 2)
 ---END-TAREFA---
 ```
 
-### Campos adicionais no REPORT do Gerente (fluxos criar-plano e criar-plano-correcao)
+### Campos adicionais no REPORT do Gerente (fluxos de plano)
 
-Nos fluxos `criar-plano` (Fluxo 4) e `criar-plano-correcao` (Fluxo 8), o REPORT do Gerente inclui dois campos adicionais:
+Nos fluxos de plano (`persistir-plano-rascunho` Fluxo 4b, `criar-plano-correcao` Fluxo 8 e variantes 4-revisao/4-regerar/4-reativar), o REPORT do Gerente inclui campos específicos. Pra fluxos de criação:
 
 ```
-PLANO-CRIADO: [caminho absoluto do arquivo do plano criado]
-RESUMO-PRO-PLAN-MODE: |
-  [conteúdo compacto pré-formatado pronto pro Maestro passar ao ExitPlanMode.
-   Inclui: 3-5 linhas de raciocínio + tabela resumida das tarefas + wiki-link pro arquivo completo.]
+PLANO-PERSISTIDO: [caminho absoluto do arquivo do plano criado]
+TABELA-DE-TAREFAS: |
+  [tabela transcrita literalmente do bloco DECOMPOSICAO-PLANO do especialista decompositor.
+   Colunas: # | Tarefa | Agente | Tipo de artefato | Depende de]
 ```
 
-O Maestro lê `RESUMO-PRO-PLAN-MODE` e passa diretamente pro `ExitPlanMode` nativo — sem reprocessar.
+Pra plano em revisão / regerado / reativado, ver formatos específicos em `gerente/SKILL.md` Seção 7.
+
+### Prompt cache em chamadas múltiplas no Fluxo de Plano
+
+No Fluxo de Plano (2 gates), o mesmo especialista é despachado **2x na mesma sessão**:
+- Chamada 1 (Fase 1): overview no chat (`MODO: decompor-plano-fase-1`).
+- Chamada 2 (Fase 2): bloco DECOMPOSICAO-PLANO completo (`MODO: decompor-plano-fase-2`).
+
+Bloco CONTEXTO **idêntico** entre as 2 chamadas → **prompt cache hit ~80% redução**. Custo total fica ~1.2x de uma chamada Sonnet única.
+
+Iteração em em-revisao (Gate 2 ajustar estratégico, `MODO: decompor-plano-em-revisao`) também reusa CONTEXTO → cache hit.
+
+> **Enum de status do plano** (referência cruzada com `plano.md` template): `rascunho | em-revisao | aprovado | em-execucao | aguardando-validacao | concluido | rejeitado | cancelado`. O status `em-revisao` é alcançado quando usuário pede "Ajustar estratégico" no Gate 2.
 
 ### Bloco 3 — Contexto coletado
 
