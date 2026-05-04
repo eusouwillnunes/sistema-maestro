@@ -1,0 +1,9 @@
+{
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/tmp/maestro-test-workspace/.maestro/cache/projeto-ativo.md",
+    "content": "..."
+  },
+  "session_id": "test-session-11",
+  "cwd": "/tmp/maestro-test-workspace"
+}

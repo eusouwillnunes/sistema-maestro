@@ -159,6 +159,165 @@ Acionado quando o usuário indica que já tem material da empresa.
    >
    > Ele vai ler os documentos, identificar o que pode ser preenchido e delegar pros agentes especialistas."
 
+### Fluxo SCAFFOLD WORKSPACE
+
+Acionado pelo `maestro-onboarding/SKILL.md` etapa 2.5 (Fluxo de Primeira Vez). F2 preenche os 3 painéis Dataview em `<workspace>/_painel/` agregando os projetos da workspace. F4 vai adicionar `bookmarks.json` da workspace + `.maestro-flags.md` (lock file + flags).
+
+**Modelo: Haiku** (operacional, sem texto criativo).
+
+**Recebe no CONTEXTO:**
+- `workspace`: path absoluto da pasta workspace
+- `projeto-slug`: slug do primeiro projeto da workspace (recém-criado pelo Fluxo de Primeira Vez — sempre presente)
+
+**Comportamento (F2):**
+
+1. **Validar marker:** confirmar que `<workspace>/.maestro-workspace` existe.
+   - Se ausente → reportar `STATUS: BLOCKED` motivo "marker ausente em <workspace>/.maestro-workspace".
+
+2. **Idempotência:** se `<workspace>/_painel/` já existe E contém os 3 painéis (`tarefas.md`, `index.md`, `grafo.md`) → reportar `STATUS: SKIPPED` motivo "painéis já existentes" e encerrar.
+
+3. **Criar pasta:** `mkdir -p <workspace>/_painel/`.
+
+4. **Pra cada template** (`tarefas`, `index`, `grafo`):
+   - Ler `plugin/core/templates/workspace/_painel/<nome>.md`.
+   - Substituir bloco frontmatter:
+     ```
+     projetos:
+       - {projeto-slug-1}
+       - {projeto-slug-2}
+     ```
+     por:
+     ```
+     projetos:
+       - <projeto-slug>
+     ```
+   - Substituir cláusula `FROM "..."` no bloco Dataview pelo sub-path canônico do painel:
+     - `tarefas.md` → `FROM "<projeto-slug>/tarefas"`
+     - `index.md` → `FROM "<projeto-slug>"` (agrega tudo do projeto)
+     - `grafo.md` → `FROM "<projeto-slug>"` (agrega tudo do projeto)
+   - Escrever em `<workspace>/_painel/<nome>.md` via atomic write (snippet Python — ver fim do fluxo).
+
+5. **Detectar Dataview ausente** (não-bloqueante):
+
+   ```python
+   import json, os
+   cp_path = os.path.join(workspace, ".obsidian", "community-plugins.json")
+   nudge_needed = False
+   if not os.path.exists(cp_path):
+       # vault sem .obsidian/ ainda — Obsidian recria depois, não emitir nudge
+       pass
+   else:
+       try:
+           with open(cp_path, 'r', encoding='utf-8') as f:
+               plugins = json.load(f)
+           if "dataview" not in plugins:
+               nudge_needed = True
+       except (json.JSONDecodeError, IOError):
+           pass  # falha silenciosa — não bloqueia scaffold
+   ```
+
+   Se `nudge_needed`, anexar ao RESULTADO o texto:
+   > "ℹ️ Faltou ligar um plugin chamado **Dataview** no Obsidian — sem ele, os painéis aparecem como código bruto em vez de tabelas. Veja o passo 5 quando rodar `/maestro:onboarding`, ou abra o Obsidian e vá em Configurações → Plugins da Comunidade → Dataview → ligar (instale antes se não aparecer)."
+
+6. **Reportar** `STATUS: DONE` listando os 3 arquivos criados + nudge condicional.
+
+**Atomic write (Python inline via Bash):**
+
+```python
+import os, tempfile
+def atomic_write(path, content):
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), prefix='.tmp-', suffix='.md')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as f:
+            f.write(content)
+        os.replace(tmp, path)
+    except Exception:
+        try: os.remove(tmp)
+        except: pass
+        raise
+```
+
+Bibliotecário invoca via `python -c "..."` quando escrever cada painel.
+
+**Formato de report:**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Painéis da workspace criados em <workspace>/_painel/ — 3 arquivos: tarefas.md, index.md, grafo.md. Listam agora 1 projeto: <projeto-slug>.
+[nudge Dataview se aplicável]
+
+ARQUIVOS:
+- <workspace>/_painel/tarefas.md
+- <workspace>/_painel/index.md
+- <workspace>/_painel/grafo.md
+---END-REPORT---
+```
+
+**Justificativa de despachar sem Gerente:** ver `protocolo-agent.md` seção 7 — critério decisor. Operação atualiza sintaxe técnica em arquivos gerados (`_painel/*.md`), não cria entrega autoral em pt-br. Cai no critério, não na lista taxativa de exceções.
+
+### Fluxo REGENERATE PAINEL
+
+Acionado por (a) `maestro-onboarding/SKILL.md` etapa 2B.2 (Fluxo de Novo Projeto) e (b) slash command `/maestro:regenerar-painel`. F2 regenera as cláusulas `FROM` dos painéis em `<workspace>/_painel/*.md` quando a lista de projetos não bate com a realidade — idempotente. F4 vai estender pra atualizar `bookmarks.json` da workspace.
+
+**Modelo: Haiku** (operacional).
+
+**Recebe no CONTEXTO:**
+- `workspace`: path absoluto
+- `projeto-slug-novo`: slug do projeto recém-adicionado (opcional — slash command manual não preenche; descoberta via Glob de qualquer forma)
+
+**Comportamento (F2):**
+
+1. **Validar marker:** confirmar que `<workspace>/.maestro-workspace` existe.
+   - Se ausente → `STATUS: BLOCKED` motivo "marker ausente — não há workspace nesta pasta".
+
+2. **Descobrir lista canônica de projetos:**
+   - Glob `<workspace>/*/maestro/config.md` (profundidade 1 — exclui `.obsidian/`, `_painel/`, `.maestro/`, `.git/`, `dist/` por construção).
+   - Pra cada match, ler `config.md` e extrair `maestro-ativo:`.
+   - Manter apenas com `maestro-ativo: true` (convenção `protocolo-ativacao.md:87` — `false` ou ausente descarta).
+   - Slug = `basename(dirname(dirname(<match>)))`.
+   - Ordenar alfabeticamente (F2-D5).
+
+3. **Pra cada painel** em `<workspace>/_painel/*.md`:
+   - Ler frontmatter atual (campo `projetos:`).
+   - Comparar lista canônica vs frontmatter via igualdade de set.
+   - **Se igual** → pula painel (idempotente, não reescreve).
+   - **Se diferente:**
+     - Atualizar frontmatter: substituir array `projetos:` completo, ordem alfabética.
+     - Reescrever cláusula `FROM "..."` no bloco Dataview com sub-path canônico do painel:
+       - `tarefas.md` → `FROM "slug-1/tarefas" OR "slug-2/tarefas" ...`
+       - `index.md` → `FROM "slug-1" OR "slug-2" ...`
+       - `grafo.md` → `FROM "slug-1" OR "slug-2" ...`
+     - Parser regex pra cláusula: `^FROM\s+"[^"]+"(?:\s+OR\s+"[^"]+")*\s*$` (linha que começa com `FROM` com cláusulas OR encadeadas — assume formatação canônica do template, não tolera quebra de linha).
+     - Atomic write via `os.replace()` (snippet em SCAFFOLD WORKSPACE).
+
+4. **Reportar** `STATUS: DONE` com mensagem padrão **mesmo se idempotente** listando N projetos detectados:
+   > "Painéis verificados — listam agora N projetos: <slug-1>, <slug-2>, ... Se faltou algum, confira se a pasta tem `maestro/config.md` com `maestro-ativo: true`."
+
+**Concorrência:** F2 não implementa lock file (escopo F4). Atomic write reduz janela de race. Aceitável em uso típico.
+
+**Formato de report:**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Painéis verificados em <workspace>/_painel/ — listam agora N projetos: <slug-1>, <slug-2>, ...
+[Se houve mudança: listar painéis que foram reescritos.]
+[Se idempotente: "Tudo em dia — lista já estava correta."]
+
+ARQUIVOS:
+- <workspace>/_painel/tarefas.md (atualizado | já em dia)
+- <workspace>/_painel/index.md (atualizado | já em dia)
+- <workspace>/_painel/grafo.md (atualizado | já em dia)
+---END-REPORT---
+```
+
+**Justificativa de despachar sem Gerente:** mesma de SCAFFOLD WORKSPACE — operação técnica, não autoral. Critério decisor de `protocolo-agent.md` seção 7.
+
 ### Fluxo CRIAR BOOKMARKS DE NAVEGAÇÃO
 
 Acionado como passo final do Fluxo CRIAR (após criar todas as pastas, indexes e painéis Dataview). Cria a navegação no painel Bookmarks do Obsidian apontando pras 14 áreas em ordem de consumo.
@@ -173,7 +332,7 @@ Acionado como passo final do Fluxo CRIAR (após criar todas as pastas, indexes e
 
 1.5. **Resolver `<path-prefix>`:**
    - Se `{projeto}` (path absoluto) == `<vault-root>` → `<path-prefix>` = `""` (vault simples).
-   - Senão → `<path-prefix>` = `"<slug-projeto>/"` (vault macro).
+   - Senão → `<path-prefix>` = `"<slug-projeto>/"` (vault workspace).
 
 2. **Verificar se plugin Bookmarks está habilitado** (não-bloqueante):
    - Read `<vault-root>/.obsidian/core-plugins.json`.

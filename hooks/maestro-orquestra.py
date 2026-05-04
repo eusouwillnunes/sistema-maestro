@@ -6,7 +6,6 @@ em paths de vault Maestro fora da whitelist Fase 1.
 """
 import sys
 import json
-import re
 from pathlib import Path
 
 WHITELIST_FASE_1 = {"rascunhos", "memorias", "maestro", ".obsidian", ".claude"}
@@ -46,26 +45,6 @@ def detect_vault_alpha(fp: Path):
             return candidate
         candidate = candidate.parent
         depth += 1
-    return None
-
-
-def detect_vault_beta(fp: Path):
-    cache_dir = Path.home() / ".maestro" / "projeto-ativo-cache"
-    if not cache_dir.exists():
-        return None
-    for cache_file in cache_dir.iterdir():
-        if not cache_file.is_file():
-            continue
-        try:
-            content = cache_file.read_text(encoding="utf-8")
-            match = re.search(r"^caminho-absoluto:\s*(.+)$", content, re.MULTILINE)
-            if not match:
-                continue
-            projeto_path = Path(match.group(1).strip()).resolve()
-            if projeto_path == fp.parent or projeto_path in fp.parents:
-                return projeto_path
-        except Exception:
-            continue
     return None
 
 
@@ -114,7 +93,7 @@ def main():
         fp = Path(file_path).resolve()
 
         # Etapa 3 — vault Maestro?
-        vault_root = detect_vault_alpha(fp) or detect_vault_beta(fp)
+        vault_root = detect_vault_alpha(fp)
         if vault_root is None:
             return emit("allow")
 

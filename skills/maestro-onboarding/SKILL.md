@@ -11,20 +11,34 @@ description: >
 
 ## 1. Detecção de Modo
 
-Ao ser acionado, verificar o estado atual:
+Ao ser acionado, verificar o estado atual cruzando 3 sinais físicos do CWD:
 
-1. Tentar ler `maestro/config.md` no vault do projeto
-2. Verificar o campo `onboarding-completo`
-3. Verificar se `~/.maestro/config.md` existe (sistema já configurado em outro projeto)
+1. Existe `<CWD>/.maestro-workspace`? (marker da Área de Trabalho)
+2. `Glob <CWD>/*/maestro/config.md` retorna ≥1 match? (Área de Trabalho com pelo menos 1 projeto)
+3. Existe `<CWD>/maestro/config.md`? (CWD é projeto Maestro)
 
-**Se `maestro/config.md` não existe E `~/.maestro/config.md` existe:**
-→ Executar o **Fluxo de Novo Projeto** (seção 2B) — onboarding leve, pula dependências e configurações globais
+| Sinais | Branch |
+|---|---|
+| (1) sim E (2) ≥1 | **Fluxo de Novo Projeto** (seção 2B) — adiciona projeto na Área de Trabalho existente |
+| (1) sim E (2) = 0 | **Recuperação** — Área de Trabalho meia-criada (marker existe mas nenhum projeto). Tratada na seção 2B.-1 com AUQ "Continuar configuração / Cancelar e recomeçar / Voltar" |
+| (3) sim sem (1) | CWD = projeto Maestro existente. Tratado na seção 2B.-1 com AUQ ramificado: "Criar projeto novo na mesma Área de Trabalho" / "Reconfigurar este projeto" (Seção 3) / "Voltar" |
+| nenhum dos 3 | Verificar se `~/.maestro/config.md` existe (sistema já configurado antes). Se sim → Fluxo de Novo Projeto (sem workspace ainda — vai propor criar uma na 2B.-1). Se não → **Fluxo de Primeira Vez** (seção 2) — onboarding completo |
 
-**Se `onboarding-completo` não existe ou é `false` (e `~/.maestro/config.md` não existe):**
-→ Executar o **Fluxo de Primeira Vez** (seção 2) — onboarding completo
+**Após qualquer branch resolver:** se `<CWD>/maestro/config.md` for lido E `onboarding-completo: true` → desviar pro **Fluxo de Re-execução** (Seção 3) ANTES de executar 2/2B.
 
-**Se `onboarding-completo: true`:**
-→ Executar o **Fluxo de Re-execução** (seção 3)
+**Tabela de operações Bash auxiliares:**
+
+```bash
+# Sinal 1
+[ -f "$CWD/.maestro-workspace" ] && SINAL_1=sim || SINAL_1=nao
+
+# Sinal 2 (find em profundidade exata 3 — projetos vivem em <CWD>/<projeto>/maestro/config.md = depth 3)
+# Fix B-F1-9: mindepth/maxdepth 2 deixava o find cego (depth real é 3, não 2). Validação F1 Cenário 12B confirmou empiricamente.
+PROJETOS_NA_WORKSPACE=$(find "$CWD" -mindepth 3 -maxdepth 3 -path "*/maestro/config.md" 2>/dev/null | wc -l)
+
+# Sinal 3
+[ -f "$CWD/maestro/config.md" ] && SINAL_3=sim || SINAL_3=nao
+```
 
 ---
 
@@ -163,15 +177,72 @@ Marcar task "Apresentar o Sistema Maestro" como `completed`.
 
 **Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
-### 2.2 Nome da empresa
+### 2.2 Nome da Área de Trabalho e nome do primeiro projeto
 
 Marcar task "Configurar projeto" como `in_progress`.
 
-Perguntar:
+**1. Apresentar a estrutura (linguagem leiga, sem jargão "pasta-pai"):**
 
-> "Qual o nome da sua empresa ou projeto?"
+> "Vou criar uma **Área de Trabalho** — pense como um fichário onde cada projeto vira uma pasta dentro. Você abre o Obsidian uma vez só e vê todos os clientes/marcas que tiver lá. Por enquanto começa com 1 projeto; depois é só ir adicionando mais."
 
-Aguardar resposta do usuário. Guardar o nome para usar nos próximos passos.
+**2. Coletar nome da Área de Trabalho via `AskUserQuestion`:**
+
+- question: "Qual o nome dessa Área de Trabalho?"
+- placeholder/exemplo no enunciado: "ex: 'Marketing Primum', 'Agência X', 'Meus Clientes'"
+- Aguardar resposta livre.
+- Guardar como `workspace_legivel` (string original do usuário).
+- Computar `workspace_slug_proposto = slugify(workspace_legivel)` (ver função `slugify` formal na spec § "Schema dos artefatos").
+
+**3. Coletar nome do primeiro projeto via `AskUserQuestion`:**
+
+- question: "E qual é o nome do primeiro projeto?"
+- placeholder/exemplo: "uma empresa, cliente ou marca que você vai trabalhar"
+- Aguardar resposta livre.
+- Guardar como `projeto_legivel`.
+- Computar `projeto_slug_proposto = slugify(projeto_legivel)`.
+
+**4. Validação anti-colisão (F1-D7 + P12):**
+
+Se `workspace_slug_proposto == projeto_slug_proposto`:
+
+`AskUserQuestion`:
+- question: "Os dois ficaram com o mesmo nome curto (`<workspace_slug_proposto>`). Sugiro deixar a Área de Trabalho mais geral (ex: 'Meu Trabalho') e o projeto específico (ex: '`<projeto_legivel>`'). Quer trocar?"
+- options:
+  - label: "Trocar Área de Trabalho", description: "Volta pro passo 2 e digita outro nome"
+  - label: "Trocar projeto", description: "Volta pro passo 3 e digita outro nome"
+  - label: "Manter assim", description: "Aceita os slugs idênticos sob seu risco"
+
+Se "Trocar Área de Trabalho" → repetir passo 2.
+Se "Trocar projeto" → repetir passo 3.
+Se "Manter assim" → seguir.
+
+**5. Preview de slugs:**
+
+`AskUserQuestion`:
+- question: "Vou criar pasta `<workspace_slug_proposto>` com `<projeto_slug_proposto>` dentro. Tudo bem ou quer mudar algum nome?"
+- options:
+  - label: "Tudo bem", description: "Cria com esses slugs"
+  - label: "Mudar Área de Trabalho", description: "Digito o slug direto (sem espaço, só letras minúsculas, números e hífens)"
+  - label: "Mudar projeto", description: "Digito o slug direto"
+
+Se "Mudar Área de Trabalho" → pedir slug direto via texto livre, validar regex `^[a-z0-9-]+$`, sem hífen nas pontas, max 80 chars. Se inválido, repetir até passar. Atualizar `workspace_slug_proposto`.
+
+Se "Mudar projeto" → idem pra `projeto_slug_proposto`.
+
+Se "Tudo bem" → fixar slugs definitivos:
+- `workspace_slug = workspace_slug_proposto`
+- `projeto_slug = projeto_slug_proposto`
+
+**6. Validação adicional pós-slugify (R9):**
+
+Se `workspace_slug` ou `projeto_slug` resultar em string vazia ou só hifens (ex: input "🌴🌴🌴"):
+
+`AskUserQuestion`:
+- question: "Não consegui transformar `<input>` em pasta válida. Pode digitar um nome curto sem caracteres especiais (só letras, números e espaço)?"
+- options:
+  - label: "Digitar de novo", description: "Volta pra etapa 2 ou 3"
+
+Repetir até `slugify` produzir resultado não-vazio.
 
 Marcar task "Configurar projeto" como `completed`.
 
@@ -329,8 +400,29 @@ Marcar task "Setup técnico" como `in_progress`.
 
 Executar silenciosamente (sem mensagens detalhadas para cada item):
 
-1. **Ativar sistema:** setar `maestro-ativo: true` em `~/.maestro/config.md`
-2. **Memórias de projeto:** criar `maestro/memorias/` usando templates de `core/templates/_memorias-projeto-template.md`:
+1. **Criar estrutura aninhada do workspace + projeto:**
+
+   ```bash
+   mkdir -p "<CWD>/<workspace_slug>/<projeto_slug>"
+   ```
+
+   Daqui em diante, `PROJETO_PATH=<CWD>/<workspace_slug>/<projeto_slug>` e `WORKSPACE_PATH=<CWD>/<workspace_slug>`.
+
+2. **Criar marker da Área de Trabalho:**
+
+   Copiar template:
+   ```bash
+   cp "<plugin-root>/core/templates/workspace/.maestro-workspace" "$WORKSPACE_PATH/.maestro-workspace"
+   ```
+
+   Ou inline (caso `<plugin-root>` não esteja disponível):
+   ```bash
+   printf '# Marker do Sistema Maestro — esta pasta é uma Área de Trabalho.\n# Não apague: a detecção de cenário do Onboarding usa este arquivo.\n' > "$WORKSPACE_PATH/.maestro-workspace"
+   ```
+
+3. **Ativar sistema:** setar `maestro-ativo: true` em `~/.maestro/config.md`
+
+4. **Memórias de projeto:** criar `$PROJETO_PATH/maestro/memorias/` usando templates de `core/templates/_memorias-projeto-template.md`:
    - `maestro/memorias/_index.md`
    - `maestro/memorias/contexto.md`
    - `maestro/memorias/sessoes/` (pasta vazia; `_sessoes.md` é criado pelo /tchau-maestro na primeira sessão)
@@ -341,50 +433,74 @@ Executar silenciosamente (sem mensagens detalhadas para cada item):
 
    O arquivo `memorias/decisoes.md` começa vazio e será preenchido automaticamente conforme você toma decisões estratégicas durante o uso do Maestro (arquétipo, formato de lançamento, tom de voz, etc.). O sistema reusa escolhas anteriores pra manter coerência entre entregas.
 
-3. **Config do projeto:** criar `maestro/config.md` usando `core/templates/_maestro-config-template.md`:
-   - Preencher `Empresa:` com o nome coletado
-   - Preencher `Vault:` com o caminho do CWD
+5. **Config do projeto:** criar `$PROJETO_PATH/maestro/config.md` usando `core/templates/_maestro-config-template.md`:
+   - Preencher `Empresa:` com `<projeto_legivel>`
+   - Preencher `Vault:` com `$PROJETO_PATH`
    - Preencher `Projeto iniciado em:` com a data atual
    - Manter `onboarding-completo: false` (será atualizado no final)
-4. **CLAUDE.md do projeto:** despachar Bibliotecário pra criar/anexar seção Maestro:
+
+6. **CLAUDE.md do projeto:** despachar Bibliotecário pra criar/anexar seção Maestro:
 
    ```python
    Agent(
      subagent_type="maestro:bibliotecario",
      prompt="""
      CONTEXTO:
-     path-projeto: {CWD}
+     path-projeto: $PROJETO_PATH
 
      FLUXO: CRIAR_CLAUDE_PROJETO
      """
    )
    ```
 
-   O Bibliotecário cria `{CWD}/CLAUDE.md` (ou anexa seção `## Maestro` se já existir). Hook PreToolUse libera porque Bibliotecário é subagente (tem `agent_id`). Idempotente — se Bibliotecário retornar `ALREADY_EXISTS`, prosseguir silencioso.
-5. **Memórias de usuário:** verificar se `~/.maestro/memorias/_index.md` existe. Se não existe, criar a estrutura `~/.maestro/` (conforme passo 2.3.5).
-6. **Cache de projeto ativo:** persistir o projeto recém-criado (ver protocolo-ativacao.md Sub-fluxo 1.5):
+   O Bibliotecário cria `$PROJETO_PATH/CLAUDE.md` (ou anexa seção `## Maestro` se já existir). Hook PreToolUse libera porque Bibliotecário é subagente (tem `agent_id`). Idempotente — se Bibliotecário retornar `ALREADY_EXISTS`, prosseguir silencioso.
+
+7. **Despachar Bibliotecário SCAFFOLD WORKSPACE (stub em F1, F2/F4 preenchem):**
+
+   ```python
+   Agent(
+     subagent_type="maestro:bibliotecario",
+     prompt="""
+     CONTEXTO:
+     workspace: $WORKSPACE_PATH
+     projeto-slug: <projeto_slug>
+
+     FLUXO: SCAFFOLD WORKSPACE
+     """
+   )
+   ```
+
+   Em F1 retorna `STATUS: DONE` validando o marker. Em F2/F4 vai preencher painel + bookmarks. Se retornar `BLOCKED` (marker ausente), abortar com erro — o passo 2 deveria ter criado.
+
+8. **Memórias de usuário:** verificar se `~/.maestro/memorias/_index.md` existe. Se não existe, criar a estrutura `~/.maestro/` (conforme passo 2.3.5).
+
+9. **Cache de projeto ativo:** persistir o projeto recém-criado em `<workspace>/.maestro/cache/projeto-ativo.md` (ver protocolo-ativacao.md Sub-fluxo 1.5):
 
    ```bash
-   # Normalizar CWD pra forward slash (Git Bash do Windows pode vir com backslash)
-   CWD_NORM=$(echo "$CWD" | tr '\\' '/')
-   HASH=$(echo -n "$CWD_NORM" | md5sum | cut -c1-32)
-   mkdir -p "$HOME/.maestro/projeto-ativo-cache"
-   cat > "$HOME/.maestro/projeto-ativo-cache/${HASH}.md" <<EOF
+   # Normalizar CWD para formato Windows (C:/...) no Windows ou forward slash em Mac/Linux.
+   # Fix B-F1-4: cygpath converte /c/dev/... → C:/dev/... no Git Bash do Windows.
+   if command -v cygpath >/dev/null 2>&1; then
+     CWD_NORM=$(cygpath -m "$CWD")
+   else
+     CWD_NORM=$(echo "$CWD" | tr '\\' '/')
+   fi
+   WORKSPACE="${CWD_NORM}/<workspace_slug>"
+   TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+   mkdir -p "$WORKSPACE/.maestro/cache"
+   cat > "$WORKSPACE/.maestro/cache/projeto-ativo.md" <<EOF
    ---
    versao: 1
-   slug: <slug-da-empresa>
-   caminho-absoluto: <caminho-absoluto-do-projeto-criado>
-   macro: <pasta-pai-do-projeto>
-   atualizado-em: <ISO 8601 agora via Bash date>
+   slug: <projeto_slug>
+   caminho-absoluto: ${WORKSPACE}/<projeto_slug>
+   workspace: ${WORKSPACE}
+   atualizado-em: ${TIMESTAMP}
    ---
    EOF
    ```
 
-   Onde `<caminho-absoluto-do-projeto-criado>` é o path normalizado (forward slash) da pasta recém-criada — `${CWD_NORM}/<slug>` se o scaffold criou subpasta no CWD-macro, ou o próprio `${CWD_NORM}` se o usuário rodou onboarding já dentro da pasta do projeto. `macro` é sempre o parent dir do `caminho-absoluto`.
+   Onde `<workspace_slug>` e `<projeto_slug>` foram fixados na etapa 2.2. **Importante (fix B-F1-7):** este Bash heredoc é obrigatório — não substituir por Write/Edit. O `$(date)` precisa rodar no shell pra timestamp ser real; se o modelo usar Edit/Write em vez de Bash, o timestamp sai inferido como `T00:00:00Z`. Se o Write falhar por permissão, aviso "cache não pode ser persistido — projeto ativo válido só nessa sessão" e segue.
 
-   Onde `<slug-da-empresa>` é o slug derivado do nome coletado no início. Se o Write falhar por permissão, aviso "cache não pode ser persistido — projeto ativo válido só nessa sessão" e segue.
-
-Informar brevemente: "Estrutura de memórias e configuração criadas."
+Informar brevemente: "Estrutura da Área de Trabalho e do projeto criadas."
 
 Marcar task "Setup técnico" como `completed`.
 
@@ -474,13 +590,14 @@ Ajustar o fluxo conforme a escolha:
    > Me avise quando estiver pronto."
    - Aguardar confirmação do usuário
 
-3. Guiar a criação do vault:
+3. Guiar a criação do vault (apontando pra Área de Trabalho, não pro projeto):
+
    > "Agora no Obsidian:
    > 1. Clique em **'Open folder as vault'** (ou 'Abrir pasta como vault')
-   > 2. Selecione a pasta do seu projeto: `{caminho do CWD}/{nome da empresa}/`
-   > 3. Pronto! Você vai ver toda a estrutura no painel esquerdo.
+   > 2. Selecione a pasta da sua **Área de Trabalho**: `<CWD>/<workspace_slug>/`
+   > 3. Pronto! Você vai ver o projeto `<projeto_legivel>` dentro, e qualquer projeto novo que adicionar depois aparece automaticamente no mesmo vault.
    >
-   > Essa pasta tem tudo que é seu: biblioteca, pesquisas, entregas, tarefas. A configuração do sistema fica fora, então você só vê o que importa."
+   > A Área de Trabalho é o fichário; cada projeto é uma aba dentro. O Obsidian vai criar uma config própria nessa pasta — é normal."
 
 4. Sugerir configurações opcionais:
    > "Dica: nas configurações do Obsidian (engrenagem no canto inferior esquerdo), ative **'Files & Links' → 'Detect all file extensions'** pra ver todos os arquivos do projeto."
@@ -696,13 +813,48 @@ Marcar task "Configurar Status Line" como `completed`.
 Marcar task "Finalizar onboarding" como `in_progress`.
 
 1. Atualizar `maestro/config.md`: setar `onboarding-completo: true`
-2. Enviar mensagem de encerramento:
 
-> "Tudo pronto!
->
-> Abre o painel **Bookmarks** no Obsidian — ele mostra a sequência da Biblioteca em ordem, começando pela Identidade da Marca. Esse é o melhor caminho pra navegar o vault.
->
-> Agora é só me pedir o que precisar. Por exemplo: 'Crie headlines pra [produto da {nome da empresa}]'."
+2. **Detectar fase de implementação (F1-D4):**
+
+   ```bash
+   if [ -f "$WORKSPACE_PATH/.obsidian/bookmarks.json" ]; then
+       FASE="completa"   # F4 já mergeada — bookmarks foram criados pelo Bibliotecário
+   else
+       FASE="reduzida"   # F1/F2/F3 ainda em construção — sem painel agregado nem bookmarks
+   fi
+   ```
+
+3. Enviar mensagem de encerramento conforme `FASE`:
+
+   **CASO A — `FASE = completa` (F4 já mergeada):**
+
+   > "Tudo pronto!
+   >
+   > Abre o painel **Bookmarks** no Obsidian — ele mostra a sequência da Biblioteca em ordem, começando pela Identidade da Marca. Esse é o melhor caminho pra navegar o vault.
+   >
+   > Agora é só me pedir o que precisar. Por exemplo: 'Crie headlines pra [produto da `<projeto_legivel>`]'."
+
+   **CASO B — `FASE = reduzida` (F1 isolada, F2/F3/F4 em construção):**
+
+   > "🎉 Área de Trabalho '`<workspace_legivel>`' criada em `<CWD>/<workspace_slug>/`, com o projeto '`<projeto_legivel>`' dentro.
+   >
+   > Pra ver tudo no Obsidian:
+   > 1. Abra o app Obsidian
+   > 2. Clique em 'Open folder as vault' (ou 'Abrir pasta como vault')
+   > 3. Navegue até `<CWD>/<workspace_slug>/`
+   > 4. Clique em 'Select Folder'
+   >
+   > Painel agregado e Bookmarks chegam em versões futuras — por enquanto navegue pelo painel de arquivos (Files) na sidebar esquerda.
+   >
+   > Próximo passo:"
+
+   `AskUserQuestion`:
+   - question: "O que você quer fazer agora?"
+   - options:
+     - label: "Preencher Identidade da marca", description: "Dispara fluxo de Marca pro projeto recém-criado"
+     - label: "Pedir primeira entrega de copy", description: "Dispara fluxo de Copywriter"
+     - label: "Explorar a Biblioteca", description: "Abro o painel de arquivos do Obsidian e oriento navegação"
+     - label: "Outra coisa", description: "Você descreve livre"
 
 Marcar task "Finalizar onboarding" como `completed`.
 
@@ -720,6 +872,49 @@ Acionar Gerente de Projetos via Agent(haiku):
 ## 2B. Fluxo de Novo Projeto
 
 Onboarding leve para quando o usuário já tem o Sistema Maestro configurado (`~/.maestro/` existe) mas está num projeto novo. Pula dependências, permissões, Obsidian, status line e apresentação.
+
+### 2B.-1 Branch de detecção (executar ANTES das tasks visuais)
+
+Decidir qual sub-fluxo seguir baseado nos sinais 1-3 da Seção 1:
+
+**Caso `marker + ≥1 projeto`:** seguir 2B.0 → 2B.6 normalmente.
+
+**Caso `marker + 0 projetos` (recuperação):**
+
+`AskUserQuestion`:
+- question: "Detectei que esta Área de Trabalho foi criada (`<CWD>/.maestro-workspace` existe) mas nenhum projeto terminou de configurar. O que fazer?"
+- options:
+  - label: "Continuar configuração", description: "Retomo de onde parou — vou pedir o nome do primeiro projeto e completar"
+  - label: "Cancelar e recomeçar", description: "Apago o marker e começo do zero pelo Fluxo de Primeira Vez"
+  - label: "Voltar", description: "Não fazer nada agora"
+
+Se "Continuar configuração":
+- Executar Fluxo de Primeira Vez (Seção 2) **a partir da etapa 2.2**, mas com `workspace_slug` derivado do basename do CWD (ou perguntar via AUQ se ambíguo). Pular criação de marker e `mkdir` da workspace na 2.5 (já existe).
+
+Se "Cancelar e recomeçar":
+```bash
+rm -f "$CWD/.maestro-workspace"
+```
+Executar Fluxo de Primeira Vez do zero a partir da etapa 2.0.
+
+Se "Voltar": encerrar sem ação.
+
+**Caso `CWD = projeto sem marker` (CWD dentro do projeto, sem Área de Trabalho):**
+
+`AskUserQuestion`:
+- question: "Você está dentro do projeto Maestro `<basename(CWD)>`. O que quer fazer?"
+- options:
+  - label: "Criar projeto novo na mesma Área de Trabalho", description: "Subo um nível, crio marker se faltar, adiciono novo projeto irmão"
+  - label: "Reconfigurar este projeto", description: "Vai pra Fluxo de Re-execução (Seção 3)"
+  - label: "Voltar", description: "Não fazer nada agora"
+
+Se "Criar projeto novo na mesma Área de Trabalho":
+- `WORKSPACE_PARENT=$(dirname "$CWD")`
+- Se `<WORKSPACE_PARENT>/.maestro-workspace` ausente → criar (mesmo conteúdo do template).
+- Tratar `WORKSPACE_PARENT` como `<workspace>` e seguir 2B.0 → 2B.6 normalmente (adapta `$CWD` → `WORKSPACE_PARENT` nos passos seguintes).
+
+Se "Reconfigurar este projeto" → Seção 3.
+Se "Voltar" → encerrar.
 
 ### 2B.0 Tasks visuais
 
@@ -762,29 +957,57 @@ Se a pasta `tarefas/` ainda não existe, adiar pro step 2B.2.1 (após setup).
 
 Guardar o caminho do arquivo de tarefa para usar na conclusão.
 
-### 2B.1 Boas-vindas e nome da empresa
+### 2B.1 Boas-vindas e nome do novo projeto
 
 Marcar task "Configurar novo projeto" como `in_progress`.
 
 Ler `~/.maestro/memorias/nome-usuario.md` para recuperar o nome do usuário.
 
-Enviar mensagem:
+**1. Resolver `workspace_legivel`:**
 
-> "Olá, {NOME}! Vejo que você já usa o Maestro. Vou configurar este novo projeto rapidinho."
+- Se cache local (`<workspace>/.maestro/cache/projeto-ativo.md`, onde `<workspace>` é o CWD atual no Fluxo Novo Projeto) existe e tem campo `workspace:`, ler de lá.
+- Senão, inferir do basename do CWD: `WORKSPACE_LEGIVEL=$(basename "$CWD")` (capitalizado pra exibição: substituir hifens por espaço e capitalizar).
 
-Perguntar:
+**2. Apresentar:**
 
-> "Qual o nome da empresa ou projeto?"
+> "Olá, `<NOME>`! Você já tem a Área de Trabalho '`<workspace_legivel>`' montada. Vou só adicionar um projeto novo dentro dela."
 
-Aguardar resposta do usuário. Guardar o nome.
+**3. Coletar nome do novo projeto via `AskUserQuestion`:**
 
-Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
-- question: "A pasta raiz do projeto é o diretório atual?"
+- question: "Qual o nome do novo projeto?"
+- placeholder/exemplo: "uma empresa, cliente ou marca que você vai trabalhar"
+
+Aguardar resposta. Guardar como `projeto_legivel`. Computar `projeto_slug_proposto = slugify(projeto_legivel)`.
+
+**4. Validar contra duplicatas:**
+
+```bash
+EXISTING_PROJETOS=$(find "$CWD" -mindepth 3 -maxdepth 3 -path "*/maestro/config.md" -exec dirname {} \; | xargs -I {} dirname {} | xargs -I {} basename {})
+```
+
+Se `projeto_slug_proposto` ∈ `EXISTING_PROJETOS`:
+
+`AskUserQuestion`:
+- question: "Já existe projeto chamado `<projeto_slug_proposto>` dentro de `<workspace_legivel>`. Outro nome ou cancelar?"
 - options:
-  - label: "Sim, usar {CWD}", description: "O projeto será configurado nesta pasta"
-  - label: "Não, quero outra pasta", description: "Informar o caminho correto"
+  - label: "Outro nome", description: "Volta pra etapa 3"
+  - label: "Cancelar", description: "Aborta o Fluxo de Novo Projeto"
 
-**Se escolheu outra pasta:** perguntar qual o caminho e confirmar.
+Se "Outro nome" → repetir etapa 3.
+Se "Cancelar" → encerrar.
+
+**5. Preview de slug:**
+
+`AskUserQuestion`:
+- question: "Vou criar pasta `<projeto_slug_proposto>` dentro da Área de Trabalho. Tudo bem ou quer mudar?"
+- options:
+  - label: "Tudo bem", description: "Cria com esse slug"
+  - label: "Mudar", description: "Digito o slug direto"
+
+Se "Mudar" → pedir slug direto, validar regex `^[a-z0-9-]+$`, max 80 chars.
+Se "Tudo bem" → fixar `projeto_slug = projeto_slug_proposto`.
+
+Aplicar mesma validação R9 do Fluxo de Primeira Vez (slug vazio/só hífens → re-pedir).
 
 Marcar task "Configurar novo projeto" como `completed`.
 
@@ -796,13 +1019,22 @@ Marcar task "Setup do projeto" como `in_progress`.
 
 Executar silenciosamente:
 
-1. **Config do projeto:** criar `maestro/config.md` usando `core/templates/_maestro-config-template.md`:
-   - Preencher `Empresa:` com o nome coletado
-   - Preencher `Vault:` com o caminho confirmado
+1. **Criar pasta do projeto dentro da Área de Trabalho:**
+
+   ```bash
+   PROJETO_PATH="$CWD/<projeto_slug>"
+   WORKSPACE_PATH="$CWD"
+   mkdir -p "$PROJETO_PATH"
+   ```
+
+2. **Config do projeto:** criar `$PROJETO_PATH/maestro/config.md` usando `core/templates/_maestro-config-template.md`:
+   - Preencher `Empresa:` com `<projeto_legivel>`
+   - Preencher `Vault:` com `$PROJETO_PATH`
    - Preencher `Projeto iniciado em:` com a data atual
    - Setar `maestro-ativo: true`
    - Manter `onboarding-completo: false` (será atualizado no final)
-2. **Memórias de projeto:** criar `maestro/memorias/` usando templates de `core/templates/_memorias-projeto-template.md`:
+
+3. **Memórias de projeto:** criar `$PROJETO_PATH/maestro/memorias/` usando templates de `core/templates/_memorias-projeto-template.md`:
    - `maestro/memorias/_index.md`
    - `maestro/memorias/contexto.md`
    - `maestro/memorias/sessoes/` (pasta vazia; `_sessoes.md` é criado pelo /tchau-maestro na primeira sessão)
@@ -813,26 +1045,72 @@ Executar silenciosamente:
 
    O arquivo `memorias/decisoes.md` começa vazio e será preenchido automaticamente conforme você toma decisões estratégicas durante o uso do Maestro (arquétipo, formato de lançamento, tom de voz, etc.). O sistema reusa escolhas anteriores pra manter coerência entre entregas.
 
-3. **CLAUDE.md do projeto:** despachar Bibliotecário pra criar/anexar seção Maestro:
+4. **CLAUDE.md do projeto:** despachar Bibliotecário pra criar/anexar seção Maestro:
 
    ```python
    Agent(
      subagent_type="maestro:bibliotecario",
      prompt="""
      CONTEXTO:
-     path-projeto: {CWD}
+     path-projeto: $PROJETO_PATH
 
      FLUXO: CRIAR_CLAUDE_PROJETO
      """
    )
    ```
 
-   O Bibliotecário cria `{CWD}/CLAUDE.md` (ou anexa seção `## Maestro` se já existir). Hook PreToolUse libera porque Bibliotecário é subagente (tem `agent_id`). Idempotente — se Bibliotecário retornar `ALREADY_EXISTS`, prosseguir silencioso.
-4. **Atualização de permissões existentes (patch silencioso):**
+   O Bibliotecário cria `$PROJETO_PATH/CLAUDE.md` (ou anexa seção `## Maestro` se já existir). Hook PreToolUse libera porque Bibliotecário é subagente (tem `agent_id`). Idempotente — se Bibliotecário retornar `ALREADY_EXISTS`, prosseguir silencioso.
+
+5. **Despachar Bibliotecário REGENERATE PAINEL (stub em F1, F2/F4 preenchem):**
+
+   ```python
+   Agent(
+     subagent_type="maestro:bibliotecario",
+     prompt="""
+     CONTEXTO:
+     workspace: $WORKSPACE_PATH
+     projeto-slug-novo: <projeto_slug>
+
+     FLUXO: REGENERATE PAINEL
+     """
+   )
+   ```
+
+   Em F1 retorna `STATUS: DONE`. Em F2 vai regenerar FROM clauses dos painéis Dataview. Em F4 vai atualizar bookmarks.
+
+6. **Atualização de permissões existentes (patch silencioso):**
    - Se o projeto já tem `.claude/settings.local.json`, abra o arquivo e verifique se `permissions.allow` contém `WebSearch` e `WebFetch(domain:*)`. Se faltar alguma das duas, adicione ao array. Não pergunte consentimento — o usuário já autorizou o padrão de permissões no onboarding completo anterior. Apenas informe: "Permissões atualizadas com WebSearch e WebFetch (necessárias para o Pesquisador)."
    - Se o projeto não tem `settings.local.json`, criar o arquivo completo com o bloco de permissões padrão (mesma lista do onboarding completo, seção 2.4).
 
-Informar brevemente: "Estrutura do projeto criada."
+7. **Atualizar cache de projeto ativo** (apontando pro projeto novo) — escrita em `<workspace>/.maestro/cache/projeto-ativo.md`:
+
+   ```bash
+   # Fix B-F1-4: cygpath converte /c/dev/... → C:/dev/... no Git Bash do Windows.
+   if command -v cygpath >/dev/null 2>&1; then
+     CWD_NORM=$(cygpath -m "$CWD")
+   else
+     CWD_NORM=$(echo "$CWD" | tr '\\' '/')
+   fi
+   # CWD nesta etapa é a workspace (Fluxo Novo Projeto roda com CWD=workspace)
+   WORKSPACE="$CWD_NORM"
+   TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+   mkdir -p "$WORKSPACE/.maestro/cache"
+   cat > "$WORKSPACE/.maestro/cache/projeto-ativo.md" <<EOF
+   ---
+   versao: 1
+   slug: <projeto_slug>
+   caminho-absoluto: ${WORKSPACE}/<projeto_slug>
+   workspace: ${WORKSPACE}
+   atualizado-em: ${TIMESTAMP}
+   ---
+   EOF
+   ```
+
+   **Precedência cache local vs cache pré-existente:** o cache local da workspace é o único — não há cache global pra "vencer". Sobrescrita do cache local é silenciosa.
+
+   **Importante (fix B-F1-7):** este Bash heredoc é obrigatório — não substituir por Write/Edit. O `$(date)` precisa rodar no shell pra timestamp ser real; se o modelo usar Edit/Write em vez de Bash, o timestamp sai inferido como `T00:00:00Z`. Validação manual confirmou em Cenários 4 e 5 da F1: paths C:/... corretos mas timestamp zerado quando o caminho passa por Edit.
+
+Informar brevemente: "Estrutura do projeto criada na Área de Trabalho."
 
 Marcar task "Setup do projeto" como `completed`.
 
@@ -924,36 +1202,35 @@ Marcar task "Importar material de referência" como `completed`.
 
 Marcar task "Finalizar projeto" como `in_progress`.
 
-1. **Cache de projeto ativo:** persistir o projeto recém-criado (ver protocolo-ativacao.md Sub-fluxo 1.5):
+1. Atualizar `$PROJETO_PATH/maestro/config.md`: setar `onboarding-completo: true` (cache já foi escrito na etapa 2B.2 passo 7).
+
+2. **Detectar fase de implementação (F1-D4) — mesma lógica da etapa 2.12:**
 
    ```bash
-   # Normalizar CWD pra forward slash (Git Bash do Windows pode vir com backslash)
-   CWD_NORM=$(echo "$CWD" | tr '\\' '/')
-   HASH=$(echo -n "$CWD_NORM" | md5sum | cut -c1-32)
-   mkdir -p "$HOME/.maestro/projeto-ativo-cache"
-   cat > "$HOME/.maestro/projeto-ativo-cache/${HASH}.md" <<EOF
-   ---
-   versao: 1
-   slug: <slug-da-empresa>
-   caminho-absoluto: <caminho-absoluto-do-projeto-criado>
-   macro: <pasta-pai-do-projeto>
-   atualizado-em: <ISO 8601 agora via Bash date>
-   ---
-   EOF
+   if [ -f "$WORKSPACE_PATH/.obsidian/bookmarks.json" ]; then
+       FASE="completa"
+   else
+       FASE="reduzida"
+   fi
    ```
 
-   Onde `<caminho-absoluto-do-projeto-criado>` é o path normalizado (forward slash) da pasta recém-criada — `${CWD_NORM}/<slug>` se o scaffold criou subpasta no CWD-macro, ou o próprio `${CWD_NORM}` se o usuário rodou onboarding já dentro da pasta do projeto. `macro` é sempre o parent dir do `caminho-absoluto`.
+3. Enviar mensagem conforme `FASE`:
 
-   Se o Write falhar por permissão, aviso "cache não pode ser persistido — projeto ativo válido só nessa sessão" e segue.
+   **CASO A — `FASE = completa`:**
 
-2. Atualizar `maestro/config.md`: setar `onboarding-completo: true`
-3. Enviar mensagem:
+   > "Projeto `<projeto_legivel>` configurado dentro de `<workspace_legivel>`!
+   >
+   > Abre o painel **Bookmarks** no Obsidian — ele agora mostra o novo projeto também. Esse é o melhor caminho pra navegar o vault.
+   >
+   > O que vamos trabalhar?"
 
-> "Projeto {nome da empresa} configurado!
->
-> Abre o painel **Bookmarks** no Obsidian — ele mostra a sequência da Biblioteca em ordem, começando pela Identidade da Marca. Esse é o melhor caminho pra navegar o vault.
->
-> O que vamos trabalhar?"
+   **CASO B — `FASE = reduzida`:**
+
+   > "Projeto '`<projeto_legivel>`' adicionado em `$PROJETO_PATH/`.
+   >
+   > Já dá pra começar a trabalhar nele. Painel agregado e Bookmarks atualizados chegam em versões futuras — por enquanto navegue pelo painel de arquivos (Files) na sidebar esquerda do Obsidian.
+   >
+   > O que vamos trabalhar?"
 
 Marcar task "Finalizar projeto" como `completed`.
 

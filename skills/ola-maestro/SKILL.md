@@ -37,15 +37,124 @@ Esta skill é acionada quando:
 
 Antes de tudo, detectar projeto ativo conforme `core/protocolos/protocolo-ativacao.md`. O mapa abaixo assume que `{projeto}` já está resolvido.
 
-### Passo prévio: GC do cache de projeto-ativo
+> A pasta global `~/.maestro/projeto-ativo-cache/` deixou de existir desde o fix B-F1-1 (Sessão 66). Cache de projeto-ativo agora vive em `<workspace>/.maestro/cache/projeto-ativo.md` (1 arquivo único por workspace). Sem GC global — cache local não acumula.
 
-Antes da detecção do projeto ativo, executar uma única vez:
+### Turno -1 — Resolução de projeto e migração (OBRIGATÓRIO, primeiro)
+
+> [!important] Este Bash **DEVE** ser o primeiro tool call da skill — antes de qualquer outro Read/Glob. Resolve `{projeto}`, `{workspace}`, persiste cache local e migra pasta global legada. Sem isso, sessões em CWD-WORKSPACE com 2+ projetos disparam AUQ todas as vezes e pasta global acumula lixo.
 
 ```bash
-find ~/.maestro/projeto-ativo-cache/ -name "*.md" -mtime +7 -delete 2>/dev/null
+# 1. Migração: apagar pasta global legada (idempotente)
+if [ -d "$HOME/.maestro/projeto-ativo-cache" ]; then
+  rm -rf "$HOME/.maestro/projeto-ativo-cache"
+fi
+
+# 2. Detectar workspace via dirname-up
+if command -v cygpath >/dev/null 2>&1; then
+  CWD_NORM=$(cygpath -m "$(pwd)")
+else
+  CWD_NORM=$(pwd | tr '\\' '/')
+fi
+
+if [ -f "$CWD_NORM/maestro/config.md" ]; then
+  CANDIDATE_WORKSPACE=$(dirname "$CWD_NORM")
+  if [ -f "$CANDIDATE_WORKSPACE/.maestro-workspace" ]; then
+    PROJETO="$CWD_NORM"
+    WORKSPACE="$CANDIDATE_WORKSPACE"
+    STATUS="CWD-PROJETO"
+  else
+    # Vault legado pré-F1 ou projeto órfão: parent não é workspace.
+    # NUNCA escrever em parent. Cair em CWD-PROJETO-ORFAO pra AUQ no tratamento.
+    PROJETO="$CWD_NORM"
+    WORKSPACE=""
+    STATUS="CWD-PROJETO-ORFAO"
+  fi
+else
+  DIR="$CWD_NORM"
+  WORKSPACE=""
+  COUNT=0
+  while [ "$DIR" != "/" ] && [ "$DIR" != "" ] && [ "$COUNT" -lt 30 ]; do
+    if [ -f "$DIR/.maestro-workspace" ]; then
+      WORKSPACE="$DIR"
+      break
+    fi
+    PARENT=$(dirname "$DIR")
+    if [ "$PARENT" = "$DIR" ]; then break; fi
+    DIR="$PARENT"
+    COUNT=$((COUNT + 1))
+  done
+  if [ -z "$WORKSPACE" ]; then
+    STATUS="CWD-INVALIDO"
+  else
+    STATUS="CWD-WORKSPACE"
+  fi
+fi
+
+# 3. Ler cache local (se workspace foi detectada)
+CACHE_FILE=""
+if [ -n "$WORKSPACE" ]; then
+  CACHE_FILE="$WORKSPACE/.maestro/cache/projeto-ativo.md"
+  if [ -f "$CACHE_FILE" ]; then
+    CACHE_PROJETO=$(grep "^caminho-absoluto:" "$CACHE_FILE" | sed 's/caminho-absoluto:[[:space:]]*//')
+    # Validar que cache aponta pra projeto válido
+    if [ -f "$CACHE_PROJETO/maestro/config.md" ]; then
+      # Cache válido — usar (só se ainda não temos PROJETO via CWD-PROJETO)
+      if [ -z "$PROJETO" ]; then
+        PROJETO="$CACHE_PROJETO"
+      fi
+    fi
+  fi
+fi
+
+# 4. Persistir cache local (só se WORKSPACE foi confirmada via marker — guard contra B-F1-8)
+if [ -n "$PROJETO" ] && [ -n "$WORKSPACE" ] && [ -f "$WORKSPACE/.maestro-workspace" ]; then
+  mkdir -p "$WORKSPACE/.maestro/cache"
+  PROJETO_SLUG=$(basename "$PROJETO")
+  cat > "$WORKSPACE/.maestro/cache/projeto-ativo.md" <<EOF
+---
+versao: 1
+slug: $PROJETO_SLUG
+caminho-absoluto: $PROJETO
+workspace: $WORKSPACE
+atualizado-em: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+---
+EOF
+fi
+
+echo "STATUS=$STATUS"
+echo "PROJETO=$PROJETO"
+echo "WORKSPACE=$WORKSPACE"
 ```
 
-Isso limpa caches de janelas que ficaram >7 dias sem uso (não polui detecção de projeto ativo em sessões novas com dados antigos). Sem efeito se diretório não existir. Custo: <50ms por sessão.
+**Tratamento por STATUS:**
+- `CWD-PROJETO` ou `CWD-WORKSPACE` com `PROJETO` resolvido → seguir pro Turno 0.
+- `CWD-WORKSPACE` sem `PROJETO` → fallback Glob `$WORKSPACE/*/maestro/config.md` profundidade 1; se 1 match auto-resolve, se ≥2 AUQ, se 0 chamar onboarding (Recuperação 2B.-1).
+- `CWD-PROJETO-ORFAO` → `AskUserQuestion` (ver Sub-fluxo abaixo). Não escrever cache, não tocar parent.
+- `CWD-INVALIDO` → mensagem orientada do `protocolo-ativacao.md` Seção 3 e parar.
+
+**Sub-fluxo CWD-PROJETO-ORFAO (B-F1-8):**
+
+Esta pasta tem `maestro/config.md` mas o parent não é workspace (`.maestro-workspace` ausente). Ocorre em vault legado pré-F1 ou projeto criado fora da estrutura F1.
+
+`AskUserQuestion`:
+- question: "Esta pasta tem configuração Maestro mas não está dentro de uma Área de Trabalho. Como tratar?"
+- options:
+  - label: "Transformar esta pasta em workspace + projeto"
+    description: "Crio `.maestro-workspace` aqui mesmo. A pasta vira workspace e projeto na mesma pasta — simples, sem aninhamento. Pode adicionar mais projetos depois."
+  - label: "Cancelar"
+    description: "Não fazer nada. Você pode reorganizar manualmente e voltar depois."
+
+Se "Transformar":
+1. `Write` `<CWD>/.maestro-workspace` com conteúdo padrão do marker (`# Marker do Sistema Maestro -- esta pasta e uma Area de Trabalho.\n# Nao apague: a deteccao de cenario do Onboarding usa este arquivo.\n`)
+2. Set `WORKSPACE="$CWD_NORM"` e `STATUS="CWD-PROJETO"` localmente
+3. Persistir cache em `<CWD>/.maestro/cache/projeto-ativo.md` seguindo o mesmo formato do passo 4 acima
+4. Seguir pro Turno 0 normal
+
+Se "Cancelar":
+- Mensagem: "OK, sessão aberta sem ativação. Quando quiser, organize a pasta e me chame de volta."
+- Parar (não executar Turnos 0+).
+
+**Princípio:** Maestro nunca cria `.maestro-workspace` em parent do CWD silenciosamente. Marker só nasce com confirmação explícita do usuário, e sempre no CWD onde o usuário está rodando o Claude Code.
 
 ### Turno 0 — Cleanup de canários órfãos (B-S59-1)
 

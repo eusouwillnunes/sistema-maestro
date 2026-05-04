@@ -38,6 +38,91 @@ Esta skill é acionada quando:
 
 Antes de tudo, detectar projeto ativo conforme `core/protocolos/protocolo-ativacao.md`. O mapa abaixo assume que `{projeto}` já está resolvido.
 
+### Turno 0 — Resolução de projeto e migração (OBRIGATÓRIO, primeiro)
+
+> [!important] Este Bash **DEVE** ser o primeiro tool call da skill — antes de qualquer outro Read/Glob. Resolve `{projeto}`, `{workspace}`, persiste cache local e migra pasta global legada. Sem isso, sessões em CWD-WORKSPACE com 2+ projetos disparam AUQ todas as vezes e pasta global acumula lixo.
+
+```bash
+# 1. Migração: apagar pasta global legada (idempotente)
+if [ -d "$HOME/.maestro/projeto-ativo-cache" ]; then
+  rm -rf "$HOME/.maestro/projeto-ativo-cache"
+fi
+
+# 2. Detectar workspace via dirname-up
+if command -v cygpath >/dev/null 2>&1; then
+  CWD_NORM=$(cygpath -m "$(pwd)")
+else
+  CWD_NORM=$(pwd | tr '\\' '/')
+fi
+
+if [ -f "$CWD_NORM/maestro/config.md" ]; then
+  CANDIDATE_WORKSPACE=$(dirname "$CWD_NORM")
+  if [ -f "$CANDIDATE_WORKSPACE/.maestro-workspace" ]; then
+    PROJETO="$CWD_NORM"
+    WORKSPACE="$CANDIDATE_WORKSPACE"
+    STATUS="CWD-PROJETO"
+  else
+    # Vault legado pré-F1 ou projeto órfão (B-F1-8): NUNCA escrever em parent.
+    PROJETO="$CWD_NORM"
+    WORKSPACE=""
+    STATUS="CWD-PROJETO-ORFAO"
+  fi
+else
+  DIR="$CWD_NORM"
+  WORKSPACE=""
+  COUNT=0
+  while [ "$DIR" != "/" ] && [ "$DIR" != "" ] && [ "$COUNT" -lt 30 ]; do
+    if [ -f "$DIR/.maestro-workspace" ]; then
+      WORKSPACE="$DIR"
+      break
+    fi
+    PARENT=$(dirname "$DIR")
+    if [ "$PARENT" = "$DIR" ]; then break; fi
+    DIR="$PARENT"
+    COUNT=$((COUNT + 1))
+  done
+  if [ -z "$WORKSPACE" ]; then
+    STATUS="CWD-INVALIDO"
+  else
+    STATUS="CWD-WORKSPACE"
+  fi
+fi
+
+# 3. Ler cache local (se workspace foi detectada)
+if [ -n "$WORKSPACE" ]; then
+  CACHE_FILE="$WORKSPACE/.maestro/cache/projeto-ativo.md"
+  if [ -f "$CACHE_FILE" ]; then
+    CACHE_PROJETO=$(grep "^caminho-absoluto:" "$CACHE_FILE" | sed 's/caminho-absoluto:[[:space:]]*//')
+    if [ -f "$CACHE_PROJETO/maestro/config.md" ]; then
+      if [ -z "$PROJETO" ]; then
+        PROJETO="$CACHE_PROJETO"
+      fi
+    fi
+  fi
+fi
+
+# 4. Persistir cache local (guard B-F1-8: só escreve se WORKSPACE tem marker)
+if [ -n "$PROJETO" ] && [ -n "$WORKSPACE" ] && [ -f "$WORKSPACE/.maestro-workspace" ]; then
+  mkdir -p "$WORKSPACE/.maestro/cache"
+  PROJETO_SLUG=$(basename "$PROJETO")
+  cat > "$WORKSPACE/.maestro/cache/projeto-ativo.md" <<EOF
+---
+versao: 1
+slug: $PROJETO_SLUG
+caminho-absoluto: $PROJETO
+workspace: $WORKSPACE
+atualizado-em: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+---
+EOF
+fi
+
+echo "STATUS=$STATUS"
+echo "PROJETO=$PROJETO"
+echo "WORKSPACE=$WORKSPACE"
+```
+
+**Tratamento por STATUS:** ver `protocolo-ativacao.md` § 1.4. Se `CWD-INVALIDO`, parar com mensagem orientada antes de seguir pro Turno 1.
+
 ### Turno 1 — Descoberta paralela (5 calls num único bloco, sem dependências)
 
 Dispare em **um único turno do modelo**:

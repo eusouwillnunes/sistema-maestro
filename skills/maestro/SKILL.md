@@ -62,7 +62,7 @@ Antes de classificar, executar `protocolo-ativacao.md` em duas etapas:
 Casos:
 
 - **Projeto resolvido + ativo:** prosseguir com classificação (seção 3).
-- **CWD-inválido (sem projeto e sem macro):** mensagem orientada do Sub-fluxo 1 da matriz; sem classificação.
+- **CWD-inválido (sem projeto e sem workspace):** mensagem orientada do Sub-fluxo 1 da matriz; sem classificação.
 - **Sem `maestro/config.md` no projeto resolvido + mensagem é ação no projeto:** executar onboarding via `Skill("maestro-onboarding")`.
 - **`maestro-ativo: false`:** reativar e informar o usuário.
 - **Mensagem é conversa pura:** responder direto, independente de ativação.
@@ -72,6 +72,31 @@ Casos:
 ### Substituição de `{projeto}` no CONTEXTO
 
 O Maestro **substitui literalmente** a string `{projeto}` por caminho absoluto resolvido antes de injetar no bloco CONTEXTO de qualquer dispatch Agent(). Skills que recebem o CONTEXTO consomem caminhos absolutos prontos — não resolvem placeholder.
+
+---
+
+## 2.bis Gatilhos de início de sessão (precede o classificador)
+
+Antes de classificar, verificar se a mensagem é saudação curta de início de sessão. Se sim, despachar `Skill("ola-maestro")` e parar — o ritual cuida do resto (resolução de projeto via Turno -1, dashboard, pergunta de abertura).
+
+**Regra de match:** mensagem do usuário, normalizada (lowercase, sem acentos, sem pontuação nas extremidades), tem ≤30 caracteres E bate com uma das frases abaixo:
+
+- `bom dia maestro` / `boa tarde maestro` / `boa noite maestro`
+- `oi maestro` / `ola maestro`
+- `iniciar sessao` / `iniciar sessão`
+- `vamos comecar` / `vamos começar`
+
+**Exemplos:**
+
+| Mensagem | Match? | Ação |
+|---|---|---|
+| "bom dia maestro" | ✅ | `Skill("ola-maestro")` e parar |
+| "BOM DIA, MAESTRO!" | ✅ (normaliza) | `Skill("ola-maestro")` e parar |
+| "bom dia maestro, gera headline pro X" | ❌ (>30 chars + tem pedido) | Classificador normal |
+| "bom dia" | ❌ (sem "maestro") | Classificador normal (Conversa) |
+| "/ola-maestro" | n/a (slash já dispara skill direto) | — |
+
+Se nenhum gatilho bater, prosseguir pra seção 3 (classificador).
 
 ---
 
