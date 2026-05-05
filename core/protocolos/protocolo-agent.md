@@ -369,6 +369,7 @@ A regra "todo despacho de especialista passa pelo Gerente" se aplica a **conteú
 | Scaffold de biblioteca (criar pastas, copiar templates) | `Skill("maestro:bibliotecario")` direto | Sem texto criativo. QA + Revisor não têm o que validar. Rastreabilidade já vive em git. |
 | Coleta de dados via Entrevistador, dentro de pipeline já ativo | `Skill("maestro:entrevistador")` invocado pelo especialista | Especialista já está dentro do pipeline (tarefa criada, dispatch via `Agent()`). Entrevistador preenche templates fechados via diálogo, não produz copy. Recursão pelo Gerente é desnecessária. |
 | Validação descartável de API/conexão | Resposta direta na conversa | Sem artefato salvo no vault. |
+| Update de flag na workspace (UPDATE_FLAG) | `Agent(maestro:bibliotecario)` direto | Operação mecânica — edição de campo frontmatter sem texto criativo |
 
 **Critério decisor:** o resultado da operação fica salvo no vault como **entrega**? Tem texto autoral em pt-br que o usuário lerá depois? Então pipeline obrigatório (Gerente cria tarefa → especialista via `Agent()` → ciclo QA + Revisor → Gerente conclui). Senão, despacho direto via `Skill()` é aceitável.
 

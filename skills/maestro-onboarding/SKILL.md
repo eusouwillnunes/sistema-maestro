@@ -828,11 +828,13 @@ Marcar task "Finalizar onboarding" como `in_progress`.
 
    **CASO A — `FASE = completa` (F4 já mergeada):**
 
-   > "Tudo pronto!
+   > "✅ Tudo configurado! Sua Área de Trabalho está em `<workspace-path-absoluto-normalizado>` com seu primeiro projeto dentro.
    >
-   > Abre o painel **Bookmarks** no Obsidian — ele mostra a sequência da Biblioteca em ordem, começando pela Identidade da Marca. Esse é o melhor caminho pra navegar o vault.
+   > 📊 Pra acessar seu projeto rapidamente: abre o Obsidian na pasta `<workspace-path>` → painel **Bookmarks** (ícone de marcador na lateral esquerda) → clica em **📊 Painel da Área de Trabalho** ou no nome do seu projeto.
    >
-   > Agora é só me pedir o que precisar. Por exemplo: 'Crie headlines pra [produto da `<projeto_legivel>`]'."
+   > 📚 Pra começar pela identidade da marca, peça: *'Maestro, quero preencher a identidade da marca'*."
+
+   **Path normalizado pro SO nativo:** detectar SO antes de mostrar (backslash em Windows, forward em Mac/Linux).
 
    **CASO B — `FASE = reduzida` (F1 isolada, F2/F3/F4 em construção):**
 
@@ -1204,33 +1206,69 @@ Marcar task "Finalizar projeto" como `in_progress`.
 
 1. Atualizar `$PROJETO_PATH/maestro/config.md`: setar `onboarding-completo: true` (cache já foi escrito na etapa 2B.2 passo 7).
 
-2. **Detectar fase de implementação (F1-D4) — mesma lógica da etapa 2.12:**
+2. **Capturar report do REGENERATE PAINEL** despachado em 2B.2 passo 5. O retorno do `Agent()` é uma string com bloco `---REPORT---/---END-REPORT---`. Buscar dentro desse bloco a linha `aviso-colisao-pendente: true|false`.
 
-   ```bash
-   if [ -f "$WORKSPACE_PATH/.obsidian/bookmarks.json" ]; then
-       FASE="completa"
-   else
-       FASE="reduzida"
-   fi
+   ```python
+   # Pseudo-código
+   import re
+   match = re.search(r"aviso-colisao-pendente:\s*(true|false)", REPORT_REGENERATE)
+   aviso_pendente = match.group(1) == "true" if match else False
    ```
 
-3. Enviar mensagem conforme `FASE`:
+3. **Se `aviso_pendente == True`:** emitir AUQ ao usuário:
 
-   **CASO A — `FASE = completa`:**
+   ```
+   AskUserQuestion:
+     question: "Você acabou de criar seu segundo projeto nessa Área de Trabalho. Quer uma dica de 30 segundos pra evitar confusão quando dois projetos tiverem arquivos com nomes parecidos?"
+     options:
+       - label: "Sim, mostra a dica"
+         description: "Mostro o texto aqui no terminal"
+       - label: "Não, valeu"
+         description: "Pula a dica — o callout fica no painel pra consulta depois"
+   ```
 
-   > "Projeto `<projeto_legivel>` configurado dentro de `<workspace_legivel>`!
-   >
-   > Abre o painel **Bookmarks** no Obsidian — ele agora mostra o novo projeto também. Esse é o melhor caminho pra navegar o vault.
-   >
-   > O que vamos trabalhar?"
+4. **Se user respondeu "Sim":** mostrar a dica no terminal:
 
-   **CASO B — `FASE = reduzida`:**
+   > 💡 **Nomes iguais entre projetos:**
+   >
+   > Você tem múltiplos projetos nessa Área de Trabalho. Se dois projetos tiverem um arquivo com o mesmo nome (ex: `funil-webinar`), o Obsidian abre o do projeto onde você está agora.
+   >
+   > Pra abrir o de outro projeto, use a busca rápida (`Ctrl+O` ou `Cmd+O`) e digite o nome da pasta antes — ex: `cliente-b/funil-webinar`.
 
-   > "Projeto '`<projeto_legivel>`' adicionado em `$PROJETO_PATH/`.
-   >
-   > Já dá pra começar a trabalhar nele. Painel agregado e Bookmarks atualizados chegam em versões futuras — por enquanto navegue pelo painel de arquivos (Files) na sidebar esquerda do Obsidian.
-   >
-   > O que vamos trabalhar?"
+   *(Texto idêntico ao callout permanente do `_painel/index.md` — single source of truth.)*
+
+5. **Se `aviso_pendente == True`** (em qualquer caso da AUQ — Sim ou Não): despachar Bibliotecário FLUXO=UPDATE_FLAG pra marcar a flag:
+
+   ```python
+   Agent(
+     subagent_type="maestro:bibliotecario",
+     prompt="""
+     TAREFA:
+     FLUXO: UPDATE_FLAG
+
+     CONTEXTO:
+     workspace: $WORKSPACE_PATH
+     flag-name: aviso-colisao-wikilink-mostrado
+     flag-value: true
+     """
+   )
+   ```
+
+   Hook PreToolUse libera porque Bibliotecário é subagente. Maestro nunca escreve flag direto (aprendizado #46).
+
+6. **Mensagem final ensinando Bookmarks** — condicional por contagem de projetos:
+
+   - Detectar contagem: `glob $WORKSPACE_PATH/*/maestro/config.md` filtrado por `maestro-ativo: true`. Pode reusar resultado já no report do REGENERATE PAINEL (`projetos=<slug-1>,<slug-2>,...`).
+
+   - **Se `len(projetos) == 1`:**
+     > "📊 Pra acessar seu projeto rapidamente: abre o Obsidian na pasta `<workspace-path-absoluto>` → painel **Bookmarks** (ícone de marcador na lateral esquerda) → clica em **📊 Painel da Área de Trabalho** ou no nome do seu projeto."
+
+   - **Se `len(projetos) >= 2`:**
+     > "📊 Pra navegar entre projetos rapidamente: abre o Obsidian na pasta `<workspace-path-absoluto>` → painel **Bookmarks** → tem o painel da Área de Trabalho e cada projeto a 2 cliques."
+
+   **Path normalizado pro SO nativo:** em Windows, mostrar com backslash (`C:\dev\...`); em Mac/Linux, com forward slash (`/Users/...`). Detectar via `cygpath -w` (Git Bash) ou `os.sep` se invocando Python.
+
+7. **Edge case documentado:** se user fechar Claude Code antes de responder o AUQ no passo 3, a flag NÃO é marcada. Próxima sessão re-pergunta. Aceitável — AUQ é opt-in.
 
 Marcar task "Finalizar projeto" como `completed`.
 

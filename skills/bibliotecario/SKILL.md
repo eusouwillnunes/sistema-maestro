@@ -79,11 +79,20 @@ Acionado quando não existe biblioteca no projeto ou o usuário pede para criar.
    - Nome da empresa (ex: "Padaria do João")
 2. **Gerar nome da pasta:** converter para lowercase, hifens, sem acentos (ex: "Padaria do João" → `padaria-do-joao`)
 3. **Verificar se já existe:** se encontrar pasta com esse nome e um arquivo `.md` com campo `empresa:` no frontmatter, avisar e perguntar se quer ver o status em vez de criar
-4. **Criar a estrutura completa dentro da pasta da empresa:**
-   - Criar a pasta da empresa (ex: `padaria-do-joao/`)
+
+3.5. **Determinar pasta-destino (B-F4-VAL-1):**
+   - Se o CONTEXTO incluir `path-projeto` apontando pra pasta que já existe (cenário onboarding pós-F1, em que `maestro-onboarding/SKILL.md` 2.6/2B.3 já criou a pasta do projeto): **usar `path-projeto` como destino direto, sem criar subpasta**.
+   - Caso contrário (invocação standalone via `/biblioteca` sem projeto pré-existente): criar a pasta `<empresa-slug>/` dentro do CWD e usar como destino.
+   - Variável `<destino>` referenciada nos passos seguintes vale o caminho determinado aqui.
+
+4. **Criar a estrutura completa dentro de `<destino>`:**
+
+   **Idempotência (B-F4-VAL-1):** pra cada arquivo deste passo, verificar via `Read` se já existe em `<destino>/<path>`. Se sim, pular silenciosamente — não sobrescrever (preserva config criado pelo onboarding 2.6/2B.3).
+
+   - Se aplicável (passo 3.5 fallback), criar a pasta da empresa (ex: `padaria-do-joao/`) — pular se `<destino>` já existe.
    - Consultar `core/templates/biblioteca-de-marketing/_scaffold-projeto.md` para a estrutura de pastas
-   - Criar `[nome-da-empresa].md` dentro da pasta (ex: `padaria-do-joao.md`) usando `core/templates/biblioteca-de-marketing/_index-biblioteca.md` como base, preenchendo `empresa:` com o nome legível e `criado:` com a data atual
-   - Criar `maestro/config.md` com configuração padrão
+   - Criar `[nome-da-empresa].md` dentro de `<destino>` (ex: `padaria-do-joao.md`) usando `core/templates/biblioteca-de-marketing/_index-biblioteca.md` como base, preenchendo `empresa:` com o nome legível e `criado:` com a data atual
+   - Criar `maestro/config.md` com configuração padrão (pular se já existe — onboarding já criou)
    - Criar `maestro/checklists/` (pasta vazia)
    - Copiar `plugin/core/templates/_readme-checklists-projeto.md` → `maestro/checklists/README.md` (cópia literal)
    - Copiar `plugin/core/templates/_feedback-revisor-template.md` → `memorias/feedback-revisor.md` (cópia literal — registro contínuo de feedbacks do Revisor pra ajuste de calibragem por projeto, Grupo 7)
@@ -161,83 +170,87 @@ Acionado quando o usuário indica que já tem material da empresa.
 
 ### Fluxo SCAFFOLD WORKSPACE
 
-Acionado pelo `maestro-onboarding/SKILL.md` etapa 2.5 (Fluxo de Primeira Vez). F2 preenche os 3 painéis Dataview em `<workspace>/_painel/` agregando os projetos da workspace. F4 vai adicionar `bookmarks.json` da workspace + `.maestro-flags.md` (lock file + flags).
+Acionado pelo `maestro-onboarding/SKILL.md` etapa 2.5 (Fluxo de Primeira Vez). F1 cria pasta + marker; F2 preenche os 3 painéis Dataview em `<workspace>/_painel/`; F4 adiciona `bookmarks.json` + `.maestro-flags.md` invocando helpers Python pré-empacotados.
 
-**Modelo: Haiku** (operacional, sem texto criativo).
+**Modelo: Haiku** (operacional — toda lógica determinística mora nos helpers Python; modelo só monta argumentos).
 
 **Recebe no CONTEXTO:**
 - `workspace`: path absoluto da pasta workspace
 - `projeto-slug`: slug do primeiro projeto da workspace (recém-criado pelo Fluxo de Primeira Vez — sempre presente)
 
-**Comportamento (F2):**
+**Comportamento:**
 
 1. **Validar marker:** confirmar que `<workspace>/.maestro-workspace` existe.
    - Se ausente → reportar `STATUS: BLOCKED` motivo "marker ausente em <workspace>/.maestro-workspace".
 
-2. **Idempotência:** se `<workspace>/_painel/` já existe E contém os 3 painéis (`tarefas.md`, `index.md`, `grafo.md`) → reportar `STATUS: SKIPPED` motivo "painéis já existentes" e encerrar.
+1.5. **Resolver `$HELPERS` (B-F4-VAL-5):** path absoluto dos helpers Python no plugin instalado.
 
-3. **Criar pasta:** `mkdir -p <workspace>/_painel/`.
+   ```bash
+   PLUGIN_DIR=$(find "$HOME/.claude/plugins/marketplaces" -maxdepth 2 -type d -name maestro 2>/dev/null | head -1)
+   if [ -z "$PLUGIN_DIR" ]; then
+       echo "ERRO: plugin maestro nao encontrado em ~/.claude/plugins/marketplaces" >&2
+       exit 1
+   fi
+   HELPERS="$PLUGIN_DIR/core/helpers"
+   ```
 
-4. **Pra cada template** (`tarefas`, `index`, `grafo`):
+   Pre-check: se `$HELPERS/workspace_bookmarks.py` não existe → `STATUS: BLOCKED` motivo "helpers Python ausentes — plugin desatualizado, esperado v2.30.0+".
+
+2. **Idempotência F2:** se `<workspace>/_painel/` já existe E contém os 3 painéis → **F2 já completou esse passo**, pular pra F4.
+
+3. **Pra cada template F2** (`tarefas`, `index`, `grafo`) — se ainda não existir:
    - Ler `plugin/core/templates/workspace/_painel/<nome>.md`.
-   - Substituir bloco frontmatter:
-     ```
-     projetos:
-       - {projeto-slug-1}
-       - {projeto-slug-2}
-     ```
-     por:
-     ```
-     projetos:
-       - <projeto-slug>
-     ```
-   - Substituir cláusula `FROM "..."` no bloco Dataview pelo sub-path canônico do painel:
+   - Substituir bloco frontmatter `projetos: ...` por `projetos: - <projeto-slug>`.
+   - Substituir cláusula `FROM "..."` pelo sub-path canônico:
      - `tarefas.md` → `FROM "<projeto-slug>/tarefas"`
-     - `index.md` → `FROM "<projeto-slug>"` (agrega tudo do projeto)
-     - `grafo.md` → `FROM "<projeto-slug>"` (agrega tudo do projeto)
-   - Escrever em `<workspace>/_painel/<nome>.md` via atomic write (snippet Python — ver fim do fluxo).
+     - `index.md` → `FROM "<projeto-slug>"`
+     - `grafo.md` → `FROM "<projeto-slug>"`
+   - Escrever em `<workspace>/_painel/<nome>.md` via `python "$HELPERS/workspace_bookmarks.py"` (atomic write reutilizado).
 
-5. **Detectar Dataview ausente** (não-bloqueante):
+4. **Adquirir lock (F4):**
+   ```bash
+   python "$HELPERS/workspace_lock.py" acquire <workspace>
+   ```
+   Se exit code 2 → ler stderr, reportar `STATUS: BLOCKED|LOCK_TIMEOUT|<detalhes>`.
+
+5. **Inicializar `.maestro-flags.md` (F4):**
+   ```bash
+   python "$HELPERS/workspace_flags.py" init <workspace>
+   ```
+   Idempotente — só escreve se não existir.
+
+6. **Scaffold dos bookmarks (F4):**
+   ```bash
+   python "$HELPERS/workspace_bookmarks.py" scaffold <workspace> <projeto-slug>
+   ```
+   Cria grupo `📊 Painel da Área de Trabalho` (3 items) + grupo `📁 Projetos > <projeto-slug>` (Painel/Pasta/Biblioteca aninhada). Idempotente por path interno.
+
+7. **Liberar lock:**
+   ```bash
+   python "$HELPERS/workspace_lock.py" release <workspace>
+   ```
+   **OBRIGATÓRIO** rodar mesmo se passos anteriores falharem (try/finally semântico).
+
+8. **Detectar Dataview ausente** (não-bloqueante, herdado da F2):
 
    ```python
    import json, os
    cp_path = os.path.join(workspace, ".obsidian", "community-plugins.json")
    nudge_needed = False
-   if not os.path.exists(cp_path):
-       # vault sem .obsidian/ ainda — Obsidian recria depois, não emitir nudge
-       pass
-   else:
+   if os.path.exists(cp_path):
        try:
            with open(cp_path, 'r', encoding='utf-8') as f:
                plugins = json.load(f)
            if "dataview" not in plugins:
                nudge_needed = True
        except (json.JSONDecodeError, IOError):
-           pass  # falha silenciosa — não bloqueia scaffold
+           pass
    ```
 
    Se `nudge_needed`, anexar ao RESULTADO o texto:
-   > "ℹ️ Faltou ligar um plugin chamado **Dataview** no Obsidian — sem ele, os painéis aparecem como código bruto em vez de tabelas. Veja o passo 5 quando rodar `/maestro:onboarding`, ou abra o Obsidian e vá em Configurações → Plugins da Comunidade → Dataview → ligar (instale antes se não aparecer)."
+   > "ℹ️ Faltou ligar o plugin **Dataview** no Obsidian — sem ele, os painéis aparecem como código bruto. Configurações → Plugins da Comunidade → Dataview → ligar."
 
-6. **Reportar** `STATUS: DONE` listando os 3 arquivos criados + nudge condicional.
-
-**Atomic write (Python inline via Bash):**
-
-```python
-import os, tempfile
-def atomic_write(path, content):
-    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), prefix='.tmp-', suffix='.md')
-    try:
-        with os.fdopen(fd, 'w', encoding='utf-8') as f:
-            f.write(content)
-        os.replace(tmp, path)
-    except Exception:
-        try: os.remove(tmp)
-        except: pass
-        raise
-```
-
-Bibliotecário invoca via `python -c "..."` quando escrever cada painel.
+9. **Reportar** `STATUS: DONE` listando arquivos criados + nudge condicional.
 
 **Formato de report:**
 
@@ -246,21 +259,34 @@ Bibliotecário invoca via `python -c "..."` quando escrever cada painel.
 STATUS: DONE
 
 RESULTADO:
-Painéis da workspace criados em <workspace>/_painel/ — 3 arquivos: tarefas.md, index.md, grafo.md. Listam agora 1 projeto: <projeto-slug>.
+Workspace configurada em <workspace>:
+- Painéis (F2): _painel/tarefas.md, _painel/index.md, _painel/grafo.md
+- Bookmarks (F4): .obsidian/bookmarks.json com Painel da Área de Trabalho + Projetos > <projeto-slug>
+- Flags (F4): .maestro-flags.md (callout warning + flag aviso-colisao-wikilink-mostrado: false)
 [nudge Dataview se aplicável]
 
 ARQUIVOS:
 - <workspace>/_painel/tarefas.md
 - <workspace>/_painel/index.md
 - <workspace>/_painel/grafo.md
+- <workspace>/.obsidian/bookmarks.json
+- <workspace>/.maestro-flags.md
 ---END-REPORT---
 ```
 
-**Justificativa de despachar sem Gerente:** ver `protocolo-agent.md` seção 7 — critério decisor. Operação atualiza sintaxe técnica em arquivos gerados (`_painel/*.md`), não cria entrega autoral em pt-br. Cai no critério, não na lista taxativa de exceções.
+**Tradução de erros pro user (se Maestro receber STATUS: BLOCKED):**
+
+| Código stderr | Mensagem ao user |
+|---|---|
+| `LOCK_TIMEOUT\|...` | "Sistema está ocupado configurando suas pastas. Aguarde 1-2 minutos e tente novamente. Se continuar travado, feche o Claude Code e reabra." |
+| `WRITE_FAILED\|...` | "Não consegui salvar a configuração do Obsidian. Pode ser antivírus ou sincronização em nuvem (OneDrive, Dropbox, iCloud) bloqueando o arquivo. Pause a sincronização e tente novamente." |
+| `JSON_CORRUPTED\|backup=...` | "Encontrei o arquivo de bookmarks corrompido. Salvei cópia em `bookmarks.json.bak` e criei novo. Bookmarks manuais podem precisar ser re-criados — abra o `.bak` se quiser recuperar." |
+
+**Justificativa de despachar sem Gerente:** ver `protocolo-agent.md` seção 7. Operação atualiza sintaxe técnica em arquivos gerados (`_painel/*.md`, `bookmarks.json`, `.maestro-flags.md`), não cria entrega autoral em pt-br. Cai no critério, não na lista taxativa de exceções.
 
 ### Fluxo REGENERATE PAINEL
 
-Acionado por (a) `maestro-onboarding/SKILL.md` etapa 2B.2 (Fluxo de Novo Projeto) e (b) slash command `/maestro:regenerar-painel`. F2 regenera as cláusulas `FROM` dos painéis em `<workspace>/_painel/*.md` quando a lista de projetos não bate com a realidade — idempotente. F4 vai estender pra atualizar `bookmarks.json` da workspace.
+Acionado por (a) `maestro-onboarding/SKILL.md` etapa 2B.2 (Fluxo de Novo Projeto) e (b) slash command `/maestro:regenerar-painel`. F2 regenera FROM clauses dos painéis; F4 estende pra atualizar `bookmarks.json` + detectar 2+ projetos pela 1ª vez.
 
 **Modelo: Haiku** (operacional).
 
@@ -268,35 +294,66 @@ Acionado por (a) `maestro-onboarding/SKILL.md` etapa 2B.2 (Fluxo de Novo Projeto
 - `workspace`: path absoluto
 - `projeto-slug-novo`: slug do projeto recém-adicionado (opcional — slash command manual não preenche; descoberta via Glob de qualquer forma)
 
-**Comportamento (F2):**
+**Comportamento:**
 
-1. **Validar marker:** confirmar que `<workspace>/.maestro-workspace` existe.
+> [!critical] Ordem dos passos é IMPORTANTE
+> Os passos 4 e 5 são INDEPENDENTES. F2 (passo 5) lida com FROM clauses dos painéis Dataview. F4 (passo 4) lida com bookmarks + callout de colisão. **NUNCA pule passo 4 baseado no resultado do passo 5** ("F2 tudo em dia → F4 também não precisa" é raciocínio ERRADO — eles operam em camadas diferentes do vault).
+>
+> O passo 4 (helper Python F4) DEVE rodar **incondicionalmente** em toda execução do REGENERATE PAINEL, mesmo quando F2 não tem trabalho. O helper é idempotente — re-executar é barato e seguro.
+
+1. **Validar marker:** confirmar `.maestro-workspace` existe.
    - Se ausente → `STATUS: BLOCKED` motivo "marker ausente — não há workspace nesta pasta".
 
-2. **Descobrir lista canônica de projetos:**
-   - Glob `<workspace>/*/maestro/config.md` (profundidade 1 — exclui `.obsidian/`, `_painel/`, `.maestro/`, `.git/`, `dist/` por construção).
-   - Pra cada match, ler `config.md` e extrair `maestro-ativo:`.
-   - Manter apenas com `maestro-ativo: true` (convenção `protocolo-ativacao.md:87` — `false` ou ausente descarta).
-   - Slug = `basename(dirname(dirname(<match>)))`.
-   - Ordenar alfabeticamente (F2-D5).
+2. **Resolver `$HELPERS` (path absoluto dos helpers Python no plugin instalado, B-F4-VAL-5):**
 
-3. **Pra cada painel** em `<workspace>/_painel/*.md`:
-   - Ler frontmatter atual (campo `projetos:`).
-   - Comparar lista canônica vs frontmatter via igualdade de set.
-   - **Se igual** → pula painel (idempotente, não reescreve).
-   - **Se diferente:**
-     - Atualizar frontmatter: substituir array `projetos:` completo, ordem alfabética.
-     - Reescrever cláusula `FROM "..."` no bloco Dataview com sub-path canônico do painel:
-       - `tarefas.md` → `FROM "slug-1/tarefas" OR "slug-2/tarefas" ...`
-       - `index.md` → `FROM "slug-1" OR "slug-2" ...`
-       - `grafo.md` → `FROM "slug-1" OR "slug-2" ...`
-     - Parser regex pra cláusula: `^FROM\s+"[^"]+"(?:\s+OR\s+"[^"]+")*\s*$` (linha que começa com `FROM` com cláusulas OR encadeadas — assume formatação canônica do template, não tolera quebra de linha).
-     - Atomic write via `os.replace()` (snippet em SCAFFOLD WORKSPACE).
+   ```bash
+   # Acha pasta do plugin maestro instalado em qualquer marketplace
+   PLUGIN_DIR=$(find "$HOME/.claude/plugins/marketplaces" -maxdepth 2 -type d -name maestro 2>/dev/null | head -1)
+   if [ -z "$PLUGIN_DIR" ]; then
+       echo "ERRO: plugin maestro nao encontrado em ~/.claude/plugins/marketplaces" >&2
+       exit 1
+   fi
+   HELPERS="$PLUGIN_DIR/core/helpers"
+   echo "HELPERS=$HELPERS"
+   ```
 
-4. **Reportar** `STATUS: DONE` com mensagem padrão **mesmo se idempotente** listando N projetos detectados:
-   > "Painéis verificados — listam agora N projetos: <slug-1>, <slug-2>, ... Se faltou algum, confira se a pasta tem `maestro/config.md` com `maestro-ativo: true`."
+   **Pre-check:** se `$HELPERS/workspace_bookmarks.py` não existe, reportar `STATUS: BLOCKED` motivo "helpers Python ausentes em $HELPERS — plugin desatualizado, esperado v2.30.0+".
 
-**Concorrência:** F2 não implementa lock file (escopo F4). Atomic write reduz janela de race. Aceitável em uso típico.
+3. **Adquirir lock (F4):**
+   ```bash
+   python "$HELPERS/workspace_lock.py" acquire <workspace>
+   ```
+
+4. **OBRIGATÓRIO E INCONDICIONAL: invocar helper Python regenerate (F4):**
+
+   > [!critical] Esta etapa roda SEMPRE — independente do que vier no passo 5. Sem ela, o callout de colisão wikilink não é injetado e o Maestro não recebe `aviso-colisao-pendente`. Não substituir por Edit direto no `bookmarks.json` — o helper faz merge idempotente, detecção de 2+ projetos, e injeção do callout num único passo determinístico.
+
+   Rodar EXATAMENTE este comando via Bash tool (não Edit, não Write):
+
+   ```bash
+   python "$HELPERS/workspace_bookmarks.py" regenerate <workspace>
+   ```
+
+   Helper retorna em stdout:
+   ```
+   projetos=<slug-1>,<slug-2>,...
+   aviso-colisao-pendente=true|false
+   ```
+
+   **Capturar AMBAS as linhas** do stdout (não só a primeira). Se `aviso-colisao-pendente=true`, o helper já injetou o callout no `_painel/index.md` (idempotente — re-executar é seguro).
+
+5. **Regenerar painéis F2 (FROM clauses):** lógica F2 existente — reler `glob {workspace}/*/maestro/config.md`, filtrar `maestro-ativo: true`, ordenar alfabeticamente, atualizar `projetos:` e `FROM "..."` em cada painel se mudou. Se nada mudou, seguir adiante (não pular liberação de lock).
+
+6. **Liberar lock:**
+   ```bash
+   python "$HELPERS/workspace_lock.py" release <workspace>
+   ```
+
+7. **Pre-report verification (B-F4-VAL-4):**
+
+   ANTES de emitir `STATUS: DONE`, **verificar internamente** que o passo 4 foi efetivamente executado nesta invocação (e não pulado por inferência). Se você não tiver memória explícita de ter rodado o `python "$HELPERS/workspace_bookmarks.py" regenerate <workspace>` Bash nesta execução, **VOLTE pro passo 4 e rode agora** — o report ainda não saiu.
+
+8. **Reportar** `STATUS: DONE` com `aviso-colisao-pendente` no bloco RESULTADO **copiando o valor literal capturado no passo 4**, não inferindo.
 
 **Formato de report:**
 
@@ -306,94 +363,141 @@ STATUS: DONE
 
 RESULTADO:
 Painéis verificados em <workspace>/_painel/ — listam agora N projetos: <slug-1>, <slug-2>, ...
-[Se houve mudança: listar painéis que foram reescritos.]
-[Se idempotente: "Tudo em dia — lista já estava correta."]
+Bookmarks atualizados em <workspace>/.obsidian/bookmarks.json.
+aviso-colisao-pendente: <true|false>
 
 ARQUIVOS:
 - <workspace>/_painel/tarefas.md (atualizado | já em dia)
 - <workspace>/_painel/index.md (atualizado | já em dia)
 - <workspace>/_painel/grafo.md (atualizado | já em dia)
+- <workspace>/.obsidian/bookmarks.json
 ---END-REPORT---
 ```
 
-**Justificativa de despachar sem Gerente:** mesma de SCAFFOLD WORKSPACE — operação técnica, não autoral. Critério decisor de `protocolo-agent.md` seção 7.
+**Justificativa de despachar sem Gerente:** mesma de SCAFFOLD WORKSPACE — operação técnica.
+
+### Fluxo UPDATE_FLAG
+
+Acionado pelo `maestro-onboarding/SKILL.md` etapa 2B.6 (Fluxo de Novo Projeto, depois do AUQ de colisão wikilink). Atualiza uma flag específica no `.maestro-flags.md` da workspace.
+
+**Modelo: Haiku** (operacional puro — só passa argumentos pro helper).
+
+**Recebe no CONTEXTO:**
+- `workspace`: path absoluto
+- `flag-name`: nome da flag (ex: `aviso-colisao-wikilink-mostrado`)
+- `flag-value`: valor (`true`/`false`)
+
+**Comportamento:**
+
+1. **Validar marker:** confirmar `.maestro-workspace` existe.
+   - Se ausente → `STATUS: BLOCKED` motivo "marker ausente".
+
+1.5. **Resolver `$HELPERS` (B-F4-VAL-5):**
+   ```bash
+   PLUGIN_DIR=$(find "$HOME/.claude/plugins/marketplaces" -maxdepth 2 -type d -name maestro 2>/dev/null | head -1)
+   HELPERS="$PLUGIN_DIR/core/helpers"
+   ```
+
+2. **Adquirir lock:**
+   ```bash
+   python "$HELPERS/workspace_lock.py" acquire <workspace>
+   ```
+
+3. **Atualizar flag:**
+   ```bash
+   python "$HELPERS/workspace_flags.py" set <workspace> <flag-name> <flag-value>
+   ```
+
+   Helper retorna em stdout: `flag-atualizada=true|false` (false se valor já era o pedido — idempotente).
+
+4. **Liberar lock.**
+
+5. **Reportar:**
+
+```
+---REPORT---
+STATUS: DONE
+
+RESULTADO:
+Flag atualizada em <workspace>/.maestro-flags.md:
+- flag-name: <flag-name>
+- flag-value: <flag-value>
+- flag-atualizada: <true|false>
+
+ARQUIVOS:
+- <workspace>/.maestro-flags.md (atualizado | já em dia)
+---END-REPORT---
+```
+
+**Justificativa de despachar sem Gerente:** operação mecânica — edição de campo frontmatter sem texto criativo. Critério de `protocolo-agent.md` seção 7.
 
 ### Fluxo CRIAR BOOKMARKS DE NAVEGAÇÃO
 
-Acionado como passo final do Fluxo CRIAR (após criar todas as pastas, indexes e painéis Dataview). Cria a navegação no painel Bookmarks do Obsidian apontando pras 14 áreas em ordem de consumo.
+Acionado como passo final do Fluxo CRIAR (após criar todas as pastas, indexes e painéis Dataview). Cria bookmarks da Biblioteca de Marketing apontando pras 14 áreas em ordem de consumo.
 
-**Modelo: Sonnet** (operacional, manipulação de JSON estrita).
+**A partir da F4:** se vault tem workspace estrutural (`.maestro-workspace` presente em ancestral), bookmarks da biblioteca ficam **aninhados dentro de `📁 Projetos > <slug> > 📚 Biblioteca`**. Vault legado (sem workspace, biblioteca direto na raiz) continua appendar no nível raiz como antes — helper `workspace_bookmarks.py library` faz fallback automático.
+
+**Modelo: Sonnet** (manipulação de JSON estrita; mas helper Python faz o trabalho pesado — Sonnet só monta input).
 
 #### Passos
 
-1. **Resolver `<vault-root>`:**
-   - Subir do path `{projeto}` resolvido até achar pasta `.obsidian/` no nível atual.
-   - Se não achar até a raiz do filesystem, avisar usuário ("vault Obsidian não detectado em ancestrais de `{projeto}` — abre o Obsidian na pasta certa antes de continuar") e abortar este fluxo (scaffold já está feito, só os bookmarks ficam pendentes).
+1. **Resolver `<vault-root>`:** subir do path `{projeto}` resolvido até achar pasta `.obsidian/`. Se não achar até a raiz, avisar e abortar.
 
-1.5. **Resolver `<path-prefix>`:**
+2. **Resolver `<path-prefix>`:**
    - Se `{projeto}` (path absoluto) == `<vault-root>` → `<path-prefix>` = `""` (vault simples).
    - Senão → `<path-prefix>` = `"<slug-projeto>/"` (vault workspace).
 
-2. **Verificar se plugin Bookmarks está habilitado** (não-bloqueante):
+3. **Verificar plugin Bookmarks habilitado** (não-bloqueante):
    - Read `<vault-root>/.obsidian/core-plugins.json`.
-   - Se "bookmarks" não está na lista (ou arquivo não existe), avisar:
-     > "Plugin Bookmarks desabilitado. Ative em Configurações → Plugins centrais pra ver a navegação. Vou criar o JSON mesmo assim — funciona assim que ativar."
-   - Continuar mesmo sem habilitar.
+   - Se "bookmarks" não está na lista, avisar "Plugin Bookmarks desabilitado. Ative em Configurações → Plugins centrais. Vou criar o JSON mesmo assim — funciona assim que ativar." e continuar.
 
-3. **Criar `<vault-root>/.obsidian/` se não existir:**
-   - `mkdir -p <vault-root>/.obsidian/`
+3.5. **Resolver `$HELPERS` (B-F4-VAL-5):**
+   ```bash
+   PLUGIN_DIR=$(find "$HOME/.claude/plugins/marketplaces" -maxdepth 2 -type d -name maestro 2>/dev/null | head -1)
+   HELPERS="$PLUGIN_DIR/core/helpers"
+   ```
 
-4. **Garantir `bookmarks.json` existe:**
-   - Se ausente, escrever `{"items":[]}`.
+4. **Adquirir lock (compartilhado com SCAFFOLD/REGENERATE/UPDATE_FLAG):**
+   ```bash
+   python "$HELPERS/workspace_lock.py" acquire <vault-root>
+   ```
 
-5. **Parse com jq (fallback python):**
-   - `parsed = jq '.' <vault-root>/.obsidian/bookmarks.json`
-   - Se parse falhar:
-     - Renomear o arquivo atual pra `bookmarks.json.bak`.
-     - Escrever `{"items":[]}` no original.
-     - `parsed = {"items":[]}`.
-     - Avisar usuário ("`bookmarks.json` corrompido — backup salvo em `bookmarks.json.bak`, criando novo").
+5. **Construir lista de items da biblioteca** (14 áreas). Cada item:
+   ```json
+   {
+     "type": "file",
+     "path": "<path-prefix><area>/_<area>.md",
+     "title": "<icon> <Nome legível>",
+     "ctime": <epoch-ms>
+   }
+   ```
 
-6. **Verificar idempotência por path interno:**
-   - `marcador = "<path-prefix>identidade/_identidade.md"`
-   - Procurar no JSON parseado por algum item com `path == marcador` em qualquer profundidade:
-     ```bash
-     jq --arg p "<path-prefix>identidade/_identidade.md" '..|.path? // empty | select(. == $p)' bookmarks.json
-     ```
-   - Se retornar não-vazio → bookmarks já criados pra este projeto. Avisar "bookmarks já existem — pulando" e encerrar fluxo.
+   Lista canônica (mesma da v1 — copiar do template `plugin/core/templates/_bookmarks-projeto.json` se quiser, mas helper aceita qualquer):
 
-7. **Read template:**
-   - `template = Read plugin/core/templates/_bookmarks-projeto.json`
+   - Identidade, Produtos, Escada de Valor, Lead Magnets, Funis, Lançamentos, Campanhas, Social, Pesquisas, Entregas, Referências, Memórias, Tarefas, Entrevistas (14 áreas).
 
-8. **Substituir placeholders** (3 placeholders):
-   - Gerar `<ctime>` via `python -c "import time; print(int(time.time()*1000))"` — epoch ms atual. Mesmo valor pra todos os itens.
-   - `template = sed -e "s/\\{nome-projeto\\}/<nome-projeto>/g" -e "s|\\{path-prefix\\}|<path-prefix>|g" -e "s/\\{ctime\\}/<ctime>/g"` (ou equivalente Python).
-   - **Atenção ao delimitador do sed:** `<path-prefix>` contém `/` (ex: `empresa-x/`), então usar `|` como delimitador na linha do path-prefix.
-   - **Atenção a `{ctime}`:** valor é número, NÃO string — não envolver em aspas. JSON válido tem `"ctime": 1777304414674`, não `"ctime": "1777304414674"`.
-   - Variáveis vêm do Fluxo CRIAR: `<nome-projeto>` é o input do usuário (ex: "Padaria do João"); `<path-prefix>` resolvido em 1.5; `<ctime>` gerado agora.
+6. **Invocar helper library:**
+   ```bash
+   python "$HELPERS/workspace_bookmarks.py" library <vault-root> <slug-projeto> '<items-json>'
+   ```
 
-9. **Append no array `items` do `parsed`:**
-   - `merged = jq --slurpfile new <(echo "$template") '.items += [$new[0]]' bookmarks.json`
-   - (Ou Python: `parsed["items"].append(json.loads(template))`.)
+   `<items-json>` é a lista do passo 5 serializada em JSON (escape adequado pro shell — usar arquivo temp se string for grande).
 
-10. **Write JSON formatado:**
-    - `echo "$merged" | jq '.' > <vault-root>/.obsidian/bookmarks.json` (fallback Python: `json.dump(parsed, fp, indent=2, ensure_ascii=False)`).
+   Helper:
+   - Localiza grupo `📁 Projetos > <slug-projeto> > 📚 Biblioteca` se existir (vault com workspace).
+   - Senão appendar no raiz dos `items` (vault legado).
+   - Idempotente por path interno.
 
-11. **Reportar sucesso:**
-    > "✓ Bookmarks de navegação criados em `.obsidian/bookmarks.json`. Abra o painel Bookmarks no Obsidian — a Biblioteca aparece em ordem de consumo, começando pela Identidade da Marca."
+7. **Liberar lock.**
+
+8. **Reportar sucesso:**
+
+> "✓ Bookmarks da Biblioteca aninhados em `.obsidian/bookmarks.json` (Projetos > <slug> > 📚 Biblioteca). Abra o painel Bookmarks no Obsidian."
 
 #### Falha graceful
 
-Se nenhuma ferramenta de JSON estiver disponível (`jq` ausente E `python` ausente):
-- Avisar:
-  > "Não consegui criar os bookmarks de navegação — falta `jq` ou Python no sistema. Rode `/biblioteca` de novo no mesmo projeto após instalar — o passo é idempotente e completa o que faltou."
-- Não bloquear o resto do scaffold.
-
-#### Restrições específicas
-
-- **Nunca** escrever JSON via concatenação de strings — sempre `jq` ou `python -c "import json"`. JSON malformado quebra o painel inteiro do Obsidian.
-- **Nunca** sobrescrever bookmarks pré-existentes — apenas append. O JSON do usuário (bookmarks manuais) é intocável.
-- **Nunca** assumir CWD = `<vault-root>` — sempre resolver via passo 1 do fluxo.
+Se Python não disponível ou helper retornar erro:
+- Avisar usuário e seguir (idempotente — pode rodar `/biblioteca` de novo depois).
 
 ### Fluxo FECHAR ARTEFATO
 
