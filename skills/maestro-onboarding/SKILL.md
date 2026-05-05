@@ -44,9 +44,32 @@ PROJETOS_NA_WORKSPACE=$(find "$CWD" -mindepth 3 -maxdepth 3 -path "*/maestro/con
 
 ## 2. Fluxo de Primeira Vez
 
-### 2.0 Checklist pré-onboarding
+### 2.0.A Apresentação humana e consentimento (Turnos 1-3)
 
-ANTES de criar tasks ou iniciar qualquer etapa, verificar o que já está configurado no ambiente do usuário. Ler silenciosamente:
+> [!critical] Esta seção é GATE OBRIGATÓRIO. Skill começa com chat output ANTES de qualquer Bash, Read, Glob ou tool call. Princípio "evitar executar coisas que o usuário não saiba o que é" — variação inversa do aprendizado #39 do CLAUDE.md (chat obrigatório como Turno 1, não Bash).
+
+**Turno 1 — Apresentação humana.** Enviar mensagem:
+
+> "Olá, tudo bem? Sou o Maestro e vou te ajudar a construir um ambiente de trabalho para marketing e vendas com IA utilizando o Claude Code e a interface e conexões neurais do Obsidian."
+
+**Turno 2 — Consentimento técnico.** Enviar mensagem:
+
+> "Antes de mais nada, preciso fazer algumas verificações no seu computador para entender se tenho tudo o que eu preciso instalado. Pode ser que eu precise te pedir algumas permissões."
+
+**Turno 3 — AskUserQuestion de consentimento:**
+
+- question: "Pode prosseguir com as verificações?"
+- options:
+  - label: "Sim, pode prosseguir", description: "Vou checar dependências, permissões e o Obsidian no seu sistema."
+  - label: "Agora não", description: "Encerra o onboarding aqui — pode retomar com /maestro-onboarding."
+
+Se "Agora não" → enviar: *"Sem problemas. Quando estiver pronto, manda `/maestro-onboarding` que retomamos daqui."* e encerrar skill.
+
+Se "Sim, pode prosseguir" → seguir pra 2.0.B (verificações técnicas).
+
+### 2.0.B Verificações técnicas pós-consentimento (Turno 4)
+
+ANTES de criar tasks ou iniciar qualquer etapa, verificar silenciosamente o que já está configurado no ambiente do usuário:
 
 1. **Dependências:** testar `python --version`, `pandoc --version` e bibliotecas (`docx`, `openpyxl`, `pdfplumber`)
 2. **Permissões:** verificar se `.claude/settings.local.json` já tem a seção `permissions` do Maestro
@@ -65,9 +88,15 @@ Guardar o resultado em memória para uso nos passos seguintes. Etapas já conclu
 
 **Exceção:** a etapa do Obsidian (2.7) NUNCA é pulada pelo checklist. Mesmo se detectado como instalado, sempre apresentar a etapa (o usuário pode precisar configurar o vault).
 
+### 2.0.C Roadmap (Turno 5)
+
+Após verificações concluírem, enviar mensagem:
+
+> "Tudo certo. Agora vou te guiar pelo setup — vai levar uns 20 minutos pra deixar o sistema pronto pra uso. A gente vai: (1) configurar a Área de Trabalho, (2) montar a Biblioteca de Marketing, (3) instalar e configurar o Obsidian com painéis automáticos de tarefas e projetos + atalhos de navegação rápida. Depois disso, partimos pra preencher a identidade da marca — sem pressa, no seu ritmo."
+
 ### 2.0.1 Tasks visuais
 
-APÓS o checklist, criar tasks visuais no terminal. Criar APENAS as tasks de etapas que precisam ser executadas (pular as já concluídas):
+APÓS o roadmap, criar tasks visuais no terminal. Criar APENAS as tasks de etapas que precisam ser executadas (pular as já concluídas):
 
 ```
 TaskCreate({ subject: "Apresentar o Sistema Maestro", description: "Boas-vindas, nome do usuário e recado da Comunidade", activeForm: "Apresentando o Sistema Maestro" })
@@ -128,17 +157,92 @@ Ao iniciar cada etapa, exibir um separador visual antes da mensagem ao usuário:
 
 Onde N é o número do passo atual e T é o total de passos a executar (descontando os pulados pelo checklist). Isso ajuda o usuário a saber onde está no processo.
 
-### 2.1 Apresentação, nome do usuário e recado
+### 2.1 Apresentação da estrutura (Turno 6)
 
-Marcar task "Apresentar o Sistema Maestro" como `in_progress`.
-
-**Etapa A — Apresentação e nome do usuário:**
+Marcar task "Configurar projeto" como `in_progress`.
 
 Enviar mensagem:
 
-> "Olá, tudo bem? Eu sou o Maestro, responsável por orquestrar a sua equipe de marketing e garantir que tudo vai ser entregue na qualidade que você precisa.
->
-> Como você gostaria que eu te chamasse?"
+> "O Maestro trabalha com dois conceitos: **Área de Trabalho** e **Projetos**. Uma Área de Trabalho contém vários projetos dentro. Um projeto pode ser um cliente, uma marca, uma unidade de negócios — fica a seu critério. Vou te perguntar primeiro o nome da Área de Trabalho e depois o nome do primeiro projeto."
+
+### 2.2 Nome da Área de Trabalho e nome do primeiro projeto (Turnos 7-9)
+
+**1. Coletar nome da Área de Trabalho via `AskUserQuestion`:**
+
+- question: "Qual o nome dessa Área de Trabalho?"
+- placeholder/exemplo no enunciado: "ex: 'Marketing Primum', 'Agência X', 'Meus Clientes'"
+- Aguardar resposta livre.
+- Guardar como `workspace_legivel` (string original do usuário).
+- Computar `workspace_slug_proposto = slugify(workspace_legivel)` (ver função `slugify` formal na spec § "Schema dos artefatos").
+
+**2. Coletar nome do primeiro projeto via `AskUserQuestion`:**
+
+- question: "E qual é o nome do primeiro projeto?"
+- placeholder/exemplo: "uma empresa, cliente ou marca que você vai trabalhar"
+- Aguardar resposta livre.
+- Guardar como `projeto_legivel` (string original do usuário). Esse valor é o **`{nome-alvo}`** referenciado nas mensagens subsequentes da skill.
+- Computar `projeto_slug_proposto = slugify(projeto_legivel)`.
+
+**3. Validação anti-colisão (F1-D7 + P12):**
+
+Se `workspace_slug_proposto == projeto_slug_proposto`:
+
+`AskUserQuestion`:
+- question: "Os dois ficaram com o mesmo nome curto (`<workspace_slug_proposto>`). Sugiro deixar a Área de Trabalho mais geral (ex: 'Meu Trabalho') e o projeto específico (ex: '`<projeto_legivel>`'). Quer trocar?"
+- options:
+  - label: "Trocar Área de Trabalho", description: "Volta pro passo 1 e digita outro nome"
+  - label: "Trocar projeto", description: "Volta pro passo 2 e digita outro nome"
+  - label: "Manter assim", description: "Aceita os slugs idênticos sob seu risco"
+
+Se "Trocar Área de Trabalho" → repetir passo 1.
+Se "Trocar projeto" → repetir passo 2.
+Se "Manter assim" → seguir.
+
+**4. Preview de slugs:**
+
+`AskUserQuestion`:
+- question: "Vou criar pasta `<workspace_slug_proposto>` com `<projeto_slug_proposto>` dentro. Tudo bem ou quer mudar algum nome?"
+- options:
+  - label: "Tudo bem", description: "Cria com esses slugs"
+  - label: "Mudar Área de Trabalho", description: "Digito o slug direto (sem espaço, só letras minúsculas, números e hífens)"
+  - label: "Mudar projeto", description: "Digito o slug direto"
+
+Se "Mudar Área de Trabalho" → pedir slug direto via texto livre, validar regex `^[a-z0-9-]+$`, sem hífen nas pontas, max 80 chars. Se inválido, repetir até passar. Atualizar `workspace_slug_proposto`.
+
+Se "Mudar projeto" → idem pra `projeto_slug_proposto`.
+
+Se "Tudo bem" → fixar slugs definitivos:
+- `workspace_slug = workspace_slug_proposto`
+- `projeto_slug = projeto_slug_proposto`
+
+**5. Validação adicional pós-slugify (R9):**
+
+Se `workspace_slug` ou `projeto_slug` resultar em string vazia ou só hifens (ex: input "🌴🌴🌴"):
+
+`AskUserQuestion`:
+- question: "Não consegui transformar `<input>` em pasta válida. Pode digitar um nome curto sem caracteres especiais (só letras, números e espaço)?"
+- options:
+  - label: "Digitar de novo", description: "Volta pra etapa 1 ou 2"
+
+Repetir até `slugify` produzir resultado não-vazio.
+
+Marcar task "Configurar projeto" como `completed`.
+
+### 2.2.bis Confirmação da estrutura e aviso do marker (Turno 10)
+
+Após fixar slugs definitivos (passo 4 da 2.2), enviar mensagem:
+
+> "Beleza, vou montar a Área de Trabalho **{workspace_legivel}** com **{projeto_legivel}** como primeiro projeto. Detalhe: vou criar um arquivo invisível chamado `.maestro-workspace` no canto pra eu reconhecer essa pasta como Área de Trabalho — não apague, ele que segura a estrutura."
+
+(Substituir `{workspace_legivel}` e `{projeto_legivel}` pelos valores capturados nos Turnos 7 e 8.)
+
+### 2.2.ter Nome do usuário (Turno 11)
+
+Marcar task "Apresentar o Sistema Maestro" como `in_progress`.
+
+Enviar mensagem:
+
+> "Pra eu poder te chamar pelo nome durante o setup: como você gostaria que eu te chamasse?"
 
 **Aguardar resposta do usuário.** Guardar o nome informado.
 
@@ -161,90 +265,21 @@ Atualizar o index `~/.maestro/memorias/_index.md` se necessário.
 
 A partir deste ponto, usar o nome do usuário nas interações sempre que natural (sem forçar em toda frase).
 
-**Etapa B — Recado da Comunidade dos Últimos:**
+### 2.2.qua Recado da Comunidade Automators (Turno 12)
 
 Enviar mensagem:
 
-> "Antes de começarmos, eu tenho um recado rápido.
+> "Antes de começarmos, um recado rápido:
 >
-> O Sistema Maestro foi construído por Willian Nunes (siga ele no Instagram @eusouwillnunes) para a sua Equipe da Primum e para os membros d'A Comunidade dos Últimos. Na comunidade você encontra um curso completo sobre o Sistema Maestro onde você vai aprender a utilizar todos os recursos do sistema, mesmo se não souber nada de IA. Você também desbloqueia o acesso ao Sistema Maestro PRO, com funcionalidades exclusivas para membros. Todo mês entram novos treinamentos e conteúdos sobre Marketing e Vendas e sobre Desenvolvimento de Software e Aplicativos usando Inteligência Artificial.
+> O Sistema Maestro foi carinhosamente construído por Willian Nunes (@eusouwillnunes) para o time da Primum e para os membros da Comunidade Automators. Nosso foco é criar treinamentos rápidos, práticos e que resolvam problemas reais de marketing e vendas usando inteligência artificial, automações e vibe coding.
 >
-> Acesse acomunidadedosultimos.com.br, e seja um membro fundador por um valor simbólico e vitalício por mês.
+> Na Comunidade você encontra o treinamento completo sobre o Sistema Maestro e todos os seus recursos. Além disso, enquanto sua assinatura estiver ativa, você recebe todas as atualizações automaticamente.
 >
-> Recado dado, vamos começar!"
+> Conheça a Comunidade Automators e os benefícios de ser assinante em https://automators.com.br"
 
 Marcar task "Apresentar o Sistema Maestro" como `completed`.
 
-**Perguntar ao usuário: "Podemos continuar?" e aguardar resposta antes de prosseguir.**
-
-### 2.2 Nome da Área de Trabalho e nome do primeiro projeto
-
-Marcar task "Configurar projeto" como `in_progress`.
-
-**1. Apresentar a estrutura (linguagem leiga, sem jargão "pasta-pai"):**
-
-> "Vou criar uma **Área de Trabalho** — pense como um fichário onde cada projeto vira uma pasta dentro. Você abre o Obsidian uma vez só e vê todos os clientes/marcas que tiver lá. Por enquanto começa com 1 projeto; depois é só ir adicionando mais."
-
-**2. Coletar nome da Área de Trabalho via `AskUserQuestion`:**
-
-- question: "Qual o nome dessa Área de Trabalho?"
-- placeholder/exemplo no enunciado: "ex: 'Marketing Primum', 'Agência X', 'Meus Clientes'"
-- Aguardar resposta livre.
-- Guardar como `workspace_legivel` (string original do usuário).
-- Computar `workspace_slug_proposto = slugify(workspace_legivel)` (ver função `slugify` formal na spec § "Schema dos artefatos").
-
-**3. Coletar nome do primeiro projeto via `AskUserQuestion`:**
-
-- question: "E qual é o nome do primeiro projeto?"
-- placeholder/exemplo: "uma empresa, cliente ou marca que você vai trabalhar"
-- Aguardar resposta livre.
-- Guardar como `projeto_legivel`.
-- Computar `projeto_slug_proposto = slugify(projeto_legivel)`.
-
-**4. Validação anti-colisão (F1-D7 + P12):**
-
-Se `workspace_slug_proposto == projeto_slug_proposto`:
-
-`AskUserQuestion`:
-- question: "Os dois ficaram com o mesmo nome curto (`<workspace_slug_proposto>`). Sugiro deixar a Área de Trabalho mais geral (ex: 'Meu Trabalho') e o projeto específico (ex: '`<projeto_legivel>`'). Quer trocar?"
-- options:
-  - label: "Trocar Área de Trabalho", description: "Volta pro passo 2 e digita outro nome"
-  - label: "Trocar projeto", description: "Volta pro passo 3 e digita outro nome"
-  - label: "Manter assim", description: "Aceita os slugs idênticos sob seu risco"
-
-Se "Trocar Área de Trabalho" → repetir passo 2.
-Se "Trocar projeto" → repetir passo 3.
-Se "Manter assim" → seguir.
-
-**5. Preview de slugs:**
-
-`AskUserQuestion`:
-- question: "Vou criar pasta `<workspace_slug_proposto>` com `<projeto_slug_proposto>` dentro. Tudo bem ou quer mudar algum nome?"
-- options:
-  - label: "Tudo bem", description: "Cria com esses slugs"
-  - label: "Mudar Área de Trabalho", description: "Digito o slug direto (sem espaço, só letras minúsculas, números e hífens)"
-  - label: "Mudar projeto", description: "Digito o slug direto"
-
-Se "Mudar Área de Trabalho" → pedir slug direto via texto livre, validar regex `^[a-z0-9-]+$`, sem hífen nas pontas, max 80 chars. Se inválido, repetir até passar. Atualizar `workspace_slug_proposto`.
-
-Se "Mudar projeto" → idem pra `projeto_slug_proposto`.
-
-Se "Tudo bem" → fixar slugs definitivos:
-- `workspace_slug = workspace_slug_proposto`
-- `projeto_slug = projeto_slug_proposto`
-
-**6. Validação adicional pós-slugify (R9):**
-
-Se `workspace_slug` ou `projeto_slug` resultar em string vazia ou só hifens (ex: input "🌴🌴🌴"):
-
-`AskUserQuestion`:
-- question: "Não consegui transformar `<input>` em pasta válida. Pode digitar um nome curto sem caracteres especiais (só letras, números e espaço)?"
-- options:
-  - label: "Digitar de novo", description: "Volta pra etapa 2 ou 3"
-
-Repetir até `slugify` produzir resultado não-vazio.
-
-Marcar task "Configurar projeto" como `completed`.
+**Perguntar ao usuário (Turno 13): "Podemos continuar?" e aguardar resposta antes de prosseguir.**
 
 ### 2.3 Verificar dependências
 
@@ -516,7 +551,7 @@ Marcar task "Criar Biblioteca de Marketing" como `in_progress`.
 
 Oferecer:
 
-> "A Biblioteca de Marketing é onde guardamos todo o contexto do seu negócio: identidade, produtos, público, tom de voz. É uma estrutura organizada com templates prontos pra preencher."
+> "A Biblioteca de Marketing é onde guardamos todo o contexto de **{nome-alvo}**: identidade, produtos, público, tom de voz. É uma estrutura organizada com templates prontos pra preencher."
 
 Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
 - question: "Quer criar a Biblioteca de Marketing agora?"
@@ -537,7 +572,7 @@ Marcar task "Criar Biblioteca de Marketing" como `completed`.
 
 O Maestro valida cada entrega contra um checklist automático antes de te entregar. Se algum critério falhar, o Revisor corrige antes de chegar até você.
 
-Você pode personalizar critérios pro seu projeto editando arquivos em `{projeto}/maestro/checklists/` — o Maestro acabou de criar essa pasta com um README explicando como usar.
+Você pode personalizar critérios do projeto **{nome-alvo}** editando arquivos em `{projeto}/maestro/checklists/` — o Maestro acabou de criar essa pasta com um README explicando como usar.
 
 Usar `AskUserQuestion`:
 - question: "Quer que eu te mostre o README com um exemplo?"
@@ -616,7 +651,9 @@ Ajustar o fluxo conforme a escolha:
    - Aguardar confirmação do usuário
 
 6. Dica final — navegação por tags. **Mostrar ao usuário (obrigatório, não pular):**
-   > "Última dica: depois de criar alguns artefatos, abra o **painel de Tags** do Obsidian (ícone de `#` no sidebar direito). Seus produtos e temas aparecem como árvore navegável — clicar em qualquer tag filtra o vault. É o jeito mais rápido de ver 'todos os copies do Produto X' ou 'todas as peças de vendas'."
+   > "Última dica: depois de criar alguns artefatos, abra o **painel de Tags** do Obsidian (ícone de `#` no sidebar direito). Seus produtos e temas aparecem como árvore navegável — clicar em qualquer tag filtra o vault. É o jeito mais rápido de ver 'todos os copies do Produto X' ou 'todas as peças de vendas'. As tags vêm do campo `tags-dominio` no topo de cada arquivo da Biblioteca (frontmatter) — quanto mais você preenche os templates, mais tags aparecem aqui."
+
+   > "**Dica bônus:** quando quiser ver o mapa visual de **{nome-alvo}**, abre o **Graph View** no Obsidian (ícone de rede no sidebar — `Ctrl+G` no Windows/Linux ou `Cmd+G` no Mac). Vai aparecer toda a teia de conexões entre produtos, públicos, peças."
 
 **Se não/depois:**
 - Informar: "Sem problema! Tudo funciona no terminal mesmo. Se quiser configurar depois, rode `/maestro:onboarding` e escolha a opção do Obsidian. Lembre-se: sem o Dataview instalado, os painéis de tarefas/planos/entrevistas ficam ilegíveis."
@@ -659,7 +696,7 @@ Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
 > 4. Adicione créditos em openrouter.ai/settings/credits (mínimo $5 é suficiente pra começar)
 > 5. Cole a chave aqui quando estiver pronto
 >
-> Para um tutorial completo com prints e vídeo, acesse A Comunidade dos Últimos: https://acomunidadedosultimos.com.br"
+> Para um tutorial completo com prints e vídeo, acesse a Comunidade Automators: https://automators.com.br"
 
   - Aguardar resposta do usuário:
     - Se colou a key: salvar em `~/.maestro/config.md` e seguir pro teste (2.8.1)
@@ -709,7 +746,7 @@ Marcar task "Pesquisa inicial do negócio" como `in_progress`.
 
 Oferecer:
 
-> "Quer que eu faça uma pesquisa rápida sobre o seu negócio? Posso analisar o site da empresa e redes sociais pra já ter um primeiro retrato.
+> "Quer que eu faça uma pesquisa rápida sobre **{nome-alvo}**? Posso analisar o site e redes sociais pra já ter um primeiro retrato.
 >
 > Isso ajuda a preencher a biblioteca com informações reais desde o início.
 >
@@ -745,7 +782,7 @@ Marcar task "Importar material de referência" como `in_progress`.
 
 Perguntar:
 
-> "Você tem documentos sobre seu negócio? Manuais de marca, apresentações, planilhas de produto, textos internos, qualquer coisa com informação sobre a empresa.
+> "Você tem documentos sobre **{nome-alvo}**? Manuais de marca, apresentações, planilhas de produto, textos internos, qualquer coisa com informação sobre a empresa.
 >
 > Se sim, coloca tudo na pasta `{empresa}/referencias/` e me avisa. Eu leio os arquivos e cruzo com o que já encontrei na pesquisa pra preencher o máximo possível da biblioteca."
 
@@ -830,9 +867,7 @@ Marcar task "Finalizar onboarding" como `in_progress`.
 
    > "✅ Tudo configurado! Sua Área de Trabalho está em `<workspace-path-absoluto-normalizado>` com seu primeiro projeto dentro.
    >
-   > 📊 Pra acessar seu projeto rapidamente: abre o Obsidian na pasta `<workspace-path>` → painel **Bookmarks** (ícone de marcador na lateral esquerda) → clica em **📊 Painel da Área de Trabalho** ou no nome do seu projeto.
-   >
-   > 📚 Pra começar pela identidade da marca, peça: *'Maestro, quero preencher a identidade da marca'*."
+   > 📊 Pra acessar **{nome-alvo}** rapidamente: abre o Obsidian na pasta `<workspace-path>` → painel **Bookmarks** (ícone de marcador na lateral esquerda) → clica em **📊 Painel da Área de Trabalho** ou no nome do projeto."
 
    **Path normalizado pro SO nativo:** detectar SO antes de mostrar (backslash em Windows, forward em Mac/Linux).
 
@@ -846,17 +881,34 @@ Marcar task "Finalizar onboarding" como `in_progress`.
    > 3. Navegue até `<CWD>/<workspace_slug>/`
    > 4. Clique em 'Select Folder'
    >
-   > Painel agregado e Bookmarks chegam em versões futuras — por enquanto navegue pelo painel de arquivos (Files) na sidebar esquerda.
-   >
-   > Próximo passo:"
+   > Painel agregado e Bookmarks chegam em versões futuras — por enquanto navegue pelo painel de arquivos (Files) na sidebar esquerda."
 
-   `AskUserQuestion`:
-   - question: "O que você quer fazer agora?"
-   - options:
-     - label: "Preencher Identidade da marca", description: "Dispara fluxo de Marca pro projeto recém-criado"
-     - label: "Pedir primeira entrega de copy", description: "Dispara fluxo de Copywriter"
-     - label: "Explorar a Biblioteca", description: "Abro o painel de arquivos do Obsidian e oriento navegação"
-     - label: "Outra coisa", description: "Você descreve livre"
+4. **Finalização enfática — preencher identidade (Turno N):**
+
+Independente do CASO A ou B acima, **toda finalização do Fluxo de Primeira Vez** termina com a AUQ enfática abaixo. Não pular.
+
+Enviar mensagem:
+
+> "Pronto! Agora a parte mais importante: **antes de qualquer agente trabalhar bem, ele precisa conhecer {nome-alvo}**. Topa começar a preencher a identidade da marca agora? Posso te guiar no chat (uma pergunta de cada vez) ou você abre os arquivos no Obsidian e preenche direto nas Properties — geralmente é mais rápido."
+
+`AskUserQuestion`:
+- question: "Como prefere preencher a identidade de {nome-alvo}?"
+- options:
+  - label: "Guia no chat", description: "Eu te conduzo uma pergunta de cada vez."
+  - label: "Vou preencher no Obsidian", description: "Você abre os arquivos e preenche nas Properties."
+  - label: "Agora não", description: "Termino o onboarding aqui — pode preencher depois."
+
+**Resoluções:**
+
+- **"Guia no chat"** → invocar fluxo do Entrevistador via despacho padrão (Gerente cria tarefa primeiro, depois Entrevistador conduz coleta de identidade pergunta-a-pergunta).
+
+- **"Vou preencher no Obsidian"** → enviar mensagem:
+
+  > "Beleza! Os arquivos da identidade estão em `<workspace>/<projeto_slug>/biblioteca-de-marketing/`. Abre o `_index-biblioteca.md` no Obsidian — ele lista todos os templates da identidade (manifesto, círculo dourado, posicionamento, perfil do público, tom de voz, personalidade da marca, identidade visual, história dos fundadores). Cada um tem **Properties** no topo do arquivo — clica em qualquer Property pra editar visualmente. Quando quiser, manda `quero preencher a identidade de {nome-alvo}` no chat e eu te guio pelo que faltar."
+
+- **"Agora não"** → enviar mensagem:
+
+  > "Beleza, quando quiser, manda `quero preencher a identidade de {nome-alvo}`."
 
 Marcar task "Finalizar onboarding" como `completed`.
 
@@ -1130,7 +1182,7 @@ Marcar task "Criar Biblioteca de Marketing" como `in_progress`.
 
 Oferecer:
 
-> "A Biblioteca de Marketing é onde guardamos todo o contexto do seu negócio: identidade, produtos, público, tom de voz."
+> "A Biblioteca de Marketing é onde guardamos todo o contexto de **{nome-alvo}**: identidade, produtos, público, tom de voz."
 
 Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
 - question: "Quer criar a Biblioteca de Marketing agora?"
@@ -1154,7 +1206,7 @@ Marcar task "Pesquisa inicial do negócio" como `in_progress`.
 
 **Só executar se a biblioteca foi criada no passo 2B.3.** Se pulou, pular esta etapa também.
 
-> "Quer que eu faça uma pesquisa rápida sobre o seu negócio? Posso analisar o site da empresa e redes sociais.
+> "Quer que eu faça uma pesquisa rápida sobre **{nome-alvo}**? Posso analisar o site e redes sociais.
 >
 > Qual o site da {nome da empresa}?"
 
@@ -1261,7 +1313,7 @@ Marcar task "Finalizar projeto" como `in_progress`.
    - Detectar contagem: `glob $WORKSPACE_PATH/*/maestro/config.md` filtrado por `maestro-ativo: true`. Pode reusar resultado já no report do REGENERATE PAINEL (`projetos=<slug-1>,<slug-2>,...`).
 
    - **Se `len(projetos) == 1`:**
-     > "📊 Pra acessar seu projeto rapidamente: abre o Obsidian na pasta `<workspace-path-absoluto>` → painel **Bookmarks** (ícone de marcador na lateral esquerda) → clica em **📊 Painel da Área de Trabalho** ou no nome do seu projeto."
+     > "📊 Pra acessar **{nome-alvo}** rapidamente: abre o Obsidian na pasta `<workspace-path-absoluto>` → painel **Bookmarks** (ícone de marcador na lateral esquerda) → clica em **📊 Painel da Área de Trabalho** ou no nome do projeto."
 
    - **Se `len(projetos) >= 2`:**
      > "📊 Pra navegar entre projetos rapidamente: abre o Obsidian na pasta `<workspace-path-absoluto>` → painel **Bookmarks** → tem o painel da Área de Trabalho e cada projeto a 2 cliques."

@@ -130,7 +130,7 @@ echo "WORKSPACE=$WORKSPACE"
 - `CWD-PROJETO` ou `CWD-WORKSPACE` com `PROJETO` resolvido → seguir pro Turno 0.
 - `CWD-WORKSPACE` sem `PROJETO` → fallback Glob `$WORKSPACE/*/maestro/config.md` profundidade 1; se 1 match auto-resolve, se ≥2 AUQ, se 0 chamar onboarding (Recuperação 2B.-1).
 - `CWD-PROJETO-ORFAO` → `AskUserQuestion` (ver Sub-fluxo abaixo). Não escrever cache, não tocar parent.
-- `CWD-INVALIDO` → mensagem orientada do `protocolo-ativacao.md` Seção 3 e parar.
+- `CWD-INVALIDO` → projeto sem `.maestro/`. Invocar `Skill("/maestro:onboarding")` direto, sem mensagem técnica intermediária nem mention de comando `/maestro` inexistente. Onboarding cuida da apresentação humana e detecção do cenário (Primeira Vez / Novo Projeto / Recuperação). B-S55-1 fix.
 
 **Sub-fluxo CWD-PROJETO-ORFAO (B-F1-8):**
 

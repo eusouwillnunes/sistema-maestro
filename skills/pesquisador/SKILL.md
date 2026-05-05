@@ -154,7 +154,7 @@ Ler `pesquisas/_pesquisas.md` (na pasta configurada). Já tem pesquisa relevante
 > 4. Adicione créditos em openrouter.ai/settings/credits (mínimo $5 é suficiente pra começar)
 > 5. Cole a chave aqui pra eu configurar agora
 >
-> Para um tutorial completo com prints e vídeo, acesse A Comunidade dos Últimos: https://acomunidadedosultimos.com.br"
+> Para um tutorial completo com prints e vídeo, acesse a Comunidade Automators: https://automators.com.br"
 
    - Se o usuário colar a key: salvar em `~/.maestro/config.md`, testar conexão (curl conforme seção de teste), e continuar com a pesquisa no modo avançado
    - Se preferir pular: executar no modo básico (WebSearch) desta vez, sem alterar `ferramenta-default`

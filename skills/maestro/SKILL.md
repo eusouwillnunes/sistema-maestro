@@ -63,7 +63,7 @@ Casos:
 
 - **Projeto resolvido + ativo:** prosseguir com classificação (seção 3).
 - **CWD-inválido (sem projeto e sem workspace):** mensagem orientada do Sub-fluxo 1 da matriz; sem classificação.
-- **Sem `maestro/config.md` no projeto resolvido + mensagem é ação no projeto:** executar onboarding via `Skill("maestro-onboarding")`.
+- **Sem `maestro/config.md` no projeto resolvido (qualquer mensagem):** executar onboarding via `Skill("maestro-onboarding")` direto, sem mostrar mensagem técnica intermediária nem mencionar comando `/maestro` inexistente. Auto-disparo cobre primeira interação do user em projeto novo (B-S55-1).
 - **`maestro-ativo: false`:** reativar e informar o usuário.
 - **Mensagem é conversa pura:** responder direto, independente de ativação.
 
