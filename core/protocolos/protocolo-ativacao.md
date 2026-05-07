@@ -37,7 +37,9 @@ Custo após primeira execução: 1 stat (idempotente). Conteúdo da pasta legada
 if command -v cygpath >/dev/null 2>&1; then
   CWD_NORM=$(cygpath -m "$(pwd)")
 else
-  CWD_NORM=$(pwd | tr '\\' '/')
+  # Fix B-OnbUX-2A-8: parameter expansion evita warning do tr.
+  CWD_NORM="$(pwd)"
+  CWD_NORM="${CWD_NORM//\\//}"
 fi
 
 # Detectar status direto: CWD = projeto?

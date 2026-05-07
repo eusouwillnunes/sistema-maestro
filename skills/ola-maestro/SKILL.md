@@ -53,7 +53,9 @@ fi
 if command -v cygpath >/dev/null 2>&1; then
   CWD_NORM=$(cygpath -m "$(pwd)")
 else
-  CWD_NORM=$(pwd | tr '\\' '/')
+  # Fix B-OnbUX-2A-8: parameter expansion evita warning do tr.
+  CWD_NORM="$(pwd)"
+  CWD_NORM="${CWD_NORM//\\//}"
 fi
 
 if [ -f "$CWD_NORM/maestro/config.md" ]; then
@@ -193,6 +195,21 @@ orfaos=$(wc -l < tmp/canarios-orfaos.txt 2>/dev/null || echo 0)
      > "Limpei N tokens de auditoria pendentes (resíduo de sessão anterior). Pode ignorar — é automático."
 
 Se quantidade = 0, silencioso (sem mensagem ao usuário).
+
+### Cleanup de state files órfãos do onboarding (F-Onb-2A)
+
+State files do onboarding interrompido (>24h sem `t-conclusao`) ficam em `<workspace>/memorias/onboarding/state-*.md` — path workspace-level (não projeto-level), porque em Fluxo de Primeira Vez o projeto ainda não existe quando state é criado, e em Fluxo de Novo Projeto o CWD do hub é a workspace. Cleanup automático silencioso:
+
+```bash
+if [ -d "{workspace}/memorias/onboarding" ]; then
+    HELPERS="$CLAUDE_PLUGIN_ROOT/core/helpers"
+    if [ -f "$HELPERS/onboarding_state.py" ]; then
+        python "$HELPERS/onboarding_state.py" cleanup "{workspace}/memorias/onboarding" 24 >/dev/null 2>&1 || true
+    fi
+fi
+```
+
+Sem mensagem ao usuário (cleanup é manutenção, não evento). State concluído (em `concluidos/`) fica permanente como audit trail.
 
 ### Turno 1 — Descoberta e leitura consolidada (paralelo, sem dependências)
 

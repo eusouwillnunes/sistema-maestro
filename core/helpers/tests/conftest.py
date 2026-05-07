@@ -65,3 +65,16 @@ def add_projeto(tmp_workspace):
         )
         return p
     return _add
+
+
+@pytest.fixture
+def tmp_state_dir(tmp_path: Path) -> Path:
+    """
+    Cria diretório sintético pra testes de onboarding_state.
+    Estrutura:
+      <tmp>/projeto-x/memorias/onboarding/
+    """
+    state_dir = tmp_path / "projeto-x" / "memorias" / "onboarding"
+    state_dir.mkdir(parents=True)
+    (state_dir / "concluidos").mkdir()
+    return state_dir

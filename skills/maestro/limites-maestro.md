@@ -157,3 +157,27 @@ NUNCA mencione, em mensagem que vai pro usuário humano:
 - **Confirmação no sucesso:** sempre exibir "Pronto, agora deu certo." quando retry passa.
 - **Log obrigatório:** independente de sucesso ou falha, escrever linha em `memorias/auditoria/historico.md` (formato em `protocolo-agent.md` Seção 9.3).
 - **Cleanup do canário sempre:** após validação (sucesso ou suspeita), `rm` do arquivo do canário.
+
+## 9. Bloqueio de turno onboarding (F-Onb-2A)
+
+Quando hook `onboarding-orquestra.py` retorna `permissionDecision: deny`:
+
+1. Parse o JSON do `permissionDecisionReason`.
+2. **Se o JSON contiver `mensagem-pro-user`** (B-OnbUX-2A-5), renderizar ESSE texto literal ao user — é a tradução pt-br pré-mastigada e tem prioridade sobre a tabela.
+3. **Se não contiver** (versões antigas), aplicar tabela de tradução abaixo conforme `marker-esperado`.
+4. Re-emita a AUQ correspondente lendo `plugin/skills/maestro-onboarding/turnos-onboarding.md` pelo turno do marker.
+5. Após resposta do user e marker escrito via helper `onboarding_state.py mark`, re-tente o dispatch original sem nova mensagem.
+
+**Tradução pro user (fallback quando `mensagem-pro-user` ausente):**
+
+| reason | frase pro user |
+|---|---|
+| marker-ausente / t-consentimento | "Preciso do seu consentimento antes de rodar verificações técnicas. Vou voltar a esse passo." |
+| marker-ausente / t-auq-biblioteca | "Peguei aqui — preciso te perguntar sobre a Biblioteca de Marketing antes de criar. Vou voltar a esse passo." |
+| marker-ausente / t-auq-pesquisa | "Peguei aqui — preciso te perguntar sobre a pesquisa inicial antes de rodar. Vou voltar a esse passo." |
+| marker-ausente / t-auq-material | "Peguei aqui — preciso confirmar se você tem material de referência antes de continuar. Vou voltar a esse passo." |
+| audit-trail-ausente | "Faltou um passo de auditoria do onboarding aqui. Vou voltar e ativar antes de fechar — um instante." |
+
+**Não exponha ao user:** `marker-ausente`, `audit-trail-ausente`, IDs `t-*`, nome do hook, JSON estruturado, exit codes, paths internos.
+
+**Recovery automático:** após escrita do marker pelo helper, re-emitir o dispatch original sem nova mensagem ao user — recovery é silencioso. No caso de `audit-trail-ausente`, voltar pro Bash de init em T3 (Primeira Vez) ou T0/T1B (Novo Projeto) antes de re-tentar.

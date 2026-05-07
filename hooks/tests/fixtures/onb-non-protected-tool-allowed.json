@@ -1,0 +1,5 @@
+{
+  "tool_name": "Read",
+  "tool_input": {"file_path": "/tmp/foo.md"},
+  "cwd": "/tmp/maestro-onb-test/projeto-x"
+}

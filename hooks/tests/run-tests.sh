@@ -41,6 +41,8 @@ FAIL=0
 
 for fixture in "$FIXTURES_DIR"/*.json; do
     name=$(basename "$fixture" .json)
+    # Fixtures do hook onboarding-orquestra.py rodam em loop separado abaixo.
+    [[ "$name" == onb-* ]] && continue
     expected_file="$EXPECTED_DIR/$name.json"
 
     if [[ ! -f "$expected_file" ]]; then
@@ -61,6 +63,106 @@ for fixture in "$FIXTURES_DIR"/*.json; do
     else
         echo "❌ $name — esperado=$expected_decision, atual=$actual_decision"
         echo "    Output completo: $actual"
+        FAIL=$((FAIL+1))
+    fi
+done
+
+# === Hook onboarding-orquestra.py ===
+ONB_HOOK="$(dirname "$0")/../onboarding-orquestra.py"
+
+# Setup do estado de teste (idempotente)
+mkdir -p \
+    "$TMP_REAL/maestro-onb-test/projeto-x/memorias/onboarding" \
+    "$TMP_REAL/maestro-onb-test/projeto-sem-onboarding" \
+    "$TMP_REAL/maestro-onb-test/projeto-com-marker/memorias/onboarding" \
+    "$TMP_REAL/maestro-onb-test/projeto-sem-marker/memorias/onboarding" \
+    "$TMP_REAL/maestro-onb-test/projeto-concluido/memorias/onboarding"
+
+# State sem markers (projeto-x e projeto-sem-marker)
+for proj in projeto-x projeto-sem-marker; do
+    cat > "$TMP_REAL/maestro-onb-test/$proj/memorias/onboarding/state-test.md" <<'EOF'
+---
+slug: test
+fluxo: primeira-vez
+inicio: 2026-05-06T10:00:00-03:00
+---
+
+## Markers
+
+EOF
+done
+
+# State com marker t-auq-biblioteca
+cat > "$TMP_REAL/maestro-onb-test/projeto-com-marker/memorias/onboarding/state-test.md" <<'EOF'
+---
+slug: test
+fluxo: primeira-vez
+inicio: 2026-05-06T10:00:00-03:00
+---
+
+## Markers
+
+- t-auq-biblioteca: 2026-05-06T10:05:00-03:00
+EOF
+
+# State concluído (libera tudo via t-conclusao)
+cat > "$TMP_REAL/maestro-onb-test/projeto-concluido/memorias/onboarding/state-test.md" <<'EOF'
+---
+slug: test
+fluxo: primeira-vez
+inicio: 2026-05-06T10:00:00-03:00
+---
+
+## Markers
+
+- t-conclusao: 2026-05-06T10:30:00-03:00
+EOF
+
+for fixture in "$FIXTURES_DIR"/onb-*.json; do
+    name=$(basename "$fixture" .json)
+    expected_file="$EXPECTED_DIR/$name.json"
+
+    if [[ ! -f "$expected_file" ]]; then
+        echo "❌ $name — expected file ausente"
+        FAIL=$((FAIL+1))
+        continue
+    fi
+
+    # Roda o hook com a fixture via stdin. Fixtures usam /tmp/maestro-onb-test/...
+    # que Python resolve nativamente: Linux/Mac → /tmp; Windows → C:\tmp (= /c/tmp).
+    # Bash setup cria os dirs em $TMP_REAL pra bater com a resolução do Python.
+    actual_file="$TMP_REAL/onb-actual.json"
+    python3 "$ONB_HOOK" < "$fixture" > "$actual_file" 2>&1
+
+    # Compara payload completo (decision + reason quando aplicável) parseando como dict
+    # pra normalizar ordem de chaves do JSON serializado.
+    if python3 - "$actual_file" "$expected_file" <<'PYEOF' 2>/dev/null
+import json, sys
+actual = json.load(open(sys.argv[1], encoding='utf-8'))
+expected = json.load(open(sys.argv[2], encoding='utf-8'))
+ah = actual.get('hookSpecificOutput', {})
+eh = expected.get('hookSpecificOutput', {})
+if ah.get('permissionDecision') != eh.get('permissionDecision'):
+    sys.exit(1)
+if eh.get('permissionDecision') == 'deny':
+    a_reason = json.loads(ah.get('permissionDecisionReason', '{}'))
+    e_reason = json.loads(eh.get('permissionDecisionReason', '{}'))
+    if a_reason != e_reason:
+        sys.exit(2)
+sys.exit(0)
+PYEOF
+    then
+        decision=$(python3 - "$actual_file" <<'PYEOF' 2>&1
+import json, sys
+print(json.load(open(sys.argv[1], encoding='utf-8'))['hookSpecificOutput']['permissionDecision'])
+PYEOF
+)
+        echo "✅ $name — $decision"
+        PASS=$((PASS+1))
+    else
+        echo "❌ $name"
+        echo "    Esperado: $(cat "$expected_file")"
+        echo "    Atual:    $(cat "$actual_file")"
         FAIL=$((FAIL+1))
     fi
 done
