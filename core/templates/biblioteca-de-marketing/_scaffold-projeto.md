@@ -56,11 +56,15 @@ tags: [meta, scaffold, biblioteca]
 │   │   └── _referencias.md
 │   ├── memorias/
 │   │   ├── _memorias.md
-│   │   └── auditoria/
-│   │       ├── historico.md
-│   │       ├── _defesa-anti-hallucination.md
-│   │       └── canarios-ativos/
-│   │           └── .gitkeep
+│   │   ├── _pendencias-aceitas.md
+│   │   ├── feedback-revisor.md
+│   │   ├── auditoria/
+│   │   │   ├── historico.md
+│   │   │   ├── _defesa-anti-hallucination.md
+│   │   │   └── canarios-ativos/
+│   │   │       └── .gitkeep
+│   │   └── pendencias-aceitas/
+│   │       └── historico.md
 │   ├── tarefas/
 │   │   └── _tarefas.md
 │   ├── planos/

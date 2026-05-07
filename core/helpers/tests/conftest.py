@@ -78,3 +78,36 @@ def tmp_state_dir(tmp_path: Path) -> Path:
     state_dir.mkdir(parents=True)
     (state_dir / "concluidos").mkdir()
     return state_dir
+
+
+@pytest.fixture
+def mock_plugin_dir(tmp_path: Path) -> Path:
+    """
+    Cria cópia parcial dos templates do plugin pra teste isolado do biblioteca_scaffold.
+    Estrutura: <tmp>/mock-plugin/core/templates/...
+    """
+    plugin_root = Path(__file__).resolve().parents[3]
+    src_templates = plugin_root / "core" / "templates"
+    dst_plugin = tmp_path / "mock-plugin"
+    dst_templates = dst_plugin / "core" / "templates"
+    dst_templates.mkdir(parents=True)
+
+    # Copia diretórios completos que o helper precisa
+    shutil.copytree(src_templates / "biblioteca-de-marketing", dst_templates / "biblioteca-de-marketing")
+    shutil.copytree(src_templates / "indexes-area", dst_templates / "indexes-area")
+
+    # Copia arquivos de raiz necessários
+    for fname in [
+        "_tarefas-index.md",
+        "_planos-index.md",
+        "_entrevistas-index.md",
+        "_rascunhos-index.md",
+        "_readme-checklists-projeto.md",
+        "_feedback-revisor-template.md",
+        "_pendencias-aceitas-historico-template.md",
+    ]:
+        src = src_templates / fname
+        if src.exists():
+            shutil.copy(src, dst_templates / fname)
+
+    return dst_plugin

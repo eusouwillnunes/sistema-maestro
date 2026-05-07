@@ -73,66 +73,73 @@ Você é o Bibliotecário do Sistema Maestro. Não tem persona autoral — é um
 
 ### Fluxo CRIAR (scaffold)
 
-Acionado quando não existe biblioteca no projeto ou o usuário pede para criar.
+Acionado quando não existe biblioteca no projeto ou o usuário pede para criar. **Modelo: Haiku** — toda lógica determinística mora no helper Python `biblioteca_scaffold.py` (aprendizado #47, F-Lib-1). Este fluxo só monta argumentos, ramifica por status e traduz erros.
 
-1. **Perguntar informações básicas:**
-   - Nome da empresa (ex: "Padaria do João")
-2. **Gerar nome da pasta:** converter para lowercase, hifens, sem acentos (ex: "Padaria do João" → `padaria-do-joao`)
-3. **Verificar se já existe:** se encontrar pasta com esse nome e um arquivo `.md` com campo `empresa:` no frontmatter, avisar e perguntar se quer ver o status em vez de criar
+1. **Extrair nome da empresa do CONTEXTO** (passado pelo Maestro via prompt do `Agent()`):
+   - Procurar linha `nome-empresa: <valor>` no bloco CONTEXTO.
+   - Se ausente, perguntar diretamente ao user via AUQ.
 
-3.5. **Determinar pasta-destino (B-F4-VAL-1):**
-   - Se o CONTEXTO incluir `path-projeto` apontando pra pasta que já existe (cenário onboarding pós-F1, em que `maestro-onboarding/SKILL.md` 2.6/2B.3 já criou a pasta do projeto): **usar `path-projeto` como destino direto, sem criar subpasta**.
-   - Caso contrário (invocação standalone via `/biblioteca` sem projeto pré-existente): criar a pasta `<empresa-slug>/` dentro do CWD e usar como destino.
-   - Variável `<destino>` referenciada nos passos seguintes vale o caminho determinado aqui.
+2. **Determinar pasta-destino** (B-F4-VAL-1):
+   - Se CONTEXTO inclui `path-projeto: <path>` apontando pra pasta existente (cenário onboarding pós-F1) → usar como destino direto.
+   - Senão → `<CWD>/<empresa-slug>/` (slug pode ser pre-computado ou deixado pro helper).
 
-4. **Criar a estrutura completa dentro de `<destino>`:**
+3. **Resolver `$HELPERS`** (mesma rotina dos outros fluxos):
 
-   **Idempotência (B-F4-VAL-1):** pra cada arquivo deste passo, verificar via `Read` se já existe em `<destino>/<path>`. Se sim, pular silenciosamente — não sobrescrever (preserva config criado pelo onboarding 2.6/2B.3).
+   ```bash
+   PLUGIN_DIR=$(find "$HOME/.claude/plugins/marketplaces" -maxdepth 2 -type d -name maestro 2>/dev/null | head -1)
+   if [ -z "$PLUGIN_DIR" ]; then
+       echo "ERRO: plugin maestro nao encontrado em ~/.claude/plugins/marketplaces" >&2
+       exit 1
+   fi
+   HELPERS="$PLUGIN_DIR/core/helpers"
+   ```
 
-   - Se aplicável (passo 3.5 fallback), criar a pasta da empresa (ex: `padaria-do-joao/`) — pular se `<destino>` já existe.
-   - Consultar `core/templates/biblioteca-de-marketing/_scaffold-projeto.md` para a estrutura de pastas
-   - Criar `[nome-da-empresa].md` dentro de `<destino>` (ex: `padaria-do-joao.md`) usando `core/templates/biblioteca-de-marketing/_index-biblioteca.md` como base, preenchendo `empresa:` com o nome legível e `criado:` com a data atual
-   - Criar `maestro/config.md` com configuração padrão (pular se já existe — onboarding já criou)
-   - Criar `maestro/checklists/` (pasta vazia)
-   - Copiar `plugin/core/templates/_readme-checklists-projeto.md` → `maestro/checklists/README.md` (cópia literal)
-   - Copiar `plugin/core/templates/_feedback-revisor-template.md` → `memorias/feedback-revisor.md` (cópia literal — registro contínuo de feedbacks do Revisor pra ajuste de calibragem por projeto, Grupo 7)
-   - Copiar os 8 templates de identidade de `core/templates/biblioteca-de-marketing/preenchimento/identidade/` para `identidade/` (cada um já vem com `status: vazio` no frontmatter)
-   - Criar indexes inline em 3 pastas com schema solto: `social/_social.md`, `referencias/_referencias.md`, `memorias/_memorias.md` usando os modelos inline do scaffold
-   - **Criar os 17 painéis Dataview copiando literalmente os templates oficiais e renomeando `_X-index.md` → `_X.md` no destino** (sufixo `-index` cai). Não inventar conteúdo:
+   Pre-check: se `$HELPERS/biblioteca_scaffold.py` ausente → reportar `STATUS: BLOCKED` motivo "helpers Python ausentes — plugin desatualizado, esperado v2.33.0+".
 
-     **Validação de existência (M5 do spec Grupo E):** antes de copiar cada um, validar via `Read` que o template existe. Se ausente, avisar usuário com:
-     > "⚠ Template `<path>` não encontrado — atualize o plugin pra v2.15.0+ pra ativar o painel de `<area>`. Vou continuar o scaffold sem este painel."
-     E continuar o scaffold sem abortar. Aviso "não inventar conteúdo" segue valendo — fallback é **omitir o painel**, nunca improvisar.
+4. **Invocar helper** (todos os argumentos entre aspas — paths podem ter espaços):
 
-     **Lista dos 17 painéis (origem → destino):**
-     - `plugin/core/templates/_tarefas-index.md` → `tarefas/_tarefas.md`
-     - `plugin/core/templates/_planos-index.md` → `planos/_planos.md`
-     - `plugin/core/templates/_entrevistas-index.md` → `entrevistas/_entrevistas.md`
-     - `plugin/core/templates/_rascunhos-index.md` → `rascunhos/_rascunhos.md`
-     - `plugin/core/templates/indexes-area/_cascatas-index.md` → `entrevistas/_cascatas.md`
-     - `plugin/core/templates/indexes-area/_produtos-index.md` → `produtos/_produtos.md`
-     - `plugin/core/templates/indexes-area/_funis-index.md` → `funis/_funis.md`
-     - `plugin/core/templates/indexes-area/_lancamentos-index.md` → `lancamentos/_lancamentos.md`
-     - `plugin/core/templates/indexes-area/_campanhas-index.md` → `campanhas/_campanhas.md`
-     - `plugin/core/templates/indexes-area/_lead-magnets-index.md` → `lead-magnets/_lead-magnets.md`
-     - `plugin/core/templates/indexes-area/_escada-de-valor-index.md` → `escada-de-valor/_escada-de-valor.md`
-     - `plugin/core/templates/indexes-area/_pesquisas-index.md` → `pesquisas/_pesquisas.md`
-     - `plugin/core/templates/indexes-area/_entregas-index.md` → `entregas/_entregas.md`
-     - `plugin/core/templates/indexes-area/_identidade-index.md` → `identidade/_identidade.md`
-     - `plugin/core/templates/indexes-area/_qa-reprovacoes-index.md` → `tarefas/_qa-reprovacoes.md`
-     - `plugin/core/templates/indexes-area/_violacoes-maestro-index.md` → `tarefas/_violacoes-maestro.md` (auditoria contínua de B-S55-47)
-     - `plugin/core/templates/indexes-area/_pendencias-aceitas-index.md` → `memorias/_pendencias-aceitas.md`
+   ```bash
+   python "$HELPERS/biblioteca_scaffold.py" scaffold "$DESTINO" "$EMPRESA_NOME" --plugin-dir "$PLUGIN_DIR"
+   ```
 
-   - Copiar `plugin/core/templates/_pendencias-aceitas-historico-template.md` → `memorias/pendencias-aceitas/historico.md`. Write tool cria a subpasta `memorias/pendencias-aceitas/` automaticamente ao salvar o arquivo. Conteúdo do template é copiado literal (vazio na criação — Maestro popula em uso).
+5. **Ler JSON do stdout e ramificar por `status`:**
 
-   - Esses painéis têm callout `[!info]`, queries Dataview e frontmatter específico. Sem os templates reais, as features de painéis Dataview não funcionam.
+   - `status == "ok"` → seguir pro passo 6.
+   - `status == "duplicata"` → consultar tabela de tradução abaixo, AUQ ao user com 3 opções: "Ver status da existente / Criar com nome diferente / Cancelar".
+   - `status == "error"` → consultar tabela de tradução abaixo, mostrar frase educativa pro user.
 
-   - **Após criar todos os painéis Dataview**, executar o **Fluxo CRIAR BOOKMARKS DE NAVEGAÇÃO** (definido abaixo) pra escrever `<vault>/.obsidian/bookmarks.json` com a navegação ordenada das 14 áreas. Esse passo cria atalhos visuais no painel Bookmarks do Obsidian; sem ele, o usuário só vê as pastas em ordem alfabética.
+   > [!critical] Tabela determinística de tradução de erros (F-Lib-1-D14)
+   > NUNCA inferir tradução. Sempre usar a tabela.
+   >
+   > | `motivo` no JSON | Frase pro user (pt-br) |
+   > |---|---|
+   > | `destino-relativo` | "Preciso do caminho completo da pasta. Roda o comando dentro do seu vault." |
+   > | `destino-e-arquivo` | "Você apontou um arquivo em vez de uma pasta. Volta um nível e tenta de novo." |
+   > | `permission-denied` | "Essa pasta tá protegida (provavelmente sincronização em nuvem ou antivírus). Tenta em outra pasta." |
+   > | `slug-vazio` | "O nome precisa ter pelo menos uma letra ou número. Tira os emojis e tenta de novo." |
+   > | `empresa-nome-vazio` | "Faltou o nome da empresa. Qual é?" |
+   > | `plugin-dir-invalido` | "Plugin desatualizado ou corrompido. Roda /plugin update no Claude Code." |
+   > | `io-error` | "Tive um problema escrevendo arquivos (talvez disco cheio ou pasta protegida). Tenta de novo ou em outra pasta." |
 
-5. **Apresentar resultado:**
-   - Listar a estrutura criada (mostrando a pasta da empresa como raiz)
-   - Indicar que o próximo passo é preencher a Identidade da Marca
-   - Orientar: "Peça ao Maestro: 'Quero preencher a identidade da marca'"
+6. **Listar resultado de forma agrupada** (não bullet de 30 linhas):
+   - Contar `criados` por categoria via prefixo do path: `identidade/*`, `*/_<area>.md` (painéis), `memorias/auditoria/*`, `memorias/pendencias-aceitas/*`, demais.
+   - Mensagem padrão:
+     ```
+     ✓ Identidade: 8 templates prontos
+     ✓ Painéis Dataview: 17 áreas
+     ✓ Indexes inline: 3 áreas
+     ✓ Auditoria + pendências: 5 arquivos
+     ✓ Total em <N> pastas dentro de <empresa-slug>/
+     ```
+   - Se `warnings` não-vazio: adicionar "⚠ N painel(éis) ainda não disponíveis nesta versão do plugin — atualize com `/plugin update` para ativar."
+   - Se `pulados` não-vazio (re-execução): adicionar "Já existia parte da estrutura — preservei suas edições."
+
+7. **Invocar Fluxo CRIAR BOOKMARKS DE NAVEGAÇÃO** (definido mais abaixo neste mesmo SKILL.md, sem alterações por F-Lib-1) — escreve `<vault>/.obsidian/bookmarks.json` com a navegação ordenada das 14 áreas.
+
+8. **Mensagem final condicional** (F-Lib-1-D17):
+   - Se CONTEXTO incluiu `path-projeto` (cenário onboarding): "✓ Estrutura pronta."
+   - Senão (`/biblioteca` standalone): "✓ Estrutura pronta. Próximo passo: peça ao Maestro 'Quero preencher a identidade da marca'."
+
 
 ### Fluxo STATUS (consultar)
 

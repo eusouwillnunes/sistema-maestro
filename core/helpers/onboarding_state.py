@@ -13,28 +13,21 @@ API:
   cleanup_orphans(state_dir, max_age_hours=24)
   normalize_slug(workspace_name, projeto_name) -> str
 """
-import re
 import sys
-import unicodedata
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
+
+# Permite import quando rodado como script (não como pacote)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _slug import slugify  # noqa: E402
 
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
 
 
-def _slugify(text: str) -> str:
-    nfkd = unicodedata.normalize("NFKD", text)
-    ascii_text = "".join(c for c in nfkd if not unicodedata.combining(c))
-    ascii_text = ascii_text.lower()
-    ascii_text = re.sub(r"[^a-z0-9]+", "-", ascii_text)
-    ascii_text = ascii_text.strip("-")
-    return ascii_text
-
-
 def normalize_slug(workspace_name: str, projeto_name: str) -> str:
-    return f"{_slugify(workspace_name)}-{_slugify(projeto_name)}"
+    return f"{slugify(workspace_name)}-{slugify(projeto_name)}"
 
 
 def _state_path(state_dir: Path, slug: str) -> Path:
