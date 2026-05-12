@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # maestro-statusline.sh — Status line do Sistema Maestro
 # Recebe JSON via stdin do Claude Code, renderiza barra de status formatada.
-# Gerado pelo Sistema Maestro. Não edite manualmente — use /maestro-statusline configurar.
+# Gerado pelo Sistema Maestro. Nao edite manualmente — use /maestro-statusline configurar.
 
-set -euo pipefail
+set -u
 
-# --- Configuração (preenchida pela skill ao gerar) ---
+# --- Configuracao (preenchida pela skill ao gerar) ---
 ITEMS="contexto,limite-5h,limite-7d,modelo"
 ESTILO_CONTEXTO="barra"
 ESTILO_LIMITE_5H="numero"
@@ -15,146 +15,162 @@ ESTILO_CUSTO="numero"
 FAIXAS_CONTEXTO="40,60,70"
 
 # --- Cores ANSI ---
-GREEN='\033[32m'
-YELLOW='\033[33m'
-ORANGE='\033[38;5;208m'
-RED='\033[31m'
-RESET='\033[0m'
-DIM='\033[2m'
-SEP=" ${DIM}│${RESET} "
+GREEN=$'\033[32m'
+YELLOW=$'\033[33m'
+ORANGE=$'\033[38;5;208m'
+RED=$'\033[31m'
+RESET=$'\033[0m'
+DIM=$'\033[2m'
+SEP=" ${DIM}|${RESET} "
 
 # --- Ler JSON do stdin ---
 JSON=$(cat)
 
-# --- Funções auxiliares ---
-extract() {
-  local key="$1"
-  local result=""
-  if command -v jq &>/dev/null; then
-    result=$(echo "$JSON" | jq -r "$key // empty" 2>/dev/null) || true
-  elif command -v python &>/dev/null || command -v python3 &>/dev/null; then
-    local py_cmd; py_cmd=$(command -v python || command -v python3)
-    result=$(echo "$JSON" | "$py_cmd" -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    keys = '${key}'.lstrip('.').split('.')
-    v = d
-    for k in keys:
-        v = v[k]
-    print(v)
-except: pass
-" 2>/dev/null) || true
-  else
-    result=$(echo "$JSON" | grep -o "\"${key##*.}\"[[:space:]]*:[[:space:]]*[^,}]*" | head -1 | sed 's/.*:[[:space:]]*//' | tr -d '"' | tr -d ' ') || true
-  fi
-  echo "$result"
-}
-
-color_context() {
-  local pct="$1"
-  IFS=',' read -r t1 t2 t3 <<< "$FAIXAS_CONTEXTO"
-  if [ "$pct" -le "$t1" ]; then echo -ne "$GREEN"
-  elif [ "$pct" -le "$t2" ]; then echo -ne "$YELLOW"
-  elif [ "$pct" -le "$t3" ]; then echo -ne "$ORANGE"
-  else echo -ne "$RED"
-  fi
-}
-
-color_limit() {
-  local pct="$1"
-  if [ "$pct" -le 50 ]; then echo -ne "$GREEN"
-  elif [ "$pct" -le 75 ]; then echo -ne "$YELLOW"
-  elif [ "$pct" -le 90 ]; then echo -ne "$ORANGE"
-  else echo -ne "$RED"
-  fi
-}
-
-render_bar() {
-  local pct="$1"
-  local filled=$(( pct / 10 ))
-  local empty=$(( 10 - filled ))
-  local bar=""
-  for ((i=0; i<filled; i++)); do bar+="█"; done
-  for ((i=0; i<empty; i++)); do bar+="░"; done
-  echo -n "${bar} ${pct}%"
-}
-
-render_number() {
-  local pct="$1"
-  echo -n "${pct}%"
-}
-
-# --- Extrair valores do JSON ---
-CTX_PCT=$(extract ".context_window.used_percentage")
-LIMIT_5H_PCT=$(extract ".rate_limits.five_hour.used_percentage")
-LIMIT_7D_PCT=$(extract ".rate_limits.seven_day.used_percentage")
-MODEL_NAME=$(extract ".model.display_name")
-COST_USD=$(extract ".cost.total_cost_usd")
+# --- Extracao: jq quando disponivel, senao sed regex puro (sem Python) ---
+if command -v jq >/dev/null 2>&1; then
+  PARSED=$(printf '%s' "$JSON" | jq -r '
+    [
+      (.context_window.used_percentage // 0),
+      (.rate_limits.five_hour.used_percentage // 0),
+      (.rate_limits.seven_day.used_percentage // 0),
+      (.model.display_name // "?"),
+      (.cost.total_cost_usd // 0)
+    ] | @tsv
+  ' 2>/dev/null)
+  IFS=$'\t' read -r CTX_PCT LIMIT_5H_PCT LIMIT_7D_PCT MODEL_NAME COST_USD <<< "$PARSED"
+else
+  # JSON do Claude Code vem em linha unica. 1 awk com 5 capturas em vez de 5 seds = ~5x mais rapido.
+  # Escopo por parent: cada captura ancora no nome do objeto-pai mais proximo do campo alvo.
+  PARSED=$(printf '%s' "$JSON" | awk '
+    {
+      ctx="0"; h5="0"; d7="0"; model="?"; cost="0"
+      if (match($0, /"context_window"[^}]*"used_percentage"[[:space:]]*:[[:space:]]*[0-9.]+/)) {
+        s = substr($0, RSTART, RLENGTH); sub(/.*:[[:space:]]*/, "", s); ctx = s
+      }
+      if (match($0, /"five_hour"[^}]*"used_percentage"[[:space:]]*:[[:space:]]*[0-9.]+/)) {
+        s = substr($0, RSTART, RLENGTH); sub(/.*:[[:space:]]*/, "", s); h5 = s
+      }
+      if (match($0, /"seven_day"[^}]*"used_percentage"[[:space:]]*:[[:space:]]*[0-9.]+/)) {
+        s = substr($0, RSTART, RLENGTH); sub(/.*:[[:space:]]*/, "", s); d7 = s
+      }
+      if (match($0, /"model"[[:space:]]*:[[:space:]]*\{[^}]*"display_name"[[:space:]]*:[[:space:]]*"[^"]*"/)) {
+        s = substr($0, RSTART, RLENGTH); sub(/.*"display_name"[[:space:]]*:[[:space:]]*"/, "", s); sub(/".*/, "", s); model = s
+      }
+      if (match($0, /"cost"[[:space:]]*:[[:space:]]*\{[^}]*"total_cost_usd"[[:space:]]*:[[:space:]]*[0-9.]+/)) {
+        s = substr($0, RSTART, RLENGTH); sub(/.*:[[:space:]]*/, "", s); cost = s
+      }
+      printf "%s\t%s\t%s\t%s\t%s", ctx, h5, d7, model, cost
+    }
+  ')
+  IFS=$'\t' read -r CTX_PCT LIMIT_5H_PCT LIMIT_7D_PCT MODEL_NAME COST_USD <<< "$PARSED"
+fi
 
 # Defaults se campo ausente
 CTX_PCT=${CTX_PCT:-0}
 LIMIT_5H_PCT=${LIMIT_5H_PCT:-0}
 LIMIT_7D_PCT=${LIMIT_7D_PCT:-0}
-MODEL_NAME=${MODEL_NAME:-"?"}
-COST_USD=${COST_USD:-"0.00"}
+MODEL_NAME=${MODEL_NAME:-?}
+COST_USD=${COST_USD:-0.00}
 
-# Converter pra inteiro (remover decimais)
-CTX_PCT=${CTX_PCT%.*}
-LIMIT_5H_PCT=${LIMIT_5H_PCT%.*}
-LIMIT_7D_PCT=${LIMIT_7D_PCT%.*}
+# Inteiros pra comparacao de faixa (remove decimais)
+CTX_INT=${CTX_PCT%.*}
+LIMIT_5H_INT=${LIMIT_5H_PCT%.*}
+LIMIT_7D_INT=${LIMIT_7D_PCT%.*}
+[ -z "$CTX_INT" ] && CTX_INT=0
+[ -z "$LIMIT_5H_INT" ] && LIMIT_5H_INT=0
+[ -z "$LIMIT_7D_INT" ] && LIMIT_7D_INT=0
 
-# --- Montar output ---
-OUTPUT=""
+# Cap em 100 (defesa contra valores absurdos do extract)
+[ "$CTX_INT" -gt 100 ] 2>/dev/null && CTX_INT=100
+[ "$LIMIT_5H_INT" -gt 100 ] 2>/dev/null && LIMIT_5H_INT=100
+[ "$LIMIT_7D_INT" -gt 100 ] 2>/dev/null && LIMIT_7D_INT=100
 
+# --- Resolvedores de cor (escrevem em variavel, sem subshell) ---
+CTX_COLOR=""
+ctx_color() {
+  local pct="$1"
+  local t1 t2 t3
+  IFS=',' read -r t1 t2 t3 <<< "$FAIXAS_CONTEXTO"
+  if   [ "$pct" -le "$t1" ]; then CTX_COLOR="$GREEN"
+  elif [ "$pct" -le "$t2" ]; then CTX_COLOR="$YELLOW"
+  elif [ "$pct" -le "$t3" ]; then CTX_COLOR="$ORANGE"
+  else                            CTX_COLOR="$RED"
+  fi
+}
+
+LIMIT_COLOR=""
+limit_color() {
+  local pct="$1"
+  if   [ "$pct" -le 50 ]; then LIMIT_COLOR="$GREEN"
+  elif [ "$pct" -le 75 ]; then LIMIT_COLOR="$YELLOW"
+  elif [ "$pct" -le 90 ]; then LIMIT_COLOR="$ORANGE"
+  else                         LIMIT_COLOR="$RED"
+  fi
+}
+
+BAR=""
+render_bar() {
+  local pct="$1"
+  local filled=$(( pct / 10 ))
+  [ "$filled" -gt 10 ] && filled=10
+  [ "$filled" -lt 0 ] && filled=0
+  local empty=$(( 10 - filled ))
+  local i out=""
+  for ((i=0; i<filled; i++)); do out+="█"; done
+  for ((i=0; i<empty; i++));  do out+="░"; done
+  BAR="${out} ${pct}%"
+}
+
+# --- Montar segmentos (cor embutida em cada segmento, sem stdout vazado) ---
+declare -a SEGMENTS=()
 IFS=',' read -ra ITEM_LIST <<< "$ITEMS"
 for item in "${ITEM_LIST[@]}"; do
-  item=$(echo "$item" | tr -d ' ')
-  segment=""
-
+  item="${item// /}"
   case "$item" in
     contexto)
-      color_context "$CTX_PCT"
+      ctx_color "$CTX_INT"
       if [ "$ESTILO_CONTEXTO" = "barra" ]; then
-        segment="Contexto: $(render_bar "$CTX_PCT")"
+        render_bar "$CTX_INT"
+        SEGMENTS+=("${CTX_COLOR}Contexto: ${BAR}${RESET}")
       else
-        segment="Ctx: $(render_number "$CTX_PCT")"
+        SEGMENTS+=("${CTX_COLOR}Ctx: ${CTX_INT}%${RESET}")
       fi
-      segment="${segment}${RESET}"
       ;;
     limite-5h)
-      color_limit "$LIMIT_5H_PCT"
+      limit_color "$LIMIT_5H_INT"
       if [ "$ESTILO_LIMITE_5H" = "barra" ]; then
-        segment="5h: $(render_bar "$LIMIT_5H_PCT")"
+        render_bar "$LIMIT_5H_INT"
+        SEGMENTS+=("${LIMIT_COLOR}5h: ${BAR}${RESET}")
       else
-        segment="5h: $(render_number "$LIMIT_5H_PCT")"
+        SEGMENTS+=("${LIMIT_COLOR}5h: ${LIMIT_5H_INT}%${RESET}")
       fi
-      segment="${segment}${RESET}"
       ;;
     limite-7d)
-      color_limit "$LIMIT_7D_PCT"
+      limit_color "$LIMIT_7D_INT"
       if [ "$ESTILO_LIMITE_7D" = "barra" ]; then
-        segment="7d: $(render_bar "$LIMIT_7D_PCT")"
+        render_bar "$LIMIT_7D_INT"
+        SEGMENTS+=("${LIMIT_COLOR}7d: ${BAR}${RESET}")
       else
-        segment="7d: $(render_number "$LIMIT_7D_PCT")"
+        SEGMENTS+=("${LIMIT_COLOR}7d: ${LIMIT_7D_INT}%${RESET}")
       fi
-      segment="${segment}${RESET}"
       ;;
     modelo)
-      segment="$MODEL_NAME"
+      SEGMENTS+=("$MODEL_NAME")
       ;;
     custo)
-      segment="\$${COST_USD}"
+      SEGMENTS+=("\$${COST_USD}")
       ;;
   esac
+done
 
-  if [ -n "$segment" ]; then
-    if [ -n "$OUTPUT" ]; then
-      OUTPUT="${OUTPUT}${SEP}${segment}"
-    else
-      OUTPUT="$segment"
-    fi
+# --- Unir com separador e imprimir uma unica vez ---
+OUTPUT=""
+for s in "${SEGMENTS[@]}"; do
+  if [ -z "$OUTPUT" ]; then
+    OUTPUT="$s"
+  else
+    OUTPUT="${OUTPUT}${SEP}${s}"
   fi
 done
 
-echo -ne "$OUTPUT"
+printf '%s' "$OUTPUT"

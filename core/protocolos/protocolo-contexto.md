@@ -166,6 +166,37 @@ Sem cap formal no Gate 1 (cada iter é Sonnet barato + cache hit). Cap de **3 vo
 
 ---
 
+## Contexto para a Marca em tarefa-filha de cadeia de identidade
+
+Quando despacho de **Marca pra tarefa-filha de plano** com `modo-cadeia` preenchido (`guiado` ou `automatico`) **e** `bloqueada-por` não-vazio, anexar bloco no CONTEXTO:
+
+```
+---ARTEFATOS-CADEIA---
+Esta tarefa faz parte da cadeia de identidade. Os artefatos abaixo já foram aprovados em tarefas anteriores. Leia-os via Read antes de produzir o seu — cada um informa o próximo (Why → história → posicionamento → público → personalidade → tom → manifesto).
+
+{projeto}/identidade/circulo-dourado.md
+{projeto}/identidade/historia-fundadores.md
+[... todos os artefatos das tarefas listadas em `bloqueada-por`, em ordem cronológica de aprovação]
+---END-ARTEFATOS-CADEIA---
+```
+
+A Marca lê via `Read` (não recebe conteúdo inline). Custo de tokens controlado — Marca decide o que olhar.
+
+### Acionamento
+
+Maestro injeta o bloco apenas quando TODAS as condições são verdadeiras:
+
+1. Tarefa tem `parte-de: [[planos/<slug>]]`.
+2. Plano tem `modo-cadeia: guiado` ou `modo-cadeia: automatico` no frontmatter (não `pendente` nem `~`).
+3. Tarefa tem `bloqueada-por:` com ≥1 wikilink (filha 1 da cadeia não recebe — sem dependências).
+4. As tarefas listadas em `bloqueada-por:` têm `status: concluida` ou `status: aprovado-com-pendencia` E `resultado:` preenchido.
+
+Se condição (4) falha — não deveria acontecer no fluxo normal porque modo Sequencial só dispara N+1 quando N fecha — Maestro reporta erro técnico ao usuário em vez de despachar com bloco incompleto.
+
+**Modo `pendente`:** Maestro nunca despacha filhas enquanto `modo-cadeia: pendente`. Aguarda escolha do usuário no AUQ da Fase 4.5 do `fluxo-plano.md` antes da 1ª filha começar.
+
+---
+
 ## Contexto para o Bibliotecário no Fluxo FECHAR ARTEFATO
 
 O Maestro anexa sempre no bloco CONTEXTO do despacho do Bibliotecário pra fechar artefato:
@@ -247,3 +278,4 @@ Antes de despachar um especialista:
 - [ ] Modo Skill()? → Instruir leitura de biblioteca/identidade/
 - [ ] Despachando Bibliotecário pra fechar artefato? → Incluir os 2 catálogos de tags no CONTEXTO (core + user)
 - [ ] Despachando especialista no modo "Decompor plano" (Fase 2 do Fluxo de Plano v2)? → Incluir CONTEXTO padrão + extensões do especialista-dono (ver seção dedicada acima)
+- [ ] Despachando Marca pra tarefa-filha de plano com `modo-cadeia` preenchido e `bloqueada-por` não-vazio? → Incluir bloco `---ARTEFATOS-CADEIA---` no CONTEXTO (ver seção "Contexto para a Marca em tarefa-filha de cadeia de identidade")

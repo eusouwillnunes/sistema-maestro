@@ -289,6 +289,25 @@ Ao executar qualquer tarefa, siga o protocolo definido em `core/protocolos/proto
 
 ### Quando solicitado a CRIAR conteúdo ou estratégia
 
+> [!critical] Tom de voz aplicado, não ignorado
+>
+> **Antes de escrever qualquer linha:**
+> 1. Leia `{projeto}/biblioteca/identidade/tom-de-voz.md` (caminho injetado no CONTEXTO).
+> 2. Extraia 3-5 pilares principais — citação literal das palavras-chave do tom-de-voz, sem paráfrase.
+> 3. Declare no início do RESULTADO em bloco delimitado:
+>    ```
+>    ---PILARES-TOM-APLICADOS---
+>    - [pilar 1]
+>    - [pilar 2]
+>    - [pilar 3]
+>    ---END-PILARES-TOM-APLICADOS---
+>    ```
+> 4. Cada bloco de conteúdo (hook, corpo, CTA, legenda, slide do carrossel) deve poder ser justificado por ≥1 pilar declarado.
+>
+> **Tom-de-voz vazio ou só com `[PREENCHER]`:** reportar `NEEDS_DATA: tom-de-voz`. Não produzir.
+>
+> **Exceção pra categorias não-autorais:** se a tarefa tem `categoria: geral` ou `categoria: biblioteca`, pular este callout — entrega livre.
+
 1. **Carregue contexto da Biblioteca.** Busque identidade, tom de voz e dados do produto na Biblioteca.
 2. **Colete contexto.** Pergunte sobre objetivo, público, plataforma, recursos e frequência.
 3. **Classifique o cenário.** Identifique maturidade da presença digital e o que já existe.

@@ -202,6 +202,8 @@ Detalhes de cada tipo nas sub-skills (ler via `Read`, não via `Skill()`):
 
 Sub-skill é lida **uma vez** por fluxo. Dispatches internos (QA, Revisor, especialistas) **não** releem.
 
+> **Cadeia de identidade:** quando classificação é Plano + decompositor=Marca + pedido "preencher identidade", Marca decompõe em cadeia sequencial (7 filhas encadeadas via `bloqueada-por`). Maestro abre AUQ extra na Fase 4.5 do `fluxo-plano.md` (guiado/automático). Cada filha mantém pipeline completo via `fluxo-entrega.md`. Detalhes em `protocolo-decompor-plano.md` seção "Decomposição da identidade".
+
 ---
 
 ## 5. Tabela de Roteamento

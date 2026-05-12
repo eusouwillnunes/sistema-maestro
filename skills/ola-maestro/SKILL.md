@@ -247,7 +247,7 @@ Dispare em um **único bloco** após o Turno 1 concluir:
 - `Bash` com grep consolidado extraindo frontmatters em lote de tarefas + entrevistas + rascunhos em uma única chamada:
 
   ```bash
-  grep -HE "^(status|agente|titulo|objetivo|parte-de|prioridade|resultado|bloqueada-por|data-conclusao|data-inicio|data-cancelamento|motivo-cancelamento|template-destino|agente-solicitante|solicitante|grupo|categoria|expira-em|tags-dominio|tipo):" \
+  grep -HE "^(status|agente|titulo|objetivo|parte-de|prioridade|resultado|bloqueada-por|data-conclusao|data-inicio|data-cancelamento|motivo-cancelamento|template-destino|agente-solicitante|solicitante|grupo|categoria|expira-em|tags-dominio|tipo|modo-cadeia|status-cadeia):" \
     {projeto}/tarefas/*.md {projeto}/entrevistas/*.md {projeto}/rascunhos/*.md {projeto}/planos/*.md 2>/dev/null || true
   ```
 
@@ -314,8 +314,24 @@ Sem novas leituras. Aplicar na ordem:
 2. Aviso de backup de emergência (se glob `sessoes-emergencia/` retornou arquivos) — oferecer cópia via `AskUserQuestion`
 3. Recuperação de tarefa interrompida → Seção 6 (um `AskUserQuestion` por caso detectado no grep)
 4. Higiene de rascunho → Seção 7 (um `AskUserQuestion` por expirado detectado no grep)
-5. Montar dashboard (Seção 4)
-6. `AskUserQuestion` final de opções (conforme [[protocolo-interacao]])
+5. Tratamento de cadeias pausadas (ver subseção abaixo)
+6. Montar dashboard (Seção 4)
+7. `AskUserQuestion` final de opções (conforme [[protocolo-interacao]])
+
+#### Tratamento de cadeias pausadas
+
+Se o Turno 2 detectou ≥1 plano com `modo-cadeia: guiado` E `status-cadeia: pausado`:
+
+1. Após apresentar dashboard, abrir `AskUserQuestion` separada (1 por plano pausado, ou 1 só se forem múltiplos):
+
+   > "Você tem [N] cadeia(s) de identidade pausada(s). Quer retomar agora?"
+
+   Opções:
+   - **Retomar [plano X]** → Maestro despacha Gerente `FLUXO: retomar-cadeia` com caminho do plano. Após retomar, despacha próxima filha pendente via `fluxo-entrega.md`.
+   - **Continuar pausada** → não faz nada agora; cadeia continua pausada e aparece no `/ola-maestro` da próxima sessão.
+   - **Cancelar cadeia** → Maestro despacha Gerente `FLUXO: cancelar-plano` (Fluxo 13 existente).
+
+2. Se múltiplas cadeias pausadas, AUQ permite escolher uma; outras continuam aparecendo no dashboard até serem tratadas.
 
 ---
 
@@ -403,6 +419,10 @@ Bom dia! Aqui o estado do projeto **[Nome da Empresa]**:
 - 🔄 **[[entrevista-em-andamento]]** — iniciada em [data], incompleta
 [Se há entrevistas pendentes, oferecer:]
 Quer resolver agora? Posso acionar o Entrevistador.
+
+### Cadeias de identidade pausadas
+[Listar planos onde `tipo: plano` E `modo-cadeia: guiado` E `status-cadeia: pausado`. Renderizar como bullets com wikilink + última filha concluída + número de filhas pendentes. Se vazio, omitir a subseção inteira.]
+- [[planos/<slug>]] — pausada após [última filha concluída] ([N] filhas pendentes)
 
 ## O que está rodando
 [Lista de tarefas/pesquisas em execução via Agent() em background]

@@ -279,6 +279,81 @@ Ao executar qualquer tarefa, siga o protocolo definido em `core/protocolos/proto
 4. **Roteie para a sub-skill adequada** conforme a tabela de Roteamento Interno.
 5. **Valide a entrega** com o Checklist de Validação antes de entregar.
 
+#### Detecção de cadeia de identidade (modo Decompor plano)
+
+Quando despachada em `MODO: decompor-plano-fase-2` (ou `decompor-plano-em-revisao`) com pedido cuja descrição contém:
+
+- Token "identidade" + verbo de criação ("preencher", "criar", "fazer", "montar", "construir"), **e**
+- NÃO especifica template único ("só o tom de voz", "personalidade da marca", "círculo dourado da empresa"), **e**
+- Sem ambiguidade quantitativa ("3 coisas da identidade" — quando ambíguo, reportar `NEEDS_CONTEXT` na Fase 1.5 perguntando quais).
+
+**Inclui identidade visual?**
+- Frase do usuário menciona "incluindo visual" / "com identidade visual" / "incluindo a visual" → cadeia de 8 (visual no fim, dependendo de manifesto).
+- Sem menção explícita → cadeia de 7 (visual fora).
+
+**Quando detecção bate, decompor seguindo tabela canônica em `protocolo-decompor-plano.md` seção "Decomposição da identidade":**
+
+```
+---DECOMPOSICAO-PLANO---
+## Raciocínio da decomposição
+
+Identidade da [empresa] decomposta em cadeia sequencial seguindo modelo Sinek (Why → How → What) + Neumeier (diferenciação radical). Cada template alimenta o próximo: Círculo Dourado fornece o Why pro Posicionamento, História dos fundadores fornece narrativa concreta pra Personalidade, e por aí vai. Cadeia preserva coerência semântica — alterar o início propaga sentido pro fim.
+
+## Tarefas
+
+| # | Tarefa | Agente | Tipo de artefato | Depende de |
+|---|--------|--------|------------------|------------|
+| 1 | Círculo Dourado de [empresa] | Marca | identidade | — |
+| 2 | História dos fundadores de [empresa] | Marca | identidade | 1 |
+| 3 | Posicionamento de [empresa] | Marca | identidade | 2 |
+| 4 | Perfil do público de [empresa] | Marca | identidade | 3 |
+| 5 | Personalidade de marca de [empresa] | Marca | identidade | 4 |
+| 6 | Tom de voz de [empresa] | Marca | identidade | 5 |
+| 7 | Manifesto de [empresa] | Marca | identidade | 6 |
+
+## Modo de execução inferido
+
+sequencial
+
+Razão: cadeia 100% encadeada — cada filha depende da anterior. Preserva coerência semântica.
+
+## Cadeia de identidade
+
+sim
+---END-DECOMPOSICAO-PLANO---
+```
+
+**Quando inclui visual:** linha 8 adicional `| 8 | Identidade visual de [empresa] | Marca | identidade | 7 |`.
+
+**Substituições obrigatórias:**
+- `[empresa]` → nome do projeto/empresa lido do CONTEXTO (ex: "CBI of Miami").
+- Razão pode ser ajustada com naturalidade — a frase canônica acima é template, não obrigação literal. O **conteúdo** (cadeia 100% encadeada, coerência semântica) é obrigatório.
+
+**Quando o pedido NÃO bate detecção** (template único, ambíguo, ou domínio diferente), Marca decompõe normalmente seguindo regras gerais — sem flag "Cadeia de identidade".
+
+#### Tom de voz aplicado, não ignorado (defesa de coerência tonal)
+
+> [!critical] Tom de voz aplicado, não ignorado
+>
+> **Antes de escrever qualquer linha:**
+> 1. Leia `{projeto}/biblioteca/identidade/tom-de-voz.md` (caminho injetado no CONTEXTO).
+> 2. Extraia 3-5 pilares principais — citação literal das palavras-chave do tom-de-voz, sem paráfrase.
+> 3. Declare no início do RESULTADO em bloco delimitado:
+>    ```
+>    ---PILARES-TOM-APLICADOS---
+>    - [pilar 1]
+>    - [pilar 2]
+>    - [pilar 3]
+>    ---END-PILARES-TOM-APLICADOS---
+>    ```
+> 4. Cada parágrafo/seção do conteúdo (manifesto, posicionamento, copy de marca) deve poder ser justificado por ≥1 pilar declarado.
+>
+> **Exceção 1 — Marca produzindo o próprio `tom-de-voz.md`:** quando o artefato-alvo é `identidade/tom-de-voz.md`, pular este callout. Você está DEFININDO os pilares, não aplicando-os.
+>
+> **Exceção 2 — Cadeia de identidade pré-tom-de-voz:** quando o artefato-alvo é da pasta `identidade/` (círculo-dourado, história-fundadores, posicionamento, perfil-publico, personalidade-marca) E o `tom-de-voz.md` ainda não existe ou só tem `[PREENCHER]`, pular este callout. Defesa ativa só a partir do manifesto (filha 7 da cadeia, quando tom-de-voz já foi produzido na filha 6).
+>
+> **Tom-de-voz vazio em outros contextos:** reportar `NEEDS_DATA: tom-de-voz`. Não produzir.
+
 ### Quando solicitado a REVISAR marca ou identidade
 
 1. **Carregue a identidade existente.** Entenda o que foi definido e como está sendo aplicado.

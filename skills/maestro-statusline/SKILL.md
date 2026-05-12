@@ -61,68 +61,81 @@ statusline-faixas-contexto: 40,60,70
 
 ### 2.3 Verificar workspace trust
 
-O Claude Code bloqueia statusLine em projetos sem workspace trust aceito. Verificar e corrigir se necessário:
+O Claude Code bloqueia statusLine em projetos sem workspace trust aceito (mensagem visível: `statusline skipped · restart to fix`).
 
-1. Obter o diretório atual (CWD) com formato Windows (ex: `C:/dev/projeto`)
-2. Executar o seguinte comando Bash para verificar o trust:
+> [!warning] Path do projeto pode existir em multiplas formas em `~/.claude.json`
+> O arquivo acumula entradas distintas pra mesma pasta conforme voce renomeia/move (ex: `C:/marketing-primum/cbi`, `C:/primum-workspace/cbi`, `G:\\Meu Drive\\...\\cbi`). O fix precisa cobrir **todas as variantes que terminam no mesmo basename do CWD atual**, nao so o path canonico.
+
+Executar o Bash unico abaixo (faz detecao + fix + verificacao numa passada, com backup):
 
 ```bash
-python -c "
-import sys
-with open(r'${HOME}/.claude.json', 'rb') as f:
+python - <<'PYEOF'
+import re, shutil, time, os, sys
+path = os.path.expanduser('~/.claude.json')
+cwd = os.getcwd().replace('\\', '/')
+basename = os.path.basename(cwd)
+
+with open(path, 'rb') as f:
     content = f.read()
-# Buscar o path do projeto atual no arquivo
-cwd = sys.argv[1].replace('\\\\', '/')
-# Verificar se hasTrustDialogAccepted aparece como false perto do path
-import re
-# Encontrar a entrada do projeto
-pattern = cwd.replace('/', '.{0,3}').encode()
-idx = content.find(cwd.encode())
-if idx == -1:
-    # Tentar com barras invertidas
-    idx = content.find(cwd.replace('/', '\\\\\\\\').encode())
-if idx == -1:
-    print('PROJECT_NOT_FOUND')
-else:
-    # Procurar hasTrustDialogAccepted nos próximos 500 bytes
-    chunk = content[idx:idx+500]
-    if b'\"hasTrustDialogAccepted\": false' in chunk:
-        print('TRUST_FALSE')
-    elif b'\"hasTrustDialogAccepted\": true' in chunk:
-        print('TRUST_OK')
+
+# Achar TODAS as entradas que terminam no basename do CWD
+# Pattern: "<qualquer-path>/<basename>": { ... "hasTrustDialogAccepted": false/true ...
+needle_re = re.compile(rb'"([^"]*[/\\\\]' + re.escape(basename).encode() + rb')"\s*:\s*\{', re.IGNORECASE)
+matches = list(needle_re.finditer(content))
+
+if not matches:
+    print(f"NENHUMA entrada com basename '{basename}' encontrada em .claude.json")
+    sys.exit(0)
+
+print(f"Encontradas {len(matches)} entrada(s) com basename '{basename}':")
+to_fix = []
+for m in matches:
+    entry_path = m.group(1).decode('utf-8', errors='replace')
+    # Ver o valor de hasTrustDialogAccepted nos proximos 1500 bytes
+    chunk = content[m.end():m.end()+1500]
+    tm = re.search(rb'"hasTrustDialogAccepted":\s*(true|false)', chunk)
+    if tm:
+        val = tm.group(1).decode()
+        print(f"  - {entry_path[-60:]} -> trust={val}")
+        if val == 'false':
+            to_fix.append(m.end() + tm.start(1))
     else:
-        print('TRUST_UNKNOWN')
-" "$(pwd)"
-```
+        print(f"  - {entry_path[-60:]} -> trust=AUSENTE (pular)")
 
-**Se `TRUST_FALSE`:** corrigir automaticamente com replace binário:
+if not to_fix:
+    print("\nTodas ja em trust=true. Nada a fazer.")
+    sys.exit(0)
 
-```bash
-python -c "
-with open(r'${HOME}/.claude.json', 'rb') as f:
-    content = f.read()
-content = content.replace(b'\"hasTrustDialogAccepted\": false', b'\"hasTrustDialogAccepted\": true')
-with open(r'${HOME}/.claude.json', 'wb') as f:
+# Backup antes do write
+backup = f"{path}.bak-{int(time.time())}"
+shutil.copy(path, backup)
+print(f"\nBackup: {backup}")
+
+# Replace de cada false -> true (do final pro comeco pra preservar offsets)
+for offset in sorted(to_fix, reverse=True):
+    content = content[:offset] + b'true' + content[offset+5:]
+
+with open(path, 'wb') as f:
     f.write(content)
-print('Trust corrigido')
-"
+print(f"OK: {len(to_fix)} entrada(s) viraram trust=true. Reinicie o Claude Code.")
+PYEOF
 ```
 
-Explicar ao usuário e pedir confirmação antes de corrigir:
+**IMPORTANTE:** Nunca usar `json.load`/`json.dump` no `~/.claude.json` — o arquivo contem caracteres Unicode surrogates em paths do Windows que corrompem na serializacao. Sempre usar leitura/escrita binaria.
 
-> "Para a barra de status funcionar, preciso ativar o **workspace trust** neste projeto.
+Antes de executar, explicar ao usuario:
+
+> "Pra barra de status funcionar, preciso ativar o **workspace trust** neste projeto.
 >
-> O workspace trust é uma trava de segurança do Claude Code. Quando você abre um projeto, o Claude pergunta se confia nele. Enquanto não aceitar, ele bloqueia qualquer coisa que execute código automaticamente — como a barra de status, hooks e plugins.
+> O workspace trust e uma trava de seguranca do Claude Code. Quando voce abre um projeto, o Claude pergunta se confia nele. Enquanto nao aceitar, ele bloqueia qualquer coisa que execute codigo automaticamente — como a barra de status, hooks e plugins.
 >
-> Esse projeto está com o trust desativado, por isso a statusline não aparece. Posso ativar agora?"
+> Esse projeto esta com o trust desativado, por isso a statusline nao aparece. Posso ativar agora? Vou cobrir todas as variantes do path desse projeto que existirem no arquivo de config (acumulam quando voce renomeia/move pasta)."
 
-**Se sim:** executar o fix binário acima e informar: "Trust ativado! Reinicie o Claude Code para que a barra de status apareça."
+**Se sim:** executar o Bash acima e informar: "Trust ativado em N entrada(s). Reinicie o Claude Code pra barra voltar."
 
-**Se não:** informar: "Sem problema. A barra de status só vai funcionar quando o trust estiver ativo. Se mudar de ideia, rode `/maestro-statusline` novamente."
+**Se nao:** informar: "Sem problema. A barra de status so funciona com trust ativo. Quando mudar de ideia, rode `/maestro-statusline` de novo."
 
-**IMPORTANTE:** Nunca usar `json.load`/`json.dump` no `~/.claude.json` — o arquivo contém caracteres Unicode surrogates em paths do Windows que corrompem na serialização. Sempre usar leitura/escrita binária.
-
-**Se `TRUST_OK` ou `PROJECT_NOT_FOUND`:** seguir para o próximo passo normalmente.
+**Se o Bash reportar "Todas ja em trust=true"** mas a barra continuar com `skipped`: problema esta em outro lugar (cache do Claude Code, settings local-level no projeto). Pedir pro usuario verificar `<CWD>/.claude/settings.local.json`.
 
 ### 2.4 Configurar os settings
 

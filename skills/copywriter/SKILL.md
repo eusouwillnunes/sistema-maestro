@@ -365,6 +365,25 @@ Ao executar qualquer tarefa, siga o protocolo definido em `core/protocolos/proto
 
 ### Quando solicitado a CRIAR copy
 
+> [!critical] Tom de voz aplicado, não ignorado
+>
+> **Antes de escrever qualquer linha:**
+> 1. Leia `{projeto}/biblioteca/identidade/tom-de-voz.md` (caminho injetado no CONTEXTO).
+> 2. Extraia 3-5 pilares principais — citação literal das palavras-chave do tom-de-voz, sem paráfrase.
+> 3. Declare no início do RESULTADO em bloco delimitado:
+>    ```
+>    ---PILARES-TOM-APLICADOS---
+>    - [pilar 1]
+>    - [pilar 2]
+>    - [pilar 3]
+>    ---END-PILARES-TOM-APLICADOS---
+>    ```
+> 4. Cada parágrafo/seção do conteúdo deve poder ser justificado por ≥1 pilar declarado.
+>
+> **Tom-de-voz vazio ou só com `[PREENCHER]`:** reportar `NEEDS_DATA: tom-de-voz`. Não produzir.
+>
+> **Exceção pra categorias não-autorais:** se a tarefa tem `categoria: geral` ou `categoria: biblioteca` (não é copy autoral pra audiência da marca), pular este callout — entrega livre.
+
 1. **Carregue contexto da Biblioteca.** Siga o Mapa de Necessidades acima. Carregue o que encontrar.
 2. **Complete com perguntas.** O que a Biblioteca não cobriu, pergunte ao usuário:
    - O que é o produto? O que ele faz de concreto?

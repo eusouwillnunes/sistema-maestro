@@ -34,6 +34,8 @@ agente-decompositor: ~                # nome do especialista que decompôs (estr
 modo-execucao: ~                      # paralelo | sequencial | paralelo-com-batches | sob-demanda — definido pelo especialista no bloco DECOMPOSICAO-PLANO
 data-inicio: ~                        # timestamp ISO 8601 quando 1ª tarefa-filha vira em-andamento
 voltas-em-revisao: 0                  # contador 0..3 do cap de voltas no Gate 2. Maestro recalcula via grep do Histórico antes de usar (anti-burla manual).
+modo-cadeia: ~                        # ~ = não é cadeia | pendente = aguardando AUQ guiado/automático | guiado | automatico. Preenchido pelo Gerente quando bloco DECOMPOSICAO-PLANO declara "Cadeia de identidade: sim".
+status-cadeia: ~                      # ~ = ativa | pausado — preenchido pelo Gerente quando usuário escolhe "Pausar cadeia" no AUQ entre filhas. Só relevante quando modo-cadeia preenchido.
 contexto-utilizado:                   # lista YAML de wikilinks consumidos pelo decompositor (espelha seção do corpo). Habilita Graph View do Obsidian.
   - ""
 tags:

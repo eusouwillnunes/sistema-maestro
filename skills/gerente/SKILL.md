@@ -286,6 +286,8 @@ Acionado pelo Maestro após o usuário aprovar no **Gate 1** do Fluxo de Plano (
 
 **Importante:** este fluxo NÃO decompõe — apenas transcreve o que o especialista decidiu. Decomposição vive nos especialistas via `protocolo-decompor-plano.md`.
 
+**Detecção de cadeia de identidade:** se bloco `DECOMPOSICAO-PLANO` contém seção `## Cadeia de identidade` com valor `sim`, Gerente preenche `modo-cadeia: pendente` no frontmatter. Maestro detecta esse campo na Fase 4.5 do Fluxo de Plano e abre AUQ guiado/automático antes da 1ª filha despachar. Sem a flag, campo fica `~` (template default).
+
 1. Receber do Maestro:
    - Briefing original do usuário (Pedido original).
    - **Overview aprovado no Gate 1** (Objetivo + Contexto utilizado + Peças do plano).
@@ -313,6 +315,8 @@ Acionado pelo Maestro após o usuário aprovar no **Gate 1** do Fluxo de Plano (
      - `regera: ~` (preencher com wiki-link do plano-anterior cancelado se Maestro passou contexto — Gate 2 Regerar)
      - `agente-decompositor: [especialista]` (estrategista | copywriter | marca | midias-sociais | performance | pesquisador)
      - `modo-execucao: [paralelo|sequencial|paralelo-com-batches|sob-demanda]` (lido do bloco DECOMPOSICAO-PLANO seção "Modo de execução")
+     - `modo-cadeia: pendente` se bloco DECOMPOSICAO-PLANO contém seção `## Cadeia de identidade` com valor `sim`. Caso contrário, omitir o campo (template usa `~` como default). Detecção: `grep -A1 "## Cadeia de identidade" $BLOCO | tail -1 | grep -i "sim"`.
+     - `status-cadeia: ~` (preenche depois quando usuário escolhe Pausar — Fluxo pausar-cadeia)
      - `data-inicio: ~` (preenche depois quando 1ª filha vira em-andamento — Fluxo 2)
      - `voltas-em-revisao: 0`
      - `contexto-utilizado:` lista YAML com wikilinks transcritos do overview seção "Contexto utilizado" (cada item entre aspas: `- "[[area/wikilink-1]]"`)
@@ -518,6 +522,82 @@ Acionado pelo Maestro durante o **Gate 2** quando usuário edita `plano.md` à m
 7. Reportar ao Maestro: `PLANO-RECONCILIADO: [caminho]` + contadores (N tarefas, M dependências) pra Maestro reapresentar Gate 2.
 
 **Sem diff preciso linha-a-linha:** o sistema não preserva snapshot anterior. Reconciliação valida consistência interna do estado atual em vez de calcular delta — suficiente pro propósito (garantir que Gate 2 reapresenta um plano íntegro).
+
+---
+
+### Fluxo gravar-modo-cadeia: GRAVAR ESCOLHA DE CADÊNCIA (após Fase 4.5 do Fluxo de Plano)
+
+Acionado pelo Maestro após o usuário responder o AUQ "Guiado vs Automático" na Fase 4.5 do `fluxo-plano.md` (planos com `modo-cadeia: pendente`).
+
+**Modelo: Sonnet.**
+
+1. Receber do Maestro:
+   - Caminho do `plano.md`.
+   - Escolha do usuário: `guiado` ou `automatico`.
+
+2. Validar pré-condição: ler frontmatter do `plano.md` e confirmar `modo-cadeia: pendente`. Se não, reportar `BLOCKED: modo-cadeia esperado pendente, encontrado [valor]` (caso de bug — Maestro acionou fluxo errado).
+
+3. Capturar `$TS_NOW` via `Bash date -u +%Y-%m-%dT%H:%M:%SZ`.
+
+4. Atualizar `plano.md`:
+   - Frontmatter: `modo-cadeia: [escolha]` (substitui `pendente`).
+   - Histórico de alterações — append:
+     ```
+     | $TS_NOW | cadencia-escolhida | [solicitante] | Modo de cadeia: [escolha] |
+     ```
+
+5. Reportar ao Maestro: `MODO-CADEIA-GRAVADO: [caminho] (modo: [escolha])`.
+
+---
+
+### Fluxo pausar-cadeia: GRAVAR PAUSA DE CADEIA (entre filhas, modo guiado)
+
+Acionado pelo Maestro quando usuário escolhe "Pausar cadeia" no AUQ entre filhas (Item 5.bis do `fluxo-entrega.md`).
+
+**Modelo: Sonnet.**
+
+1. Receber do Maestro:
+   - Caminho do `plano.md`.
+   - Última filha concluída (wikilink, ex: `[[tarefas/2026-05-08-1430-circulo-dourado]]`).
+
+2. Validar pré-condição: ler frontmatter e confirmar `modo-cadeia: guiado`. Se `automatico` ou `~`, reportar `BLOCKED: pausa só permitida em modo guiado, encontrado [valor]`.
+
+3. Capturar `$TS_NOW` via `Bash date -u +%Y-%m-%dT%H:%M:%SZ`.
+
+4. Atualizar `plano.md`:
+   - Frontmatter: `status-cadeia: pausado`.
+   - Histórico:
+     ```
+     | $TS_NOW | cadeia-pausada | [solicitante] | Pausada após [última filha concluída] |
+     ```
+
+5. Reportar ao Maestro: `CADEIA-PAUSADA: [caminho]`.
+
+---
+
+### Fluxo retomar-cadeia: RETOMAR CADEIA PAUSADA (do ola-maestro)
+
+Acionado pelo Maestro quando usuário escolhe "Retomar" no AUQ do `/ola-maestro` que detectou plano com `status-cadeia: pausado`.
+
+**Modelo: Sonnet.**
+
+1. Receber do Maestro:
+   - Caminho do `plano.md`.
+
+2. Validar pré-condição: ler frontmatter e confirmar `modo-cadeia: guiado` E `status-cadeia: pausado`. Se `status-cadeia` não é `pausado`, reportar `BLOCKED: cadeia já ativa`.
+
+3. Capturar `$TS_NOW`.
+
+4. Atualizar `plano.md`:
+   - Frontmatter: `status-cadeia: ~` (volta a ativa).
+   - Histórico:
+     ```
+     | $TS_NOW | cadeia-retomada | [solicitante] | Retomada de pausa |
+     ```
+
+5. Identificar próxima filha pendente: glob em `{projeto}/tarefas/*.md` filtrando `parte-de: [[planos/<slug>]]` e `status: em-andamento` ou `pendente` e `bloqueada-por:` com ≥1 wikilink já concluído.
+
+6. Reportar ao Maestro: `CADEIA-RETOMADA: [caminho-plano] (próxima filha: [wikilink])`.
 
 ---
 

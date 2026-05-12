@@ -206,12 +206,13 @@ Abre no Obsidian (leva 2-5 min). Quando voltar, me diz: aprova, quer ajustar, re
 1. Despachar Gerente em Fluxo 5 via `Agent()` passando caminho do plano aprovado.
 2. Gerente materializa N tarefas-filhas + cascas, escreve `data-aprovacao` + `status: aprovado` + `gate-2-aprovado` no Histórico.
 3. Maestro mostra: `✅ Tarefas criadas.`
-4. **AskUserQuestion #2 — modo de execução (4 opções):**
+4. **Detecção de cadeia de identidade:** se `plano.md` tem `modo-cadeia: pendente` no frontmatter, **pular** o AUQ #2 padrão (passos 5-6) e ir direto pra **Fase 4.5**. Modo Sequencial é forçado por contrato (ver `protocolo-decompor-plano.md` seção "Decomposição da identidade").
+5. **AskUserQuestion #2 — modo de execução (4 opções):**
    - **Paralelo** — todas em paralelo simultâneo
    - **Paralelo com batches** — independentes em batch 1; dependentes esperam
    - **Sequencial** — uma por vez, na ordem de dependência
    - **Sob demanda** — usuário dispara tarefa por tarefa
-5. **Recomendação destacada** com justificativa, conforme regra de inferência:
+6. **Recomendação destacada** com justificativa, conforme regra de inferência:
 
    | Situação | Recomendação |
    |---|---|
@@ -222,17 +223,40 @@ Abre no Obsidian (leva 2-5 min). Quando voltar, me diz: aprova, quer ajustar, re
 
    "Sob demanda" **nunca** é recomendação automática.
 
-6. Conforme escolha, executar:
+7. Conforme escolha, executar:
    - **Paralelo:** abrir múltiplos `Agent()` simultâneos pra todas as filhas
    - **Paralelo com batches:** abrir Agent() concorrentes pras filhas independentes; bloquear dependentes até batch 1 fechar
    - **Sequencial:** Agent() pra 1ª filha; próxima só depois de fechar
    - **Sob demanda:** sair do plano; usuário dispara tarefa por tarefa quando quiser
 
-7. Cada tarefa-filha **roda como Entrega completa** via `fluxo-entrega.md`.
+8. Cada tarefa-filha **roda como Entrega completa** via `fluxo-entrega.md`.
 
-8. Tracking continua em `plano.md` (Gerente atualiza via Fluxo 2 conforme completam).
+9. Tracking continua em `plano.md` (Gerente atualiza via Fluxo 2 conforme completam).
 
-9. Marcar item 8 `completed` após escolha do modo de execução.
+10. Marcar item 8 `completed` após escolha do modo de execução.
+
+### Fase 4.5 — AUQ extra de cadência (só identidade, modo-cadeia: pendente)
+
+Quando `plano.md` tem `modo-cadeia: pendente`, Maestro abre AUQ específico **antes** de despachar a 1ª filha:
+
+**Mensagem 1 (preâmbulo):**
+
+> A identidade vai ser preenchida em cadeia sequencial — cada template alimenta o próximo (Círculo Dourado → História → Posicionamento → Perfil → Personalidade → Tom → Manifesto).
+
+**Mensagem 2 (AUQ separada):**
+
+| Opção | Resultado |
+|---|---|
+| **Guiado** | Após cada template aprovado, paro pra você revisar antes de liberar o próximo. 7 pausas. Erro num template não contamina os 6 seguintes. |
+| **Automático** | Rodo os 7 em sequência sem pausar. Você revisa no fim. Mais rápido, mas erro de tom no Círculo Dourado reverbera nos 6 seguintes. |
+
+**Após escolha:**
+
+1. Despachar Gerente em `FLUXO: gravar-modo-cadeia` com a escolha (`guiado` ou `automatico`).
+2. Aguardar retorno `MODO-CADEIA-GRAVADO`.
+3. Avançar pra Fase 4 passo 7+ com modo Sequencial forçado: Agent() pra 1ª filha; próxima só depois de fechar.
+
+**Cancelamento mid-AUQ:** se usuário responde "cancela", marcar plano como `status: cancelado, motivo-cancelamento: cancelado-pelo-usuario` via Gerente Fluxo 13 (cancelar plano) e não despachar nenhuma filha.
 
 ## Regras absolutas
 
@@ -246,3 +270,4 @@ Abre no Obsidian (leva 2-5 min). Quando voltar, me diz: aprova, quer ajustar, re
 8. **Cap de 3 voltas em em-revisao** — após 3, AUQ extra (Continuar regera / Aprovar / Cancelar). Maestro recalcula contador via grep do Histórico (anti-burla via Properties).
 9. **Gate 1 SEMPRE roda**, sem skip explícito ou heurístico (D9 da spec).
 10. **Especialista NUNCA chama Write/Edit em `planos/*.md`** — defesa textual (D13 da spec). Final reviewer cross-grepa.
+11. **Cadeia de identidade força modo Sequencial.** AUQ #2 padrão é pulado quando `modo-cadeia: pendente`. Em vez disso, AUQ extra (Fase 4.5) coleta `guiado` ou `automatico`. Não há override pra rodar cadeia em paralelo.

@@ -107,8 +107,14 @@ dependências-chave entre tarefas. Linguagem natural, sem formatação extra.]
 [paralelo | paralelo-com-batches | sequencial | sob-demanda]
 
 Razão: [linguagem simples explicando a inferência]
+
+## Cadeia de identidade
+
+[sim | não]
 ---END-DECOMPOSICAO-PLANO---
 ```
+
+A seção "Cadeia de identidade" com valor `sim` é declarada **apenas** pela Marca quando decompõe pedido "preencher identidade da empresa" seguindo a tabela canônica de 7 templates encadeados (ver seção "Decomposição da identidade" abaixo). Para qualquer outro plano, o valor é `não` ou a seção pode ser omitida (Gerente trata ambos como `~` no frontmatter do plano).
 
 ### Colunas obrigatórias da tabela
 
@@ -203,3 +209,27 @@ Exemplo de decomposição cross-domain:
 | 6 | Posts de IG do pré-lançamento | Mídias Sociais | entrega-generica | 1 |
 | 7 | Anúncios de tráfego pra inscrição | Performance | analise-performance | 4 |
 ```
+
+---
+
+## Decomposição da identidade (Marca decompositora, modo cadeia)
+
+Quando o pedido do usuário é "preencher identidade da empresa" sem especificar template único (ver `marca/SKILL.md` para detecção), Marca decompõe **sempre na ordem fixa abaixo**, com `Depende de` encadeada:
+
+| # | Tarefa | Agente | Tipo de artefato | Depende de |
+|---|--------|--------|------------------|------------|
+| 1 | Círculo Dourado de [empresa] | Marca | identidade | — |
+| 2 | História dos fundadores de [empresa] | Marca | identidade | 1 |
+| 3 | Posicionamento de [empresa] | Marca | identidade | 2 |
+| 4 | Perfil do público de [empresa] | Marca | identidade | 3 |
+| 5 | Personalidade de marca de [empresa] | Marca | identidade | 4 |
+| 6 | Tom de voz de [empresa] | Marca | identidade | 5 |
+| 7 | Manifesto de [empresa] | Marca | identidade | 6 |
+
+**identidade-visual** entra na cadeia só quando o usuário pedir explicitamente ("incluindo a visual" / "com identidade visual"). Quando entra, vira filha 8 com `Depende de: 7`. Sem pedido explícito, fica fora.
+
+**Modo de execução:** sempre `sequencial` por contrato (densidade 100% de dependência cobre o critério ≥60% da regra de inferência geral).
+
+**Flag obrigatória:** Marca declara `Cadeia de identidade: sim` no bloco DECOMPOSICAO-PLANO. Gerente Fluxo 4b lê a flag e preenche `modo-cadeia: pendente` no plano.md (gatilho pra AUQ extra do Maestro na Fase 4.5 do `fluxo-plano.md`).
+
+**Substituição literal de `[empresa]`:** Marca substitui pelo nome do projeto/empresa do CONTEXTO. Slug do artefato deriva do título do template (`circulo-dourado`, `historia-fundadores`, etc.) — não do nome da empresa.

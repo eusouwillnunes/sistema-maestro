@@ -20,7 +20,7 @@ Garantir que **todo texto produzido pelo sistema MAESTRO** pareça escrito por h
 
 Padrões IA modernos (estruturas que se popularizaram em 2024+) são frequentemente **técnicas legítimas de copy** quando usadas com propósito. O que separa técnica de muleta é **densidade + uso reflexo**, não a presença pontual.
 
-**Exceção pra padrões Bloqueantes (B-01..B-09):** a regra "densidade + uso reflexo, não presença pontual" vale pros padrões de Alerta (A-XX). Padrões Bloqueantes são presença pura — basta ≥1 ocorrência GLOBAL no documento pra Revisor reprovar, sem importar distribuição entre seções.
+**Exceção pra padrões Bloqueantes (B-01..B-10):** a regra "densidade + uso reflexo, não presença pontual" vale pros padrões de Alerta (A-XX). Padrões Bloqueantes são presença pura — basta ≥1 ocorrência GLOBAL no documento pra Revisor reprovar, sem importar distribuição entre seções.
 
 ---
 
@@ -119,6 +119,33 @@ Padrões IA modernos (estruturas que se popularizaram em 2024+) são frequenteme
 **Threshold:** ≥1 ocorrência → Revisor REPROVA. Sem exceção.
 **Lista monitorada (não exaustiva):** "é", "não", "próximo", "fundação", "só", "já", "também", "você", "análise", "estratégia", "conteúdo", "está", "três", "público", "sério", "história", "técnica", "última", "média"
 **Apontamento do Revisor ao especialista:** "Corrigir TODAS as ocorrências de palavras sem acento listadas no achado antes de re-entregar."
+
+### 3.5 Coerência tonal
+
+> [!danger] Categoria bloqueante — texto deve refletir os pilares de tom-de-voz declarados pelo especialista.
+>
+> Bloco `---PILARES-TOM-APLICADOS---` no RESULTADO declara 3-5 pilares citados literalmente do `tom-de-voz.md` do projeto. Cada parágrafo/bloco do conteúdo precisa ser justificável por ≥1 pilar.
+>
+> **Threshold global:** ≥3 frases divergem do pilar dominante → REPROVA. Distribuição não importa — densidade local não atenua.
+>
+> **Exceção pro próprio `tom-de-voz.md`:** quando artefato-alvo é `identidade/tom-de-voz.md`, B-10 não se aplica (não há pilares anteriores pra referenciar — está sendo criado).
+>
+> **Exceção pra cadeia de identidade pré-tom-de-voz:** quando artefato-alvo é da pasta `identidade/` E `tom-de-voz.md` ainda não foi produzido no projeto (filhas 1-5 da cadeia da F-Mar-Cadeia), B-10 não aplica.
+
+#### B-10 — Coerência tonal
+**Severidade:** Bloqueante
+**Threshold:** bloco `---PILARES-TOM-APLICADOS---` ausente OU ≥3 frases divergem do pilar dominante → Revisor REPROVA.
+
+**Apontamento do Revisor ao especialista:**
+- Quando bloco `---PILARES-TOM-APLICADOS---` está ausente: "RESULTADO precisa abrir com bloco PILARES-TOM-APLICADOS declarando 3-5 pilares citados literalmente do tom-de-voz.md. Reescrever incluindo o bloco."
+- Quando pilares declarados são paráfrase (não literais do tom-de-voz.md): "Pilar 'X' declarado mas não encontrado literalmente em tom-de-voz.md. Substituir por citação literal."
+- Quando texto diverge dos pilares declarados: "Texto declara pilar 'X' mas frases [N], [M], [O] soam 'Y' (oposto). Reescrever pra alinhar com pilar declarado, ou trocar pilar declarado pra refletir o que foi escrito (decisão do especialista)."
+
+**Exemplo antes/depois (pilar declarado: "autoridade direta, frases curtas, vocabulário técnico"):**
+
+❌ Antes: "É importante ressaltar que, em meio à constante evolução do mercado digital, talvez seja interessante considerarmos como nossa abordagem pode, de certa forma, contribuir pra otimização dos resultados."
+
+✅ Depois: "O mercado mudou. Sua abordagem precisa mudar junto. Nosso framework ataca o gargalo da conversão direto."
 
 ---
 
@@ -342,6 +369,7 @@ Peças curtas TÊM staccato, paralelismo, pergunta retórica e triplete como fer
 - [ ] Algum clichê pronto (B-02 a B-05)?
 - [ ] Alguma metáfora gasta (B-06 a B-08)?
 - [ ] Acentuação pt-br completa? (B-09)
+- [ ] Bloco `---PILARES-TOM-APLICADOS---` presente + texto coerente com pilares declarados? (B-10)
 
 ### 7.2 Alertas (limiar excedido → REPROVADO)
 

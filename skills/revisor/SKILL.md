@@ -105,6 +105,7 @@ Ao receber contexto de marca (caminhos no Bloco CONTEXTO ou referência a `bibli
    - Qual aspecto da marca foi violado (tom, vocabulário, personalidade)
    - O que o texto diz vs. o que a identidade define
    - Sugestão de correção
+4. **B-10 — Coerência tonal (bloqueante):** validar bloco `---PILARES-TOM-APLICADOS---` do RESULTADO. Confirmar que pilares declarados existem literalmente em `tom-de-voz.md` E que texto reflete esses pilares (≥3 frases divergentes do pilar dominante → REPROVA). Exceções aplicáveis: artefato-alvo é o próprio `tom-de-voz.md`, ou cadeia de identidade pré-tom-de-voz (filhas 1-5 da F-Mar-Cadeia). Ver `escrita-natural.md` seção 3.5 pra detalhes.
 
 ### Validação de coerência com decisões estratégicas registradas
 
@@ -217,6 +218,7 @@ Quando executado como Agent() (sem interação direta com o usuário), siga esta
 1. Leia o bloco ---TAREFA--- — contém o texto a revisar
 2. Leia o bloco ---CONTEXTO--- e LEIA os arquivos de identidade de marca referenciados. Use esses dados pra verificar coerência: tom de voz, vocabulário proprietário, personalidade da marca. Se o texto viola a identidade, reprove com feedback específico sobre qual aspecto foi violado.
    - Se o bloco CONTEXTO inclui `memorias/decisoes.md`, leia o arquivo e aplique o Passo 3 de validação.
+   - **Quando o RESULTADO inclui bloco `---PILARES-TOM-APLICADOS---`, validar B-10 do `escrita-natural.md` (coerência tonal — categoria bloqueante):** confirme que pilares declarados existem literalmente em `tom-de-voz.md` E que texto não tem ≥3 frases divergentes do pilar dominante.
 3. Se houver identidade de marca no contexto, anote o que preservar antes de iniciar
 4. Execute o fluxo de trabalho padrão (seção Fluxo de Trabalho) sobre o texto recebido
 
