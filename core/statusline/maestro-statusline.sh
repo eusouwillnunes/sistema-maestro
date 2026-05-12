@@ -39,26 +39,64 @@ if command -v jq >/dev/null 2>&1; then
   ' 2>/dev/null)
   IFS=$'\t' read -r CTX_PCT LIMIT_5H_PCT LIMIT_7D_PCT MODEL_NAME COST_USD <<< "$PARSED"
 else
-  # JSON do Claude Code vem em linha unica. 1 awk com 5 capturas em vez de 5 seds = ~5x mais rapido.
-  # Escopo por parent: cada captura ancora no nome do objeto-pai mais proximo do campo alvo.
+  # JSON do Claude Code pode vir formatado (multi-linha com indentacao) E ter objetos
+  # nested dentro do parent que queremos (ex: current_usage dentro de context_window vem
+  # ANTES de used_percentage). awk slurpa tudo via getline e faz brace counting manual
+  # pra delimitar o bloco do parent corretamente — depois extrai o campo de dentro.
   PARSED=$(printf '%s' "$JSON" | awk '
-    {
-      ctx="0"; h5="0"; d7="0"; model="?"; cost="0"
-      if (match($0, /"context_window"[^}]*"used_percentage"[[:space:]]*:[[:space:]]*[0-9.]+/)) {
-        s = substr($0, RSTART, RLENGTH); sub(/.*:[[:space:]]*/, "", s); ctx = s
+    function extract_block(buf, parent,    start, brace_start, depth, i, c) {
+      start = index(buf, "\"" parent "\"")
+      if (!start) return ""
+      buf = substr(buf, start)
+      brace_start = index(buf, "{")
+      if (!brace_start) return ""
+      depth = 1; i = brace_start + 1
+      while (i <= length(buf) && depth > 0) {
+        c = substr(buf, i, 1)
+        if (c == "{") depth++
+        else if (c == "}") depth--
+        if (depth == 0) return substr(buf, brace_start, i - brace_start + 1)
+        i++
       }
-      if (match($0, /"five_hour"[^}]*"used_percentage"[[:space:]]*:[[:space:]]*[0-9.]+/)) {
-        s = substr($0, RSTART, RLENGTH); sub(/.*:[[:space:]]*/, "", s); h5 = s
+      return ""
+    }
+    function extract_num(block, key,    s) {
+      if (match(block, "\"" key "\"[[:space:]]*:[[:space:]]*[0-9.]+")) {
+        s = substr(block, RSTART, RLENGTH)
+        sub(/.*:[[:space:]]*/, "", s)
+        return s
       }
-      if (match($0, /"seven_day"[^}]*"used_percentage"[[:space:]]*:[[:space:]]*[0-9.]+/)) {
-        s = substr($0, RSTART, RLENGTH); sub(/.*:[[:space:]]*/, "", s); d7 = s
+      return "0"
+    }
+    function extract_str(block, key,    s) {
+      if (match(block, "\"" key "\"[[:space:]]*:[[:space:]]*\"[^\"]*\"")) {
+        s = substr(block, RSTART, RLENGTH)
+        sub(/.*:[[:space:]]*"/, "", s)
+        sub(/".*/, "", s)
+        return s
       }
-      if (match($0, /"model"[[:space:]]*:[[:space:]]*\{[^}]*"display_name"[[:space:]]*:[[:space:]]*"[^"]*"/)) {
-        s = substr($0, RSTART, RLENGTH); sub(/.*"display_name"[[:space:]]*:[[:space:]]*"/, "", s); sub(/".*/, "", s); model = s
+      return "?"
+    }
+    { all = all $0 }
+    END {
+      ctx_block = extract_block(all, "context_window")
+      rate_block = extract_block(all, "rate_limits")
+      model_block = extract_block(all, "model")
+      cost_block = extract_block(all, "cost")
+
+      ctx = ctx_block != "" ? extract_num(ctx_block, "used_percentage") : "0"
+
+      h5 = "0"; d7 = "0"
+      if (rate_block != "") {
+        h5_block = extract_block(rate_block, "five_hour")
+        d7_block = extract_block(rate_block, "seven_day")
+        if (h5_block != "") h5 = extract_num(h5_block, "used_percentage")
+        if (d7_block != "") d7 = extract_num(d7_block, "used_percentage")
       }
-      if (match($0, /"cost"[[:space:]]*:[[:space:]]*\{[^}]*"total_cost_usd"[[:space:]]*:[[:space:]]*[0-9.]+/)) {
-        s = substr($0, RSTART, RLENGTH); sub(/.*:[[:space:]]*/, "", s); cost = s
-      }
+
+      model = model_block != "" ? extract_str(model_block, "display_name") : "?"
+      cost = cost_block != "" ? extract_num(cost_block, "total_cost_usd") : "0"
+
       printf "%s\t%s\t%s\t%s\t%s", ctx, h5, d7, model, cost
     }
   ')
