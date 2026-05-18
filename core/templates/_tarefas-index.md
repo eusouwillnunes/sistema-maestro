@@ -24,10 +24,10 @@ GROUP BY status
 
 ```dataview
 TABLE length(rows) as Total,
-      length(filter(rows, (r) => r.status = "concluida")) as Concluídas,
+      length(filter(rows, (r) => r.status = "concluido")) as Concluídas,
       length(filter(rows, (r) => r.status = "pendente")) as Pendentes,
-      length(filter(rows, (r) => r.status = "bloqueada")) as Bloqueadas,
-      length(filter(rows, (r) => r.status = "cancelada")) as Canceladas
+      length(filter(rows, (r) => r.status = "bloqueado")) as Bloqueadas,
+      length(filter(rows, (r) => r.status = "cancelado")) as Canceladas
 FROM ""
 WHERE file.folder = this.file.folder AND tipo = "tarefa"
 GROUP BY agente
@@ -37,9 +37,9 @@ GROUP BY agente
 
 ```dataview
 TABLE length(rows) as Total,
-      length(filter(rows, (r) => r.status = "concluida")) as Concluídas,
+      length(filter(rows, (r) => r.status = "concluido")) as Concluídas,
       length(filter(rows, (r) => r.status = "em-andamento")) as "Em andamento",
-      length(filter(rows, (r) => r.status = "cancelada")) as Canceladas
+      length(filter(rows, (r) => r.status = "cancelado")) as Canceladas
 FROM ""
 WHERE file.folder = this.file.folder AND tipo = "tarefa"
 GROUP BY solicitante
@@ -70,7 +70,7 @@ SORT prioridade ASC, data-criacao DESC
 ```dataview
 TABLE agente, bloqueada-por as "Bloqueada por", solicitante, parte-de as Plano
 FROM ""
-WHERE file.folder = this.file.folder AND tipo = "tarefa" AND status = "bloqueada"
+WHERE file.folder = this.file.folder AND tipo = "tarefa" AND status = "bloqueado"
 ```
 
 ## Concluídas (últimas 15)
@@ -78,7 +78,7 @@ WHERE file.folder = this.file.folder AND tipo = "tarefa" AND status = "bloqueada
 ```dataview
 TABLE agente, solicitante, parte-de as Plano, resultado as Resultado, data-conclusao as Conclusão, choice(concluido-por = "sistema", "🤖 sistema", choice(concluido-por = "manual", "✋ manual", "— desconhecido")) as Origem
 FROM ""
-WHERE file.folder = this.file.folder AND tipo = "tarefa" AND status = "concluida"
+WHERE file.folder = this.file.folder AND tipo = "tarefa" AND status = "concluido"
 SORT data-conclusao DESC
 LIMIT 15
 ```
@@ -88,7 +88,7 @@ LIMIT 15
 ```dataview
 TABLE agente, solicitante, parte-de as Plano, motivo-cancelamento as Motivo, data-cancelamento as Cancelamento, choice(concluido-por = "sistema", "🤖 sistema", choice(concluido-por = "manual", "✋ manual", "— desconhecido")) as Origem
 FROM ""
-WHERE file.folder = this.file.folder AND tipo = "tarefa" AND status = "cancelada"
+WHERE file.folder = this.file.folder AND tipo = "tarefa" AND status = "cancelado"
 SORT data-cancelamento DESC
 LIMIT 15
 ```

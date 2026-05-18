@@ -18,7 +18,7 @@ Este painel lista todos os projetos da workspace ordenados por última atividade
 TABLE WITHOUT ID
   link(key + "/" + key + ".md", key) AS "Projeto",
   max(rows.file.mtime) AS "Última atividade",
-  length(filter(rows, (r) => contains(r.file.folder, "/tarefas") AND r.status = "em-progresso")) AS "Tarefas em progresso"
+  length(filter(rows, (r) => contains(r.file.folder, "/tarefas") AND r.status = "em-andamento")) AS "Tarefas em progresso"
 FROM "{projeto-slug-1}" OR "{projeto-slug-2}"
 GROUP BY regexreplace(file.folder, "/.*", "")
 SORT max(rows.file.mtime) DESC

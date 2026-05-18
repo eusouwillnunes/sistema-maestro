@@ -2,7 +2,7 @@
 titulo: Oferta Irresistível
 tipo: produto
 camada: 2
-status: vazio
+status: pendente
 produto: [NOME DO PRODUTO]
 depende-de:
   - produto/dossie

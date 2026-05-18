@@ -79,6 +79,11 @@ Acionado quando não existe biblioteca no projeto ou o usuário pede para criar.
    - Procurar linha `nome-empresa: <valor>` no bloco CONTEXTO.
    - Se ausente, perguntar diretamente ao user via AUQ.
 
+1.5. **Extrair `areas-ja-presentes:` se vier no CONTEXTO** (cenário /importar-projeto):
+   - Procurar linha `areas-ja-presentes: <lista>` no bloco CONTEXTO.
+   - Se presente, montar `SKIP_ARGS="--skip-areas <lista>"` (ex.: `--skip-areas identidade,produto`).
+   - Se ausente, `SKIP_ARGS=""`.
+
 2. **Determinar pasta-destino** (B-F4-VAL-1):
    - Se CONTEXTO inclui `path-projeto: <path>` apontando pra pasta existente (cenário onboarding pós-F1) → usar como destino direto.
    - Senão → `<CWD>/<empresa-slug>/` (slug pode ser pre-computado ou deixado pro helper).
@@ -99,7 +104,7 @@ Acionado quando não existe biblioteca no projeto ou o usuário pede para criar.
 4. **Invocar helper** (todos os argumentos entre aspas — paths podem ter espaços):
 
    ```bash
-   python "$HELPERS/biblioteca_scaffold.py" scaffold "$DESTINO" "$EMPRESA_NOME" --plugin-dir "$PLUGIN_DIR"
+   python "$HELPERS/biblioteca_scaffold.py" scaffold "$DESTINO" "$EMPRESA_NOME" --plugin-dir "$PLUGIN_DIR" $SKIP_ARGS
    ```
 
 5. **Ler JSON do stdout e ramificar por `status`:**
@@ -160,10 +165,18 @@ Acionado quando a biblioteca já existe e o usuário pede status ou chama `/bibl
 Acionado quando o usuário pede explicitamente "marcar identidade X como preenchida" (ou similar).
 
 1. **Identificar arquivo alvo** em `{projeto}/identidade/<slug>.md` (ex: `circulo-dourado.md`).
-2. **Edit no frontmatter** trocando `status: vazio` por `status: preenchido`.
-3. **Confirmar no usuário** com link pro doc atualizado: "✓ marcado `[[identidade/<slug>]]` como preenchido."
+2. **Atualizar status via helper** (F-Status — Edit direto em frontmatter é bloqueado pelo hook schema-aware):
 
-> **Por quê opt-in:** heurística "presença de [PREENCHER]" é frágil — o usuário pode preencher parcialmente. Status virar `preenchido` é decisão consciente. O Bibliotecário **não infere automaticamente** durante o Fluxo STATUS — apenas reporta o status atual lido do frontmatter.
+```bash
+TS_NOW=$(date +"%Y-%m-%dT%H:%M:%S")
+python plugin/core/helpers/patch_frontmatter.py --file "{projeto}/identidade/<slug>.md" \
+  --set status=concluido \
+  --set data-conclusao=$TS_NOW
+```
+
+3. **Confirmar no usuário** com link pro doc atualizado: "✓ marcado `[[identidade/<slug>]]` como concluído."
+
+> **Por quê opt-in:** heurística "presença de [PREENCHER]" é frágil — o usuário pode preencher parcialmente. Status virar `concluido` é decisão consciente. O Bibliotecário **não infere automaticamente** durante o Fluxo STATUS — apenas reporta o status atual lido do frontmatter.
 
 ### Fluxo MATERIAL (detecção de material existente)
 
@@ -181,14 +194,24 @@ Acionado pelo `maestro-onboarding/SKILL.md` etapa 2.5 (Fluxo de Primeira Vez). F
 
 **Modelo: Haiku** (operacional — toda lógica determinística mora nos helpers Python; modelo só monta argumentos).
 
+**Modos:**
+
+- `padrão` (sem `modo:` ou `modo: padrão`): F2 painéis + F4 bookmarks/flags. Pressupõe workspace + projeto já criados.
+- `pre-import`: **vault zerado**. Cria `<CWD>/.maestro-workspace` (marker) + pasta `<CWD>/<projeto-slug>/` + `maestro/config.md` mínimo + F2 + F4. Usado pelo `/importar-projeto` em Estado 1.
+- `pre-import-novo-projeto`: **workspace existe, projeto não**. Cria pasta `<workspace>/<projeto-slug>/` + `maestro/config.md` mínimo. Usado em Estado 2.
+
 **Recebe no CONTEXTO:**
 - `workspace`: path absoluto da pasta workspace
 - `projeto-slug`: slug do primeiro projeto da workspace (recém-criado pelo Fluxo de Primeira Vez — sempre presente)
+- `modo` (opcional): `padrão` | `pre-import` | `pre-import-novo-projeto` — omitido equivale a `padrão`
 
 **Comportamento:**
 
-1. **Validar marker:** confirmar que `<workspace>/.maestro-workspace` existe.
-   - Se ausente → reportar `STATUS: BLOCKED` motivo "marker ausente em <workspace>/.maestro-workspace".
+1. **Validar / criar marker:**
+   - `modo: pre-import` (vault zerado): criar `<CWD>/.maestro-workspace` se não existe + criar pasta `<CWD>/<projeto-slug>/` + `<CWD>/<projeto-slug>/maestro/config.md` mínimo (frontmatter com `projeto: <projeto-slug>`, `workspace: <CWD>`, `onboarding-completo: false`).
+   - `modo: pre-import-novo-projeto`: marker já existe; criar só `<workspace>/<projeto-slug>/` + `<workspace>/<projeto-slug>/maestro/config.md` mínimo com os mesmos campos.
+   - `modo: padrão` ou ausente: confirmar que `<workspace>/.maestro-workspace` existe.
+     - Se ausente → reportar `STATUS: BLOCKED` motivo "marker ausente em <workspace>/.maestro-workspace".
 
 1.5. **Resolver `$HELPERS` (B-F4-VAL-5):** path absoluto dos helpers Python no plugin instalado.
 

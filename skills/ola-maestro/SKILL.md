@@ -267,13 +267,13 @@ Dispare em um **único bloco** após o Turno 1 concluir:
 - `Bash` adicional pra contar **violações B-S55-47** (tarefas-filhas categoria revisao com correção pós-Revisor aplicada por agente errado — escaparam ao tripwire ou foram detectadas após o fato):
 
   ```bash
-  # Conta tarefas categoria=revisao com agente!=usuario E _ultima-correcao-por=maestro/null E status!=aprovado-com-pendencia
+  # Conta tarefas categoria=revisao com agente!=usuario E _ultima-correcao-por=maestro/null E pendencias-aceitas vazio (F-Status M6)
   # Heurística: encontrar arquivos que casam categoria revisao + agente especialista + autoria errada
   for f in {projeto}/tarefas/*.md; do
     [ -f "$f" ] || continue
     grep -q "^categoria: revisao" "$f" 2>/dev/null || continue
     grep -q "^agente: usuario" "$f" 2>/dev/null && continue
-    grep -q "^status: aprovado-com-pendencia" "$f" 2>/dev/null && continue
+    grep -qE "^pendencias-aceitas:\s*\S" "$f" 2>/dev/null && continue
     if grep -qE "^_ultima-correcao-por: (maestro|~|null)$" "$f" 2>/dev/null || ! grep -q "^_ultima-correcao-por:" "$f" 2>/dev/null; then
       echo "$f"
     fi
@@ -395,12 +395,26 @@ Bom dia! Aqui o estado do projeto **[Nome da Empresa]**:
 
 > 💡 Você tem [feedback_pendentes] feedbacks de Revisor parados. Vale rodar `/maestro-revisar-memorias` antes do próximo dispatch criativo — a calibragem do projeto pode estar saindo do alinhamento.
 
-[Se pendencias_qualidade ≥ 1, renderizar bloco abaixo. pendencias_qualidade = contagem no grep do Turno 2 de tarefas com `status: aprovado-com-pendencia` OU (`categoria: revisao` E status diferente de `concluida`/`cancelada`). Se pendencias_qualidade == 0: omitir o bloco.]
+[Se pendencias_qualidade ≥ 1, renderizar bloco abaixo. pendencias_qualidade = contagem no grep do Turno 2 de tarefas com `pendencias-aceitas` preenchido (F-Status M6) OU (`categoria: revisao` E status diferente de `concluido`/`cancelado`). Se pendencias_qualidade == 0: omitir o bloco.]
 
 > [!warning] Pendências de qualidade: [pendencias_qualidade] tarefa(s) com pendência aceita ou em revisão.
 > Abrir `tarefas/_qa-reprovacoes.md` pra revisar.
 
-[Se violacoes_maestro ≥ 1, renderizar bloco abaixo. violacoes_maestro = contagem do Bash dedicado no Turno 2 (categoria revisao + agente especialista + _ultima-correcao-por=maestro/null + status≠aprovado-com-pendencia). Se violacoes_maestro == 0: omitir o bloco. Origem: B-S55-47 — Maestro aplicou correção em vez do especialista.]
+[Se aguardando_feedback ≥ 1, renderizar um dos blocos abaixo conforme threshold. aguardando_feedback = grep "^status: entregue" em {projeto}/tarefas/. Pluralizar conforme N.]
+
+[Se aguardando_feedback == 1:]
+> [!tip] Aguardando seu feedback
+> Você tem **1 entrega** pronta pra revisar. Rode `/feedback` ou abra [[_painel/tarefas]] pra ver.
+
+[Se 2 <= aguardando_feedback < 10:]
+> [!tip] Aguardando seu feedback
+> Você tem **[aguardando_feedback] entregas** prontas pra revisar. Rode `/feedback` ou abra [[_painel/tarefas]] pra ver.
+
+[Se aguardando_feedback >= 10:]
+> [!warning] Pilha de feedback acumulada
+> Você tem **[aguardando_feedback] entregas** esperando há tempo. Considere abrir uma sessão de feedback agora — rode `/feedback`. Lista completa em [[_painel/tarefas#Entregues — aguardando seu feedback]].
+
+[Se violacoes_maestro ≥ 1, renderizar bloco abaixo. violacoes_maestro = contagem do Bash dedicado no Turno 2 (categoria revisao + agente especialista + _ultima-correcao-por=maestro/null + pendencias-aceitas vazio). Se violacoes_maestro == 0: omitir o bloco. Origem: B-S55-47 — Maestro aplicou correção em vez do especialista.]
 
 > [!danger] Violações B-S55-47 detectadas: [violacoes_maestro] tarefa(s) com correção aplicada pelo agente errado.
 > Abrir `tarefas/_violacoes-maestro.md` pra investigar — Maestro aplicou correção em vez do especialista que produziu o artefato. Voz autoral comprometida em [violacoes_maestro] caso(s).

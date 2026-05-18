@@ -46,6 +46,8 @@ Este agente é acionado quando a tarefa envolver:
 | cria revisão, tarefa de revisão, QA falhou, Revisor reprovou | Ciclo de revisão (Fluxo 3) |
 | cancela tarefa, descarta tarefa, desiste da tarefa | Cancelamento de 1 tarefa (Fluxo 12) |
 | cancela plano, desiste do plano, mata o plano | Cancelamento top-down (Fluxo 13) |
+| aprovar entregue, /feedback aprovar | Aprovação de entrega criativa pelo usuário (Fluxo 14) |
+| reprovar entregue, /feedback reprovar | Reprovação de entrega criativa pelo usuário (Fluxo 15) |
 
 ### O que este agente NÃO faz
 
@@ -200,7 +202,7 @@ Se a tarefa sendo fechada tem TODAS as condições:
 - `categoria: revisao` (é tarefa-filha de ciclo de validação) **E**
 - `agente != "usuario"` (rodada 3 tem agente=usuario por design do Fluxo 3 step 2; bypassa tripwire — caso de pendência aceita ou reescrita pelo usuário) **E**
 - `_ultima-correcao-por` no payload é `"maestro"` OU ausente OU `null` **E**
-- `status` no frontmatter atual NÃO é `aprovado-com-pendencia`
+- `pendencias-aceitas` no frontmatter atual está vazio/ausente (se preenchido = user já aceitou ressalva, bypassa tripwire)
 
 → **REJEITAR** fechamento. Retornar `BLOCKED` no report:
 
@@ -218,44 +220,72 @@ hint-pro-maestro: "TRADUZIR esta mensagem pro usuário em linguagem natural — 
 
 Maestro recebe BLOCKED, lê `limites-maestro.md` e re-executa o passo certo (re-despacha especialista pra aplicar correção). Não prosseguir com os passos 3+ enquanto autoria estiver errada.
 
-3. Atualizar frontmatter da tarefa: `status: concluida`, `data-conclusao` = agora, `concluido-por: sistema` (indica que a transição foi via fluxo do Maestro/Gerente). Se `resultado:` é `pendente` (caso pesquisa), preencher com o wiki-link recebido. Se já é wiki-link válido, não mexer. **Se** o payload incluiu `_ultima-correcao-por: <slug>` com valor diferente de `~`/null/omitido, persistir esse valor no frontmatter; senão, omitir o campo (não escrever `~` — evita poluir tarefas que não tiveram ciclo).
+**3. Decidir status final via catálogo (F-Status D7/D8):**
 
-4. Marcar `[x]` em TODOS os itens da seção "Validações" (seção "Sub-tarefas" já foi marcada pelo especialista durante a execução — não mexer).
+- Se a tarefa **não tem** `resultado:` preenchido (operacional pura) → status final = `concluido`, campo de data = `data-conclusao`.
+- Senão, abrir arquivo apontado por `resultado:`, ler `tipo:` do frontmatter.
+- Consultar `plugin/core/protocolos/catalogo-status.md` — encontrar o bloco `### tipo: <X>` e ler a flag `categoria-criativa-vai-pra-entregue`:
+  - `true` → status final = `entregue`, campo de data = `data-entregue`.
+  - `false` ou tipo não declarado no catálogo → status final = `concluido`, campo de data = `data-conclusao`.
 
-5. Atualizar `status: concluido` no frontmatter do artefato apontado por `resultado:`.
+**4. Atualizar frontmatter da tarefa via helper:**
 
-6. Verificar desbloqueios: buscar tarefas cujo `bloqueada-por` contém esta tarefa. Remover este bloqueador. Se lista ficar vazia, mudar status delas pra `pendente`. Registrar lista de desbloqueios.
+Capturar `$TS_NOW` via `Bash date +"%Y-%m-%dT%H:%M:%S"`. Então:
 
-7. ~~Atualizar `_tarefas.md`~~ — painel Dataview reflete mudança de status e desbloqueios automaticamente.
+```bash
+python plugin/core/helpers/patch_frontmatter.py --file <tarefa> \
+  --set status=<final> \
+  --set <data-X>=$TS_NOW \
+  --set concluido-por=sistema
+```
 
-**7.bis — Setar `data-inicio` do plano-pai (se aplicável):**
+- Se `resultado:` da tarefa é `pendente` (caso pesquisa) e wikilink veio no payload: adicionar `--set resultado=<wikilink>`.
+- Se payload incluiu `_ultima-correcao-por: <slug>` com valor diferente de `~`/null/omitido: adicionar `--set _ultima-correcao-por=<slug>`. Senão, omitir (não escrever `~` — evita poluir tarefas sem ciclo).
+
+**Importante:** sempre via `patch_frontmatter.py`. Hook PreToolUse valida enum + presença de campos canônicos — Edit direto em frontmatter pode ser bloqueado.
+
+5. Marcar `[x]` em TODOS os itens da seção "Validações" (seção "Sub-tarefas" já foi marcada pelo especialista durante a execução — não mexer).
+
+**6. Atualizar frontmatter do artefato apontado por `resultado:`** via mesma chamada do helper:
+
+```bash
+python plugin/core/helpers/patch_frontmatter.py --file <artefato> \
+  --set status=<final> \
+  --set <data-X>=$TS_NOW
+```
+
+7. Verificar desbloqueios: buscar tarefas cujo `bloqueada-por` contém esta tarefa. Remover este bloqueador. Se lista ficar vazia, mudar status delas pra `pendente`. Registrar lista de desbloqueios.
+
+8. ~~Atualizar `_tarefas.md`~~ — painel Dataview reflete mudança de status e desbloqueios automaticamente.
+
+**8.bis — Setar `data-inicio` do plano-pai (se aplicável):**
 
 Se a tarefa concluída tem `parte-de: "[[planos/<slug>]]"`:
 1. Ler frontmatter do plano-pai.
 2. Se `data-inicio: ~` (ainda vazio):
    - Capturar `$TS_NOW` via `Bash date -u +%Y-%m-%dT%H:%M:%SZ`.
-   - Atualizar frontmatter do plano: `data-inicio: $TS_NOW`, `status: em-execucao`.
-   - Append no Histórico do plano: `| $TS_NOW | em-execucao | sistema | 1ª tarefa-filha em-andamento (cascade) |`.
+   - Atualizar frontmatter do plano via helper: `python plugin/core/helpers/patch_frontmatter.py --file <plano> --set data-inicio=$TS_NOW --set status=em-andamento`.
+   - Append no Histórico do plano: `| $TS_NOW | em-andamento | sistema | 1ª tarefa-filha em-andamento (cascade) |`.
 3. Se `data-inicio` já preenchido, não fazer nada.
 
-8. **Fusão determinística A — detectar última tarefa de plano.** Se a tarefa tem `parte-de: [[planos/<slug>]]` (não é `~`):
+9. **Fusão determinística A — detectar última tarefa de plano.** Se a tarefa tem `parte-de: [[planos/<slug>]]` (não é `~`):
    - Ler o arquivo do plano.
-   - Consultar quantas tarefas do plano ainda estão em `pendente`, `em-andamento` ou `bloqueada`.
-   - Se **zero** (ou seja, essa era a última):
-     a. Mudar status do plano pra `aguardando-validacao`.
+   - Consultar quantas tarefas do plano ainda estão em `pendente`, `em-andamento`, `bloqueado` ou `entregue` (entregues também não fecham o plano — user precisa aprovar via /feedback antes).
+   - Se **zero** (ou seja, todas as filhas em `concluido`/`cancelado`):
+     a. Mudar status do plano pra `aguardando-validacao` via helper.
      b. Criar tarefa de validação via Fluxo 6 (inline) — categoria `validacao-plano`, agente `usuario`, solicitante `sistema`, `parte-de: "[[planos/<slug>]]"`.
      c. ~~Atualizar `_planos.md`~~ — painel Dataview reflete mudança automaticamente.
      d. Registrar no Histórico do plano: "última tarefa concluída — aguardando validação".
 
-9. **Fusão determinística B — detectar conclusão de tarefa de validação aprovada.** Se a tarefa concluída tem `categoria: validacao-plano`:
+10. **Fusão determinística B — detectar conclusão de tarefa de validação aprovada.** Se a tarefa concluída tem `categoria: validacao-plano`:
    - Ler o arquivo do plano (`parte-de`).
-   - Mudar status do plano pra `concluido`, preencher `data-conclusao`.
+   - Mudar status do plano pra `concluido` via helper, preencher `data-conclusao`.
    - ~~Atualizar `_planos.md`~~ — painel Dataview reflete mudança automaticamente.
    - Registrar no Histórico do plano: "concluído".
 
 **Nota:** as fusões são triggers determinísticos baseados em estado agregado. Não violam a decisão 063 (Gerente reporta, Maestro decide) — o Gerente não decide roteamento, apenas reage a fatos observáveis.
 
-10. Reportar ao Maestro: tarefa concluída + lista de desbloqueadas + (se fusão A) "última tarefa concluída, plano X aguardando validação, tarefa de validação criada em Y" + (se fusão B) "plano X concluído".
+11. Reportar ao Maestro: tarefa concluída + status final (`entregue` ou `concluido`) + lista de desbloqueadas + (se fusão A) "todas as filhas concluídas, plano X aguardando validação, tarefa de validação criada em Y" + (se fusão B) "plano X concluído".
 
 ---
 
@@ -302,7 +332,7 @@ Acionado pelo Maestro após o usuário aprovar no **Gate 1** do Fluxo de Plano (
 
 4. Criar arquivo usando `plugin/core/templates/artefatos/plano.md`:
    - **Frontmatter operacional (todos preenchidos):**
-     - `status: rascunho`
+     - `status: backlog`
      - `grupo: [slug recebido]` ou `~`
      - `solicitante: [nome recebido]`
      - `data-criacao: $TS_NOW`
@@ -415,7 +445,7 @@ Acionado pelo Maestro quando usuário pede pra reativar plano que foi cancelado 
 
 4. **Inferir status anterior** via grep do Histórico:
    - Se última linha pré-cancelamento tem evento `gate-2-feedback` → restaurar `status: em-revisao`.
-   - Senão → restaurar `status: rascunho`.
+   - Senão → restaurar `status: backlog`.
 
 5. Atualizar frontmatter:
    - `status: [rascunho|em-revisao]` (inferido).
@@ -619,7 +649,7 @@ Acionado pelo Maestro após o usuário aprovar no **Gate 2** do Fluxo de Plano (
    a. Seguir os passos 4-11 do Fluxo 1 (carregar padrão, gerar nomes, criar tarefa + casca usando a tabela de campos operacionais).
    b. No frontmatter da tarefa, preencher `parte-de: [[planos/<slug>]]` (wiki-link pro plano).
    c. Tarefas sem bloqueio → `status: pendente`.
-   d. Tarefas com bloqueio (coluna `Depende de` aponta pra outra filha) → `status: bloqueada`, preencher `bloqueada-por` com wiki-link pra tarefa-pai (depois que ela for criada).
+   d. Tarefas com bloqueio (coluna `Depende de` aponta pra outra filha) → `status: bloqueado`, preencher `bloqueada-por` com wiki-link pra tarefa-pai (depois que ela for criada).
    e. **EXCEÇÃO categoria `pesquisa`:** pular a criação da casca. Pesquisador cria o próprio arquivo (conforme Grupo 2). Tarefa nasce com `resultado: pendente`.
 
 6. **Transição da seção textual pra Dataview no plano.md:**
@@ -629,8 +659,8 @@ Acionado pelo Maestro após o usuário aprovar no **Gate 2** do Fluxo de Plano (
 
       ```dataview
       TABLE agente, status, resultado, prioridade
-      FROM "tarefas"
-      WHERE parte-de = this.file.link
+      FROM ""
+      WHERE (file.folder = "tarefas" OR endswith(file.folder, "/tarefas")) AND contains(string(parte-de), this.file.name)
       SORT data-criacao ASC
       ```
       ```
@@ -708,7 +738,7 @@ Acionado pelo Maestro após usuário rejeitar a validação final e fornecer fee
 3. Gerar nome do arquivo do plano de correção: `YYYY-MM-DD-HHMM-correcao-[slug-do-plano-original].md` em `{projeto}/planos/`.
 
 4. Criar arquivo do plano de correção usando o mesmo template `plano.md`:
-   - Frontmatter: `status: rascunho`, `corrige: "[[planos/<slug-original>]]"`, `correcoes: []`, `data-criacao` = agora.
+   - Frontmatter: `status: backlog`, `corrige: "[[planos/<slug-original>]]"`, `correcoes: []`, `data-criacao` = agora.
    - Seção "Pedido original": referência à necessidade de correção do plano original.
    - Seção "Raciocínio da decomposição": como o feedback foi desdobrado em tarefas de correção.
    - Seção "Tarefas": query Dataview padrão.
@@ -729,7 +759,7 @@ Acionado pelo Maestro após usuário rejeitar a validação final e fornecer fee
 
 ### Fluxo 9: ADICIONAR TAREFA POS-APROVAÇÃO
 
-Acionado pelo Maestro quando o usuário pede pra adicionar tarefa(s) a um plano já aprovado/em-execucao.
+Acionado pelo Maestro quando o usuário pede pra adicionar tarefa(s) a um plano já aprovado/em-andamento.
 
 **Modelo: Sonnet.**
 
@@ -785,7 +815,7 @@ Acionado pelo Maestro quando especialista reporta `NEEDS_DATA` ou `INSUFFICIENT_
 
 6. Criar casca da entrevista em `{projeto}/entrevistas/` com frontmatter do padrão (agente-solicitante, tarefa-relacionada, status: pendente, data-criacao) + seções Contexto/Perguntas/Respostas/Fontes.
 
-7. Vincular entrevista à tarefa pai: adicionar wiki-link da entrevista ao campo `bloqueada-por` da tarefa original. Mudar status da tarefa pai pra `bloqueada`.
+7. Vincular entrevista à tarefa pai: adicionar wiki-link da entrevista ao campo `bloqueada-por` da tarefa original. Mudar status da tarefa pai pra `bloqueado`.
 
 8. ~~Atualizar indexes `_entrevistas.md` e `_tarefas.md`~~ — os 2 painéis Dataview refletem entrevista nova + mudança de status da tarefa pai automaticamente via frontmatters.
 
@@ -830,7 +860,7 @@ entrevistas:
 
 2. **Atualizar tarefa pai** (Edit em `{projeto}/tarefas/<slug-tarefa>.md`):
    ```yaml
-   status: bloqueada
+   status: bloqueado
    bloqueada-por: ["[[entrevistas/<slug-1>]]", "[[entrevistas/<slug-2>]]", ...]
    entrevistas-cascata: ["[[entrevistas/<slug-1>]]", "[[entrevistas/<slug-2>]]", ...]
    ```
@@ -839,7 +869,7 @@ entrevistas:
 
 **Detecção de retomada (Fluxo 2 do Gerente — concluir-tarefa, já existente):**
 
-Quando Fluxo 2 conclui uma entrevista (status pendente → concluida), antes de finalizar verifica:
+Quando Fluxo 2 conclui uma entrevista (status pendente → concluido), antes de finalizar verifica:
 
 ```pseudo
 SE entrevista.parte-de-cascata == true:
@@ -868,7 +898,7 @@ Acionado pelo Maestro ou pelo usuário pedindo estado das tarefas ou planos.
 1. **Glob** em `{projeto}/tarefas/*.md` e/ou `{projeto}/planos/*.md` e/ou `{projeto}/entrevistas/*.md` conforme pedido. Extrair frontmatter de cada arquivo (agente, status, solicitante, grupo, prioridade, parte-de, etc.). **Não ler os painéis** `_tarefas.md`, `_planos.md` nem `_entrevistas.md` — agora são Dataview puro e não contêm dados em raw.
 
 2. Filtrar conforme pedido:
-   - Por status (bloqueadas, pendentes, em-andamento, concluídas, aguardando-validacao, rascunho, aprovado, rejeitado)
+   - Por status (bloqueadas, pendentes, em-andamento, concluídas, em-revisão, entregues, aguardando-validacao, backlog, aprovado, reprovadas)
    - Por grupo
    - Por agente
    - Por solicitante
@@ -922,7 +952,7 @@ Atualize cada item conforme avança — sem TodoWrite o cancelamento parece trav
    - **Re-descoberta do contador pós-falha:** ao retomar cascata, re-ler o status atual de todas as tarefas coletadas no passo 3. Já-canceladas contam como "realizadas anteriormente"; não-canceladas entram na fila pendente. Operação continua do ponto onde parou, sem perder o track do total esperado.
 
 3. Atualizar frontmatter da tarefa:
-   - `status: cancelada`
+   - `status: cancelado`
    - `motivo-cancelamento: [motivo]`
    - `data-cancelamento: [timestamp ISO 8601 agora]`
    - `concluido-por: sistema`
@@ -952,14 +982,14 @@ Atualize cada item conforme avança — sem TodoWrite o cancelamento parece trav
 
 8. **Fusão determinística C — detectar plano totalmente finalizado.** Só dispara uma vez por plano afetado, ao final da cascata (coletar antes, processar depois). Se a tarefa (ou qualquer cascateada) tem `parte-de: [[planos/<slug>]]` (não `~`):
    - Ler arquivo do plano.
-   - Contar tarefas filhas por status. `ativas` = pendente ∪ em-andamento ∪ bloqueada.
+   - Contar tarefas filhas por status. `ativas` = pendente ∪ em-andamento ∪ bloqueado.
    - Se `ativas == 0`:
      - **Caso C1** — existe ≥1 `concluida`: disparar Fluxo 6 inline (criar tarefa de validação), mudar plano pra `aguardando-validacao`. Idêntico à Fusão A do Fluxo 2.
      - **Caso C2** — todas filhas são `cancelada` (zero concluída): mudar plano pra `cancelado`, `motivo-cancelamento: cascata-automatica` (valor reservado do sistema), `data-cancelamento` = agora, `concluido-por: sistema`. ~~Atualizar `_planos.md`~~ (painel Dataview reflete automaticamente). Registrar no Histórico: "todas as tarefas canceladas — plano cancelado automaticamente".
    - Se `ativas > 0`: não faz nada.
 
 9. **Validação leve pós-operação:**
-   - **Critério de "realizada":** tarefa conta como realizada quando `status: cancelada` + `data-cancelamento` foram escritos no frontmatter **e** a operação Write retornou sem erro. Incrementar contador em memória após cada write.
+   - **Critério de "realizada":** tarefa conta como realizada quando `status: cancelado` + `data-cancelamento` foram escritos no frontmatter **e** a operação Write retornou sem erro. Incrementar contador em memória após cada write.
    - **Em modo recuperação (ver passo 2):** contador é re-descoberto lendo status atual das tarefas coletadas no passo 3 (já-canceladas contam como "realizadas anteriormente"). Não requer re-escrita.
    - Ao terminar a cascata, comparar `esperadas == realizadas`. Divergência entra no report no campo `Validação leve`.
 
@@ -1002,16 +1032,16 @@ Atualize cada item conforme avança. Em plano com 15-20 tarefas, 3-5s sem sinal 
    - `concluido`: rejeitar via `NEEDS_CONTEXT` — já terminal.
    - `cancelado`: entrar em **modo recuperação** (mesma semântica idempotente do Fluxo 12 passo 2). Nunca reportar NEEDS_CONTEXT — o modo descobre se tudo já está consistente (nenhum write) ou se falta completar cascata/índices.
    - `rascunho`: caminho curto — pular pro passo 5. Não há tarefas materializadas.
-   - `aprovado`, `em-execucao`, `aguardando-validacao`, `rejeitado`: cascata completa (3-4).
-   - **Nota `rejeitado`:** planos de correção vinculados (campo `correcoes:`) NÃO cascateiam — ciclo próprio. Maestro sinaliza no cabeçalho.
+   - `aprovado`, `em-andamento`, `aguardando-validacao`, `reprovado`: cascata completa (3-4).
+   - **Nota `reprovado`:** planos de correção vinculados (campo `correcoes:`) NÃO cascateiam — ciclo próprio. Maestro sinaliza no cabeçalho.
    - **Nota plano de correção (`corrige:` preenchido):** cancelar NÃO afeta plano original. Original permanece no estado anterior.
 
-3. **Coletar tarefas a cascatear:** filhas com `status ∈ {pendente, em-andamento, bloqueada}`. Concluídas e já-canceladas ficam intactas.
+3. **Coletar tarefas a cascatear:** filhas com `status ∈ {pendente, em-andamento, bloqueado}`. Concluídas e já-canceladas ficam intactas.
 
 4. **Cascata em lote:**
 
    **4a.** Pra cada tarefa a cascatear, atualizar:
-   - Frontmatter: `status: cancelada`, herda `motivo-cancelamento` do plano, `data-cancelamento` = agora, `concluido-por: sistema`.
+   - Frontmatter: `status: cancelado`, herda `motivo-cancelamento` do plano, `data-cancelamento` = agora, `concluido-por: sistema`.
    - Corpo da tarefa: acrescentar seção "Motivo do cancelamento" com contexto `cascata do plano [[planos/<slug-Y>]]` (check de duplicata).
    - Artefato apontado por `resultado:`: frontmatter + seção (mesma lógica).
    - **Sem processamento de dependentes internos** — tudo do plano será cascateado.
@@ -1037,9 +1067,79 @@ Atualize cada item conforme avança. Em plano com 15-20 tarefas, 3-5s sem sinal 
 8. Validação leve + report via `---REPORT---` (formato na seção 7).
 
 **Ordem pra recuperação de falha parcial:**
-- Falha no passo 4a: plano segue `em-execucao`. Retry idempotente completa só o que falta.
+- Falha no passo 4a: plano segue `em-andamento`. Retry idempotente completa só o que falta.
 - Falha entre 4 e 5: tarefas canceladas mas plano não. Retry do Fluxo 13 em **modo recuperação**: se todas as filhas coletadas no passo 3 já estão `cancelada`, pular 4a-4c e ir direto pra 5-7.
 - Falha no passo 7 (não se aplica mais — passo virou no-op com Dataview).
+
+---
+
+### Fluxo 14: APROVAR ENTREGUE (invocado por /feedback)
+
+Acionado pela skill `/feedback` quando user escolhe "Aprovar" ou "Aceitar com ressalva" pra uma tarefa em `status: entregue`.
+
+**Modelo: Sonnet.**
+
+**CONTEXTO esperado:**
+- `tarefa-slug`: slug da tarefa em status `entregue`.
+- `decisao`: `aprovado` | `pendencia-aceita`.
+- `pendencia` (opcional, só se `decisao=pendencia-aceita`): texto livre do que o user anotou.
+
+**Passos:**
+
+1. Localizar tarefa por slug em `{projeto}/tarefas/<slug>.md`. Se não encontrar, reportar `BLOCKED tarefa-nao-encontrada`.
+
+2. Ler frontmatter da tarefa. Validar `status: entregue`. Se diferente, reportar `BLOCKED status-incorreto: esperado entregue, encontrado <X>`.
+
+3. Capturar `$TS_NOW` via `Bash date +"%Y-%m-%dT%H:%M:%S"`.
+
+4. Atualizar tarefa via helper:
+
+```bash
+python plugin/core/helpers/patch_frontmatter.py --file <tarefa> \
+  --set status=concluido \
+  --set data-conclusao=$TS_NOW \
+  --set aprovada-por=usuario
+```
+
+Se `decisao=pendencia-aceita`: adicionar `--set pendencias-aceitas="<texto>"` (escape de aspas no shell).
+
+5. Atualizar artefato apontado por `resultado:` da tarefa via mesma chamada do helper — mesmos campos.
+
+6. Verificar fusão B do Fluxo 2 (se tarefa concluída tem `categoria: validacao-plano`, transitar plano-pai pra `concluido`).
+
+7. Reportar ao Maestro: `RESULTADO: tarefa <slug> aprovada por usuario (decisao=<aprovado|pendencia-aceita>)`.
+
+---
+
+### Fluxo 15: REPROVAR ENTREGUE (invocado por /feedback)
+
+Acionado pela skill `/feedback` quando user escolhe "Reprovar e pedir refação" pra tarefa em `status: entregue`.
+
+**Modelo: Sonnet.**
+
+**CONTEXTO esperado:**
+- `tarefa-slug`.
+- `motivo`: texto livre do que precisa mudar.
+
+**Passos:**
+
+1. Localizar tarefa. Validar `status: entregue` (mesmo que Fluxo 14).
+
+2. Capturar `$TS_NOW`.
+
+3. Atualizar tarefa original via helper:
+
+```bash
+python plugin/core/helpers/patch_frontmatter.py --file <tarefa> \
+  --set status=reprovado \
+  --set motivo-reprovacao="<motivo>"
+```
+
+4. Atualizar artefato apontado por `resultado:` da tarefa — mesmos campos.
+
+5. **Criar tarefa-filha de revisão via Fluxo 3** (inline), passando o `motivo` como briefing da revisão. Especialista a despachar = mesmo `agente:` da tarefa original.
+
+6. Reportar: `RESULTADO: tarefa <slug> reprovada, revisao <slug-revisao> criada`.
 
 ---
 
@@ -1369,7 +1469,7 @@ RESULTADO:
 Plano reativado: [título]
 Status restaurado: [rascunho | em-revisao]
 
-PLANO-REATIVADO: [caminho] (status: rascunho|em-revisao)
+PLANO-REATIVADO: [caminho] (status: backlog|em-revisao)
 
 ARQUIVOS:
   - modificado: "[caminho do plano]"

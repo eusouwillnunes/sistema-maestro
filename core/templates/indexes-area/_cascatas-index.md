@@ -13,7 +13,7 @@ tags:
 TABLE WITHOUT ID
   link(rows[0].tarefa-relacionada) as "Tarefa pai",
   length(rows) as "Total entrevistas",
-  length(filter(rows, (r) => r.status = "concluida")) as "Concluídas",
+  length(filter(rows, (r) => r.status = "concluido")) as "Concluídas",
   length(filter(rows, (r) => r.status = "pendente")) as "Pendentes"
 FROM ""
 WHERE file.folder = this.file.folder

@@ -45,7 +45,7 @@ SORT data-criacao DESC
 ```dataview
 TABLE agente-solicitante as Solicitante, tarefa-relacionada as "Tarefa", data-conclusao as Conclusão
 FROM ""
-WHERE file.folder = this.file.folder AND tipo = "entrevista" AND status = "concluida"
+WHERE file.folder = this.file.folder AND tipo = "entrevista" AND status = "concluido"
 SORT data-conclusao DESC
 LIMIT 15
 ```
@@ -55,7 +55,7 @@ LIMIT 15
 ```dataview
 TABLE agente-solicitante as Solicitante, tarefa-relacionada as "Tarefa", motivo-cancelamento as Motivo, data-cancelamento as Cancelamento
 FROM ""
-WHERE file.folder = this.file.folder AND tipo = "entrevista" AND status = "cancelada"
+WHERE file.folder = this.file.folder AND tipo = "entrevista" AND status = "cancelado"
 SORT data-cancelamento DESC
 LIMIT 15
 ```

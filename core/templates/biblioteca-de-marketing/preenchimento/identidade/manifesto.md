@@ -2,7 +2,7 @@
 titulo: Manifesto da Marca
 tipo: identidade
 camada: 3
-status: vazio
+status: pendente
 depende-de:
   - identidade/circulo-dourado
   - identidade/personalidade-marca

@@ -2,7 +2,7 @@
 titulo: Tom de Voz e Elementos Verbais
 tipo: identidade
 camada: 1
-status: vazio
+status: pendente
 depende-de:
   - identidade/personalidade-marca
   - identidade/posicionamento

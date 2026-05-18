@@ -2,7 +2,7 @@
 titulo: Posicionamento e Diferenciação
 tipo: identidade
 camada: 1
-status: vazio
+status: pendente
 depende-de:
   - identidade/circulo-dourado
 tags: [identidade, posicionamento, diferenciação, zag, neumeier]

@@ -25,7 +25,7 @@ GROUP BY status
 ```dataview
 TABLE agente, tags-dominio as Tags, expira-em as "Expira em", origem-pedido as Pedido
 FROM ""
-WHERE file.folder = this.file.folder AND tipo = "rascunho" AND status = "rascunho"
+WHERE file.folder = this.file.folder AND tipo = "rascunho" AND status = "pendente"
 SORT expira-em ASC
 ```
 
@@ -34,7 +34,7 @@ SORT expira-em ASC
 ```dataview
 TABLE length(rows) as Quantidade
 FROM ""
-WHERE file.folder = this.file.folder AND tipo = "rascunho" AND status = "rascunho"
+WHERE file.folder = this.file.folder AND tipo = "rascunho" AND status = "pendente"
 FLATTEN tags-dominio AS tag
 WHERE startswith(tag, "tema/")
 GROUP BY tag
@@ -55,7 +55,7 @@ SORT expira-em ASC
 ```dataview
 TABLE agente, tags-dominio as Tags, data as Criado
 FROM ""
-WHERE file.folder = this.file.folder AND tipo = "rascunho" AND status = "promovido"
+WHERE file.folder = this.file.folder AND tipo = "rascunho" AND status = "concluido"
 SORT file.mtime DESC
 LIMIT 15
 ```
@@ -65,7 +65,7 @@ LIMIT 15
 ```dataview
 TABLE agente, tags-dominio as Tags, data as Criado
 FROM ""
-WHERE file.folder = this.file.folder AND tipo = "rascunho" AND status = "arquivado"
+WHERE file.folder = this.file.folder AND tipo = "rascunho" AND status = "cancelado"
 SORT file.mtime DESC
 LIMIT 15
 ```

@@ -123,7 +123,7 @@ Disparada quando usuário escolhe a 4ª opção ("Rascunho exploratório com sup
 - `data-cancelamento`: timestamp via `Bash date +"%Y-%m-%dT%H:%M:%S"` (conforme `protocolo-timestamp`)
 - `concluido-por: sistema` (conforme Grupo C — cancelamento via fluxo)
 
-A tarefa fica com `status: cancelada`, mantém rastreabilidade.
+A tarefa fica com `status: cancelado`, mantém rastreabilidade.
 
 **2. Resetar TodoWrite.** O TodoWrite do `fluxo-entrega.md` tem 5 itens e está no Item 2 ou posterior. Ao entrar em modo exploratório:
 - Marcar todos os itens **restantes** do TodoWrite atual como `completed` com nota "redirecionado pra modo exploratório".

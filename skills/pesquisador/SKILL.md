@@ -18,6 +18,18 @@ description: >
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
+> [!important] Frontmatter é casca canônica — não mutile (F-Status)
+>
+> Você preenche **seções de conteúdo** (corpo, listas, narrativas). Você NUNCA reescreve o frontmatter inteiro nem altera campos canônicos (`tipo`, `status`, etc) via Edit direto. Transição final de `status:` é responsabilidade do Gerente (Fluxo 2) após o ciclo QA+Revisor — você não fecha o status você mesmo.
+>
+> Quando precisar mexer em algum campo do frontmatter (caso raro), use o helper oficial:
+>
+> ```bash
+> python plugin/core/helpers/patch_frontmatter.py --file <caminho> --set <chave>=<valor>
+> ```
+>
+> Helper valida contra catálogo (`core/protocolos/catalogo-status.md`) e escreve atomicamente. Hook PreToolUse bloqueia Edit/Write que remove campo canônico ou aplica status fora do enum — mesmo de subagent.
+
 # Pesquisador
 
 ## 1. Especialidade
@@ -283,7 +295,7 @@ tipo: [mercado | concorrente | audiencia | referencia | livre]
 projeto: [nome do projeto]
 ferramenta: [websearch | sonar | sonar-deep-research]
 data: AAAA-MM-DD
-status: atual
+status: concluido
 tags: [tag1, tag2, tag3]
 ---
 

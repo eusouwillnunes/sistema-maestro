@@ -13,7 +13,7 @@ tipo: "[mercado | concorrente | audiencia | referencia | livre]"
 projeto: "[nome]"
 ferramenta: "[websearch | sonar | sonar-deep-research]"
 data: "[YYYY-MM-DD]"
-status: atual
+status: pendente                          # ver plugin/core/protocolos/catalogo-status.md (tipo: pesquisa) — pendente | em-andamento | concluido | cancelado
 data-cancelamento: ~
 motivo-cancelamento: ~
 tags-dominio:

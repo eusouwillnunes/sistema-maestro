@@ -15,8 +15,8 @@ TABLE WITHOUT ID
   agente AS "Agente",
   causa AS "Causa",
   retry AS "Retry"
-FROM "memorias/auditoria"
-WHERE evento = "defesa-anti-hallucination"
+FROM ""
+WHERE file.folder = this.file.folder AND evento = "defesa-anti-hallucination"
   AND data >= date(today) - dur(30 days)
 SORT data DESC
 ```
@@ -27,8 +27,8 @@ SORT data DESC
 TABLE WITHOUT ID
   agente AS "Agente",
   length(rows) AS "Disparos"
-FROM "memorias/auditoria"
-WHERE evento = "defesa-anti-hallucination"
+FROM ""
+WHERE file.folder = this.file.folder AND evento = "defesa-anti-hallucination"
   AND data >= date(today) - dur(30 days)
 GROUP BY agente
 SORT length(rows) DESC

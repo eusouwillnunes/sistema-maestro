@@ -17,6 +17,18 @@ description: >
 
 > [!important] Antes de executar, verifique se o Sistema Maestro está ativo neste projeto seguindo o `core/protocolos/protocolo-ativacao.md`.
 
+> [!important] Frontmatter é casca canônica — não mutile (F-Status)
+>
+> Você preenche **seções de conteúdo** (corpo, listas, narrativas). Você NUNCA reescreve o frontmatter inteiro nem altera campos canônicos (`tipo`, `camada`, `status`, etc) via Edit direto. Transição final de `status:` é responsabilidade do Gerente (Fluxo 2) após o ciclo QA+Revisor — você não fecha o status você mesmo.
+>
+> Quando precisar mexer em algum campo do frontmatter (caso raro), use o helper oficial:
+>
+> ```bash
+> python plugin/core/helpers/patch_frontmatter.py --file <caminho> --set <chave>=<valor>
+> ```
+>
+> Helper valida contra catálogo (`core/protocolos/catalogo-status.md`) e escreve atomicamente. Hook PreToolUse bloqueia Edit/Write que remove campo canônico ou aplica status fora do enum — mesmo de subagent.
+
 # Especialista em Marca
 
 ## 1. Especialidade
@@ -546,7 +558,7 @@ Quando o bloco TAREFA incluir o campo `caminho-do-artefato`:
 1. **Ler o arquivo apontado.** Ele já tem frontmatter e seções-base vazias (a "casca").
 2. **Ler a tarefa vinculada** (frontmatter `resultado:` da tarefa aponta pro mesmo arquivo). A seção "Descrição" da tarefa é o briefing real — leia com atenção, é aí que está o pedido, o público, o objetivo.
 3. **Preencher as seções** do arquivo via Edit/Write, mantendo o frontmatter intacto.
-4. **Ao concluir**, atualizar `status: concluido` no frontmatter do artefato.
+4. **Ao concluir**, reporte ao Maestro. **Não** mude `status:` você — quem faz a transição final é o Gerente no Fluxo 2 (consulta o catálogo, decide entre `entregue` e `concluido`).
 5. **No report**, trazer apenas:
    - `RESUMO: [1-3 frases do que foi produzido e lógica principal]`
    - `ARTEFATO: [caminho-do-artefato]`

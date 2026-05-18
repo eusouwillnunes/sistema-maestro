@@ -25,7 +25,7 @@ GROUP BY status
 ```dataview
 TABLE tipo as Subtipo, ferramenta, data
 FROM ""
-WHERE file.folder = this.file.folder AND contains(tags, "#maestro/pesquisa") AND status = "atual"
+WHERE file.folder = this.file.folder AND contains(tags, "#maestro/pesquisa") AND status = "concluido"
 SORT data DESC
 ```
 
@@ -34,7 +34,7 @@ SORT data DESC
 ```dataview
 TABLE tipo as Subtipo, ferramenta, motivo-cancelamento as Motivo, data-cancelamento as Cancelamento
 FROM ""
-WHERE file.folder = this.file.folder AND contains(tags, "#maestro/pesquisa") AND status = "cancelada"
+WHERE file.folder = this.file.folder AND contains(tags, "#maestro/pesquisa") AND status = "cancelado"
 SORT data-cancelamento DESC
 LIMIT 15
 ```

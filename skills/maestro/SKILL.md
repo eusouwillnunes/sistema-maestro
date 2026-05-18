@@ -223,6 +223,7 @@ Sub-skill é lida **uma vez** por fluxo. Dispatches internos (QA, Revisor, espec
 | **Entrevistador** | entrevista, responder perguntas, coletar dados, entrevistas pendentes | Coleta guiada de dados do usuário |
 | **Onboarding** | onboarding, configurar maestro, setup inicial | Setup/reconfiguração do sistema |
 | **Projeto** | /projeto, trocar projeto, listar projetos, projeto ativo | Lista/troca projeto ativo via slash command |
+| **Importar Projeto** | /importar-projeto | Importa identidade e/ou produto de outro projeto Maestro (ZIP ou pastas descompactadas). Aceita projeto-origem com `status: concluido` em todos os arquivos. Detecta contexto (vault zerado, workspace, projeto vazio) automaticamente. |
 
 ### Desempate
 

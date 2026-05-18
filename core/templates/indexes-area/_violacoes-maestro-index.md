@@ -26,7 +26,7 @@ WHERE file.folder = this.file.folder
   AND categoria = "revisao"
   AND agente != "usuario"
   AND (_ultima-correcao-por = "maestro" OR _ultima-correcao-por = null)
-  AND status != "aprovado-com-pendencia"
+  AND pendencias-aceitas = null
 SORT data-conclusao DESC
 ```
 

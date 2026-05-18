@@ -2,7 +2,7 @@
 titulo: Manual de Identidade Visual
 tipo: identidade
 camada: 1
-status: vazio
+status: pendente
 depende-de:
   - identidade/personalidade-marca
   - identidade/posicionamento

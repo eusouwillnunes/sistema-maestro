@@ -1,5 +1,0 @@
-{
-  "tool_name": "Skill",
-  "tool_input": {"skill": "maestro:bibliotecario", "prompt": "FLUXO: CRIAR\nCONTEXTO:\nnome-empresa: foo"},
-  "cwd": "/tmp/maestro-onb-test/projeto-sem-marker"
-}

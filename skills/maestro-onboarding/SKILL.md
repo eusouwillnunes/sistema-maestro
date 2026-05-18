@@ -965,6 +965,10 @@ Marcar task "Pesquisa inicial do negócio" como `completed` somente após o cicl
 
 ### 2.10 Importar Material de Referência (Turno 14)
 
+**Se `SKIP_T14=true` (cenário pós-import via /importar-projeto):** pular esta seção inteira. Render literal "A importação já trouxe seu material — vamos pro próximo passo." e marcar TodoWrite T14 como `completed`. Seguir pro próximo turno.
+
+Caso contrário, manter fluxo atual.
+
 Marcar task "Importar material de referência" como `in_progress`. Marcar TodoWrite T14 `in_progress`.
 
 **Só executar se a biblioteca foi criada no passo 2.6.** Se o usuário pulou a biblioteca, pular esta etapa também (e marcar TodoWrite T14 `completed`).
@@ -1132,6 +1136,12 @@ Acionar Gerente de Projetos via Agent(haiku):
 ---
 
 ## 2B. Fluxo de Novo Projeto
+
+**Parsing de modo (se vier no CONTEXTO):**
+
+- Procurar linha `modo: <valor>` no bloco CONTEXTO.
+- Se `modo == pos-import-skip-T14`: setar variável `SKIP_T14=true` (no escopo da skill). Os demais turnos rodam normais.
+- Outros valores ou ausente: rodar fluxo padrão (`SKIP_T14=false`).
 
 Onboarding leve para quando o usuário já tem o Sistema Maestro configurado (`~/.maestro/` existe) mas está num projeto novo. Pula dependências, permissões, Obsidian, status line e apresentação.
 
@@ -1593,6 +1603,10 @@ O fluxo cobre Gerente cria tarefa → Pesquisador via `Agent()` → ciclo QA + R
 Marcar task "Pesquisa inicial do negócio" como `completed` somente após o ciclo de validação retornar aprovado (ou após o usuário confirmar que pulou). Marcar TodoWrite T10B `completed`.
 
 ### 2B.5 Importar Material de Referência (Turno T11B)
+
+**Se `SKIP_T14=true` (cenário pós-import via /importar-projeto):** pular esta seção inteira. Render literal "A importação já trouxe seu material — vamos pro próximo passo." e marcar TodoWrite T11B como `completed`. Seguir pro próximo turno.
+
+Caso contrário, manter fluxo atual.
 
 Marcar task "Importar material de referência" como `in_progress`. Marcar TodoWrite T11B `in_progress`.
 

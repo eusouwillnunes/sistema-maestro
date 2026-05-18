@@ -25,8 +25,8 @@ area: sessoes
 
 ```dataview
 TABLE data, hora, foco, parou-em
-FROM "memorias/sessoes"
-WHERE tipo = "sessao"
+FROM ""
+WHERE file.folder = this.file.folder AND tipo = "sessao"
 SORT data DESC, hora DESC
 LIMIT 10
 ```
@@ -35,8 +35,8 @@ LIMIT 10
 
 ```dataview
 TABLE length(rows) as "Tarefas", list(rows.file.link) as "Links"
-FROM "tarefas"
-WHERE status = "concluida" AND data-conclusao
+FROM ""
+WHERE (file.folder = "tarefas" OR endswith(file.folder, "/tarefas")) AND status = "concluido" AND data-conclusao
 GROUP BY dateformat(data-conclusao, "yyyy-MM-dd") as Data
 SORT Data DESC
 LIMIT 10
@@ -46,8 +46,8 @@ LIMIT 10
 
 ```dataview
 TABLE length(rows) as "Tarefas"
-FROM "tarefas"
-WHERE status = "concluida" AND data-conclusao
+FROM ""
+WHERE (file.folder = "tarefas" OR endswith(file.folder, "/tarefas")) AND status = "concluido" AND data-conclusao
 GROUP BY dateformat(data-conclusao, "yyyy-MM") as Mês, agente
 SORT Mês DESC
 ```

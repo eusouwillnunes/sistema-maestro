@@ -27,7 +27,7 @@ TABLE WITHOUT ID
   rows.file.link[0] as Documento,
   split(rows.file.folder[0], "/")[length(split(rows.file.folder[0], "/")) - 1] as Pasta,
   rows.produto[0] as Nome,
-  length(filter(rows, (r) => r.status = "preenchido")) + "/" + length(rows) as Preenchidos
+  length(filter(rows, (r) => r.status = "concluido")) + "/" + length(rows) as Preenchidos
 FROM ""
 WHERE startswith(file.folder, this.file.folder) AND file.folder != this.file.folder AND tipo = "produto"
 GROUP BY file.folder

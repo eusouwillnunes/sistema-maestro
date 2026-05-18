@@ -34,7 +34,7 @@ SORT data-prevista ASC
 ```dataview
 TABLE produto, modelo, data-prevista, data-conclusao as Conclusão
 FROM ""
-WHERE file.folder = this.file.folder AND tipo = "lancamento" AND status = "concluida"
+WHERE file.folder = this.file.folder AND tipo = "lancamento" AND status = "concluido"
 SORT data-conclusao DESC
 LIMIT 15
 ```
@@ -44,7 +44,7 @@ LIMIT 15
 ```dataview
 TABLE produto, modelo, motivo-cancelamento as Motivo, data-cancelamento as Cancelamento
 FROM ""
-WHERE file.folder = this.file.folder AND tipo = "lancamento" AND status = "cancelada"
+WHERE file.folder = this.file.folder AND tipo = "lancamento" AND status = "cancelado"
 SORT data-cancelamento DESC
 LIMIT 15
 ```

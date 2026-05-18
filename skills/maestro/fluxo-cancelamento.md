@@ -30,7 +30,7 @@ Sub-skill lida pelo Maestro via `Read` quando o classificador retorna `tipo=Canc
 3. Se 0 matches, abrir `AskUserQuestion` oferecendo buscar por substring diferente ou cancelar operação.
 4. Quando 1 match único, confirmar via `AskUserQuestion`. Wording varia conforme o trigger:
    - **Trigger explícito** ("cancela [[x]]"): `AskUserQuestion` binário — "Cancelar [[x]]? Sim/Não".
-   - **Trigger implícito** ("deixa pra lá [[x]]", "esquece o [[x]]", "abandonei [[x]]" etc.): `AskUserQuestion` com 3 ações — "Parece que você quer parar com [[x]]. **Cancelar** (status cancelada + motivo), **arquivar** (deixa salvo sem andar, não cancela), ou **deixar pendente** (volta depois)?" Se usuário escolher arquivar/deixar pendente, NÃO prossegue pro Item 2-5 deste fluxo — faz a ação escolhida e encerra. Arquivar = mudar status pra `arquivada` + nota no frontmatter. Deixar pendente = sem mudança de status, Maestro registra na sessão atual que usuário quis pausar.
+   - **Trigger implícito** ("deixa pra lá [[x]]", "esquece o [[x]]", "abandonei [[x]]" etc.): `AskUserQuestion` com 3 ações — "Parece que você quer parar com [[x]]. **Cancelar** (status cancelado + motivo), **arquivar** (deixa salvo sem andar, não cancela), ou **deixar pendente** (volta depois)?" Se usuário escolher arquivar/deixar pendente, NÃO prossegue pro Item 2-5 deste fluxo — faz a ação escolhida e encerra. Arquivar = mudar status pra `arquivada` + nota no frontmatter. Deixar pendente = sem mudança de status, Maestro registra na sessão atual que usuário quis pausar.
 5. Capturar motivo via `AskUserQuestion` com 4 opções comuns (Duplicada / Escopo mudou / Bloqueada por dependência / Outro) + campo livre.
 6. Marcar item 1 `completed`.
 
@@ -39,13 +39,13 @@ Sub-skill lida pelo Maestro via `Read` quando o classificador retorna `tipo=Canc
 1. Ler tarefa alvo. Checar `status` atual.
 2. Se já `cancelada`: checar consistência dos derivados (artefato tem `status: cancelado`? tabela "Canceladas" em `_tarefas.md` atualizada? pendências do plano-pai?).
 3. Se inconsistente, despachar Gerente em modo recuperação (completa o que falta).
-4. Se `status: concluida` e usuário insiste em cancelar, abrir `AskUserQuestion` forte: "Tarefa já concluída. Cancelar cria incoerência. Confirma?".
+4. Se `status: concluido` e usuário insiste em cancelar, abrir `AskUserQuestion` forte: "Tarefa já concluída. Cancelar cria incoerência. Confirma?".
 5. Marcar item 2 `completed`.
 
 ### Item 3 — Executar cancelamento
 
 1. Despachar Gerente em modo cancelar-tarefa com `tarefa-id`, `motivo`, e `data-cancelamento` lido via `Bash date +"%Y-%m-%dT%H:%M:%S"` — **nunca chutar hora** (ver `protocolo-timestamp`).
-2. Gerente atualiza frontmatter da tarefa: `status: cancelada`, `data-cancelamento`, `motivo-cancelamento`.
+2. Gerente atualiza frontmatter da tarefa: `status: cancelado`, `data-cancelamento`, `motivo-cancelamento`.
 3. Se tarefa tinha artefato associado, Gerente atualiza artefato: `status: cancelado`.
 4. Se tarefa é filha de plano, Gerente atualiza plano-pai (checkbox cancelado, nota em corpo).
 5. Marcar item 3 `completed`.

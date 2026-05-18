@@ -2,7 +2,7 @@
 titulo: Análise de Mercado
 tipo: produto
 camada: 3
-status: vazio
+status: pendente
 produto: [NOME DO PRODUTO]
 depende-de:
   - identidade/posicionamento

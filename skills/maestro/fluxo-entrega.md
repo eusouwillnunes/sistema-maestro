@@ -10,7 +10,7 @@ Antes de qualquer dispatch, escrever `TodoWrite` com estes 5 itens. A ordem e o 
 2. `Despachar [especialista] com casca do artefato` — preencher [especialista] com nome do agente (copywriter, estrategista, marca, midias-sociais, performance, pesquisador)
 3. `Executar QA do artefato`
 4. `Executar Revisor do artefato`
-5. `Fechar tarefa no Gerente (status concluida)`
+5. `Fechar tarefa no Gerente (status concluido)`
 
 Marcar item 1 como `in_progress` antes do primeiro dispatch. Nunca começar com item 2 ou posterior.
 
@@ -32,7 +32,7 @@ Marcar item 1 como `in_progress` antes do primeiro dispatch. Nunca começar com 
    - `parte-de:` aponta pra plano (`[[planos/<slug>]]`).
    - Plano tem `modo-cadeia: guiado` ou `modo-cadeia: automatico` no frontmatter.
    - `bloqueada-por:` tem ≥1 wikilink.
-   - Cada wikilink em `bloqueada-por:` aponta pra tarefa com `status: concluida` ou `status: aprovado-com-pendencia` E `resultado:` preenchido.
+   - Cada wikilink em `bloqueada-por:` aponta pra tarefa com `status: concluido` ou `pendencias-aceitas` preenchido E `resultado:` preenchido.
 
    Então adicionar bloco `---ARTEFATOS-CADEIA---` no CONTEXTO conforme `protocolo-contexto.md` seção "Contexto para a Marca em tarefa-filha de cadeia de identidade". Listar caminhos absolutos dos artefatos das tarefas anteriores aprovadas em ordem cronológica.
 
@@ -56,7 +56,7 @@ Marcar item 1 como `in_progress` antes do primeiro dispatch. Nunca começar com 
 ### Item 5 — Fechar tarefa no Gerente
 
 1. Despachar Gerente em modo `concluir-tarefa` com `tarefa-id` e `caminho-do-artefato-final`. **Se houve ciclo de validação** (tarefa-filha de categoria `revisao` foi fechada), incluir no payload `_ultima-correcao-por: <slug-especialista-que-aplicou>`. Se foi aprovação direta sem ciclo, omitir o campo.
-2. Aguardar retorno confirmando `status: concluida` e `data-conclusao` preenchida. Se Gerente retornar `BLOCKED` com `referencia-tecnica: B-S55-47`, ler `plugin/skills/maestro/limites-maestro.md` seção 4 e traduzir pro usuário em linguagem natural — depois re-executar o passo certo (re-despachar especialista pra aplicar correção).
+2. Aguardar retorno confirmando `status: concluido` e `data-conclusao` preenchida. Se Gerente retornar `BLOCKED` com `referencia-tecnica: B-S55-47`, ler `plugin/skills/maestro/limites-maestro.md` seção 4 e traduzir pro usuário em linguagem natural — depois re-executar o passo certo (re-despachar especialista pra aplicar correção).
 3. Marcar item 5 `completed`.
 4. TodoWrite fica 5/5 completed.
 5. Maestro apresenta entrega ao usuário (resumo + link pro artefato + link pra tarefa).
@@ -108,7 +108,7 @@ Após Item 5 fechar (tarefa concluída ou aprovada-com-pendência), checar se a 
 5. **Na 3a reprova, abortar pipeline e perguntar ao usuário via `AskUserQuestion`:**
    - **Revisar o pedido** (usuário reescreve)
    - **Ver o último rascunho** (entrega parcial pra inspeção)
-   - **Forçar entrega com pendência** (loga `status: aprovado-com-pendencia` + seção "Pendências aceitas pelo usuário" + append em `memorias/pendencias-aceitas/historico.md` — ver fluxo-needs.md seção governança). Maestro confirma: "Salvei como está. Anotei no histórico de pendências aceitas pra você revisar depois."
+   - **Forçar entrega com pendência** (loga `pendencias-aceitas` preenchido + seção "Pendências aceitas pelo usuário" + append em `memorias/pendencias-aceitas/historico.md` — ver fluxo-needs.md seção governança). Maestro confirma: "Salvei como está. Anotei no histórico de pendências aceitas pra você revisar depois."
 6. Quando QA aprova a tarefa-filha, despachar Gerente `concluir-tarefa` da filha com payload `_ultima-correcao-por: <slug-especialista>`. Tripwire do Gerente (ver `protocolo-agent.md` §8) valida autoria — retorna BLOCKED se autoria errada.
 
 ### Revisor reprova

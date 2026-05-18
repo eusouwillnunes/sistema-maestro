@@ -1,9 +1,0 @@
-{
-  "tool_name": "Write",
-  "tool_input": {
-    "file_path": "/tmp/maestro-test-workspace/arquivo-na-raiz.md",
-    "content": "..."
-  },
-  "session_id": "test-session-10",
-  "cwd": "/tmp/maestro-test-workspace"
-}

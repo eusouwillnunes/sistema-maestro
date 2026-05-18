@@ -1,9 +1,0 @@
-{
-  "tool_name": "Write",
-  "tool_input": {
-    "file_path": "/tmp/maestro-test-vault/memorias/sessoes/2026-04-28-1500-fechamento.md",
-    "content": "..."
-  },
-  "session_id": "test-session-08",
-  "cwd": "/tmp/maestro-test-vault"
-}

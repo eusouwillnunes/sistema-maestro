@@ -19,7 +19,7 @@ descricao: Plano agregador de tarefas relacionadas. Cobre plano normal (corrige/
 
 titulo: "[Título do plano]"
 tipo: plano
-status: rascunho                      # rascunho | em-revisao | aprovado | em-execucao | aguardando-validacao | concluido | rejeitado | cancelado
+status: backlog                       # ver plugin/core/protocolos/catalogo-status.md (tipo: plano) — backlog | em-andamento | aprovado | aguardando-validacao | em-revisao | reprovado | entregue | concluido | cancelado
 grupo: "[slug-do-grupo]"
 solicitante: "[nome]"
 data-criacao: "[timestamp ISO 8601]"
@@ -95,19 +95,20 @@ tags:
 === 🎨 Configuração recomendada de Properties no Obsidian ===
 Settings > Custom Properties > status > Type: Select
 Mapping de cores sugerido:
-  🔲 rascunho               — gray
-  🟠 em-revisao             — orange
+  📋 backlog                — gray
+  🔵 em-andamento           — blue
   ✅ aprovado               — green
-  🔵 em-execucao            — blue
   ⏳ aguardando-validacao    — yellow
+  🔍 em-revisao             — orange
+  ❌ reprovado              — red
+  🔄 entregue               — purple
   🏁 concluido              — dark-green
-  ❌ rejeitado              — red
   ⭕ cancelado              — dark-gray
 
 === 💡 Pesquisa rápida no Obsidian ===
 Use Quick Switcher (Cmd+K / Ctrl+K) ou Search com operadores:
   status:em-revisao         — planos esperando seu feedback
-  status:rascunho           — planos aguardando primeira leitura
+  status:backlog            — planos aguardando primeira leitura
   voltas-em-revisao:3       — planos no limite do cap
   parte-de:[[planos/X]]     — todas tarefas do plano X
 -->

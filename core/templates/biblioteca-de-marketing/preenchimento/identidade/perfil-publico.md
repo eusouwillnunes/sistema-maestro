@@ -2,7 +2,7 @@
 titulo: Perfil do Público
 tipo: identidade
 camada: 1
-status: vazio
+status: pendente
 depende-de:
   - identidade/circulo-dourado
   - identidade/posicionamento

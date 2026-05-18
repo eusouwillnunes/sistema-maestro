@@ -7,7 +7,7 @@ descricao: Tarefas com pendência de qualidade (reprovação ou em revisão)
 # Pendências de Qualidade
 
 > [!info] O que aparece aqui
-> Tarefas com `status: aprovado-com-pendencia` (entrega forçada após 3 reprovações) ou `categoria: revisao` ativa. Quando vazio, mostra mensagem de "sem pendências".
+> Tarefas com `pendencias-aceitas` preenchido (entrega aceita com ressalva via `/feedback` — F-Status M6) ou `categoria: revisao` ativa. Quando vazio, mostra mensagem de "sem pendências".
 
 ## Pendências ativas
 
@@ -16,7 +16,7 @@ TABLE titulo AS "Tarefa", categoria AS "Categoria", status AS "Status", data-cri
 FROM ""
 WHERE file.folder = this.file.folder
   AND tipo = "tarefa"
-  AND (status = "aprovado-com-pendencia" OR (categoria = "revisao" AND status != "concluida" AND status != "cancelada"))
+  AND (pendencias-aceitas != null OR (categoria = "revisao" AND status != "concluido" AND status != "cancelado"))
 SORT data-criacao DESC
 ```
 

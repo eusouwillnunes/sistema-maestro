@@ -80,14 +80,31 @@ def main() -> None:
     p_scaffold.add_argument("destino", help="Path absoluto da pasta destino")
     p_scaffold.add_argument("empresa_nome", help="Nome legível da empresa")
     p_scaffold.add_argument("--plugin-dir", required=True, help="Path absoluto do plugin instalado")
+    p_scaffold.add_argument(
+        "--skip-areas",
+        default="",
+        help="Lista comma-separated de areas pra pular (identidade,produto etc)",
+    )
 
     args = parser.parse_args()
 
     if args.cmd == "scaffold":
-        scaffold(args.destino, args.empresa_nome, args.plugin_dir)
+        scaffold(args.destino, args.empresa_nome, args.plugin_dir, args.skip_areas)
 
 
-def scaffold(destino_arg: str, empresa_nome: str, plugin_dir_arg: str) -> None:
+_ALIAS_NORMALIZACAO = {
+    "produto": "produtos",
+}
+
+
+def scaffold(destino_arg: str, empresa_nome: str, plugin_dir_arg: str, skip_areas: str = "") -> None:
+    # Normaliza aliases no skip_areas (ex: "produto" → "produtos")
+    skip_set: set[str] = set()
+    for token in skip_areas.split(","):
+        token = token.strip()
+        if token:
+            skip_set.add(_ALIAS_NORMALIZACAO.get(token, token))
+
     # 1. Validar argumentos
     destino = Path(destino_arg)
     if not destino.is_absolute():
@@ -148,16 +165,19 @@ def scaffold(destino_arg: str, empresa_nome: str, plugin_dir_arg: str) -> None:
         "maestro/checklists",
     ]
     for p in pastas:
+        if p.split("/")[0] in skip_set:
+            continue
         (destino / p).mkdir(parents=True, exist_ok=True)
 
     # 7. Copiar 8 templates de identidade
-    identidade_src = plugin_dir / "core" / "templates" / "biblioteca-de-marketing" / "preenchimento" / "identidade"
-    if identidade_src.is_dir():
-        for tpl in identidade_src.glob("*.md"):
-            dst = destino / "identidade" / tpl.name
-            _copy_idempotent(tpl, dst, destino, criados, pulados, warnings)
-    else:
-        warnings.append({"template": str(identidade_src), "motivo": "ausente"})
+    if "identidade" not in skip_set:
+        identidade_src = plugin_dir / "core" / "templates" / "biblioteca-de-marketing" / "preenchimento" / "identidade"
+        if identidade_src.is_dir():
+            for tpl in identidade_src.glob("*.md"):
+                dst = destino / "identidade" / tpl.name
+                _copy_idempotent(tpl, dst, destino, criados, pulados, warnings)
+        else:
+            warnings.append({"template": str(identidade_src), "motivo": "ausente"})
 
     # 8. Copiar 17 painéis Dataview (com rename _X-index.md → _X.md)
     paineis = [
@@ -180,6 +200,10 @@ def scaffold(destino_arg: str, empresa_nome: str, plugin_dir_arg: str) -> None:
         ("indexes-area/_pendencias-aceitas-index.md", "memorias/_pendencias-aceitas.md"),
     ]
     templates_root = plugin_dir / "core" / "templates"
+    # B-Imp-cand-21 (S88): paineis _<area>.md SEMPRE criados, mesmo em --skip-areas.
+    # 'skip-areas' significa 'nao toca no conteudo da area', NAO 'ignora area inteira'.
+    # Painel eh estrutura agregadora Dataview — ajuda igual em area pre-existente
+    # (com arquivos do user vindos de import) quanto em area scaffoldada fresh.
     for src_rel, dst_rel in paineis:
         src = templates_root / src_rel
         dst = destino / dst_rel

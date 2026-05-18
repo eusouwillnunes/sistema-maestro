@@ -412,7 +412,7 @@ Quando o ciclo de revisão chega na rodada 3 sem aprovação, Maestro abre `AskU
 - "Reescrever do zero"
 - "Cancelar tarefa"
 
-Se usuário escolhe "aceitar com pendência", a tarefa-filha de revisão recebe `status: aprovado-com-pendencia` (campo já existente em `fluxo-entrega.md`). Maestro confirma pro usuário: *"Salvei como está. Anotei no histórico de pendências aceitas pra você revisar depois."* Tripwire não dispara.
+Se usuário escolhe "aceitar com pendência", a tarefa-filha de revisão recebe `status: concluido` + `pendencias-aceitas: <texto>` (F-Status — `aprovado-com-pendencia` virou flag separada do status canônico). Maestro confirma pro usuário: *"Salvei como está. Anotei no histórico de pendências aceitas pra você revisar depois."* Tripwire não dispara (condição: `pendencias-aceitas` preenchido).
 
 ### Cobertura limitada
 
@@ -524,3 +524,18 @@ Timestamp via `date +"%Y-%m-%d %H:%M"` (ver `protocolo-timestamp.md`).
 ### 9.5 Modo de operação do Revisor/QA
 
 `caminho-do-artefato:` E `caminho-do-canario:` no bloco TAREFA disparam audit-on-file. Ausência de qualquer um → modo audit-on-text (Revisor) ou `NEEDS_DATA` (QA — sempre opera audit-on-file).
+
+---
+
+## 10. Contratos do Bibliotecário para `/importar-projeto`
+
+### `FLUXO: CRIAR` com `areas-ja-presentes:` (feature `/importar-projeto`)
+
+Bibliotecário, ao receber `areas-ja-presentes: identidade,produto` no CONTEXTO, repassa `--skip-areas identidade,produto` pro helper `biblioteca_scaffold.py`. Helper pula criação dessas pastas e respectivos indexes/painéis. Pastas alvo precisam já existir no projeto-destino (vêm do import).
+
+### `FLUXO: SCAFFOLD WORKSPACE` com `modo: pre-import` / `modo: pre-import-novo-projeto`
+
+`pre-import`: vault zerado. Bibliotecário cria `.maestro-workspace` + pasta-projeto + `maestro/config.md` mínimo antes de F2/F4.
+`pre-import-novo-projeto`: workspace existe, projeto não. Bibliotecário cria pasta-projeto + `maestro/config.md`.
+
+Ambos usados pelo `/importar-projeto` Estado 1 e 2 respectivamente.

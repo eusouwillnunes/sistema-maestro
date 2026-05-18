@@ -34,7 +34,7 @@ SORT data-criacao DESC
 ```dataview
 TABLE tipo, agente, data-conclusao as Conclusão
 FROM ""
-WHERE file.folder = this.file.folder AND (tipo = "entrega-generica" OR tipo = "analise-performance") AND status = "concluida"
+WHERE file.folder = this.file.folder AND (tipo = "entrega-generica" OR tipo = "analise-performance") AND status = "concluido"
 SORT data-conclusao DESC
 LIMIT 15
 ```
@@ -44,7 +44,7 @@ LIMIT 15
 ```dataview
 TABLE tipo, agente, motivo-cancelamento as Motivo, data-cancelamento as Cancelamento
 FROM ""
-WHERE file.folder = this.file.folder AND (tipo = "entrega-generica" OR tipo = "analise-performance") AND status = "cancelada"
+WHERE file.folder = this.file.folder AND (tipo = "entrega-generica" OR tipo = "analise-performance") AND status = "cancelado"
 SORT data-cancelamento DESC
 LIMIT 15
 ```

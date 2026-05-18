@@ -2,7 +2,7 @@
 titulo: História dos Fundadores
 tipo: identidade
 camada: 3
-status: vazio
+status: pendente
 depende-de:
   - identidade/circulo-dourado
 tags: [identidade, história, fundadores, storytelling]

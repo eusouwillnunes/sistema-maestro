@@ -32,7 +32,7 @@ Transforma rascunho em entrega formal. Funciona forçando `tipo=Entrega` no Maes
    - Gerente fecha tarefa
 6. Artefato final em `entregas/` (ou pasta adequada pelo tipo)
 7. Rascunho original fica em `rascunhos/` como histórico (não é apagado automaticamente)
-8. Atualiza `status: promovido` no frontmatter do rascunho + adiciona wiki-link pro artefato promovido
+8. Atualiza `status: concluido` no frontmatter do rascunho + adiciona wiki-link pro artefato promovido
 
 ## Rascunho inexistente ou ambíguo
 

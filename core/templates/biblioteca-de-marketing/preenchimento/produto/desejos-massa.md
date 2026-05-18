@@ -2,7 +2,7 @@
 titulo: Análise de Desejos de Massa
 tipo: produto
 camada: 3
-status: vazio
+status: pendente
 produto: [NOME DO PRODUTO]
 depende-de:
   - identidade/perfil-publico

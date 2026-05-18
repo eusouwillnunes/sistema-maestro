@@ -34,7 +34,7 @@ SORT data-criacao DESC
 ```dataview
 TABLE produto-destino as "Produto destino", formato, data-conclusao as Conclusão
 FROM ""
-WHERE file.folder = this.file.folder AND tipo = "lead-magnet" AND status = "concluida"
+WHERE file.folder = this.file.folder AND tipo = "lead-magnet" AND status = "concluido"
 SORT data-conclusao DESC
 LIMIT 15
 ```
@@ -44,7 +44,7 @@ LIMIT 15
 ```dataview
 TABLE produto-destino as "Produto destino", motivo-cancelamento as Motivo, data-cancelamento as Cancelamento
 FROM ""
-WHERE file.folder = this.file.folder AND tipo = "lead-magnet" AND status = "cancelada"
+WHERE file.folder = this.file.folder AND tipo = "lead-magnet" AND status = "cancelado"
 SORT data-cancelamento DESC
 LIMIT 15
 ```

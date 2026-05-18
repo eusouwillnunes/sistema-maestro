@@ -189,7 +189,7 @@ Maestro injeta o bloco apenas quando TODAS as condições são verdadeiras:
 1. Tarefa tem `parte-de: [[planos/<slug>]]`.
 2. Plano tem `modo-cadeia: guiado` ou `modo-cadeia: automatico` no frontmatter (não `pendente` nem `~`).
 3. Tarefa tem `bloqueada-por:` com ≥1 wikilink (filha 1 da cadeia não recebe — sem dependências).
-4. As tarefas listadas em `bloqueada-por:` têm `status: concluida` ou `status: aprovado-com-pendencia` E `resultado:` preenchido.
+4. As tarefas listadas em `bloqueada-por:` têm `status: concluido` (com ou sem `pendencias-aceitas:` preenchido) E `resultado:` preenchido.
 
 Se condição (4) falha — não deveria acontecer no fluxo normal porque modo Sequencial só dispara N+1 quando N fecha — Maestro reporta erro técnico ao usuário em vez de despachar com bloco incompleto.
 

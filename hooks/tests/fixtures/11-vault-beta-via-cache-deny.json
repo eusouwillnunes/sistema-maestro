@@ -1,9 +1,0 @@
-{
-  "tool_name": "Write",
-  "tool_input": {
-    "file_path": "/tmp/maestro-test-cache-vault/identidade/posicionamento.md",
-    "content": "..."
-  },
-  "session_id": "test-session-11",
-  "cwd": "/tmp/maestro-test-cache-vault"
-}

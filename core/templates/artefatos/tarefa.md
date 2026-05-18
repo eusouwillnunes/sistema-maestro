@@ -14,7 +14,7 @@ titulo: "[Título da tarefa]"
 tipo: tarefa
 agente: "[agente destino]"
 categoria: "[identidade|copy|estrategia|midias|performance|pesquisa|biblioteca|revisao|validacao-plano|geral]"
-status: em-andamento                       # valores: em-andamento | concluida | cancelada | aprovado-com-pendencia
+status: em-andamento                       # ver plugin/core/protocolos/catalogo-status.md (tipo: tarefa) — pendente | em-andamento | bloqueado | em-revisao | reprovado | entregue | concluido | cancelado
 bloqueada-por: []                          # quando preenchido: lista de "[[tarefas/<slug>]]"
 _ultima-correcao-por: ~                    # auditoria do sistema — preenchido pelo Gerente em tarefas-filhas categoria=revisao. Ignorar se você é o usuário (campo prefixado `_` = interno)
 grupo: "[grupo]"

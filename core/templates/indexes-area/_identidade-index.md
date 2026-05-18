@@ -17,7 +17,7 @@ tags:
 ```dataview
 TABLE WITHOUT ID
   file.link as Documento,
-  choice(status = "preenchido", "✅ preenchido", choice(status = "vazio", "⚪ vazio", "❓ sem status")) as Status
+  choice(status = "entregue", "🔄 Aguardando você", choice(status = "concluido", "✅ Aprovado", choice(status = "em-revisao", "🔍 Em revisão", choice(status = "reprovado", "❌ Reprovado", choice(status = "em-andamento", "⚙️ Em andamento", choice(status = "pendente", "⏳ Pendente", status)))))) as Status
 FROM ""
 WHERE file.folder = this.file.folder AND tipo = "identidade" AND camada = 1
 SORT file.name ASC
@@ -28,7 +28,7 @@ SORT file.name ASC
 ```dataview
 TABLE WITHOUT ID
   file.link as Documento,
-  choice(status = "preenchido", "✅ preenchido", choice(status = "vazio", "⚪ vazio", "❓ sem status")) as Status
+  choice(status = "entregue", "🔄 Aguardando você", choice(status = "concluido", "✅ Aprovado", choice(status = "em-revisao", "🔍 Em revisão", choice(status = "reprovado", "❌ Reprovado", choice(status = "em-andamento", "⚙️ Em andamento", choice(status = "pendente", "⏳ Pendente", status)))))) as Status
 FROM ""
 WHERE file.folder = this.file.folder AND tipo = "identidade" AND camada = 3
 SORT file.name ASC

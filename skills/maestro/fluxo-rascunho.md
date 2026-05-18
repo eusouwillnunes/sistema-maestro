@@ -30,7 +30,7 @@ Rascunho = artefato rápido sem validação. Sai em `rascunhos/` fora do grafo p
    origem-pedido: [texto do pedido do usuário]
    expira-em: <YYYY-MM-DD>  # hoje + 30 dias
    agente: [nome do especialista]
-   status: rascunho
+   status: pendente
    tags-dominio: []
    tags:
      - "#maestro/rascunho"
@@ -86,7 +86,7 @@ Antes do Item 1, contar rascunhos abertos em `rascunhos/` (excluindo pasta `arqu
 No `/ola-maestro`, rascunhos com `expira-em` vencida são listados com `AskUserQuestion`: "Rascunho [[x]] venceu em YYYY-MM-DD. Promover, arquivar ou apagar?"
 
 - **Promover:** dispara `/promover [[x]]`.
-- **Arquivar:** move pra `rascunhos/arquivados/`, atualiza `status: arquivado`.
+- **Arquivar:** move pra `rascunhos/arquivados/`, atualiza `status: cancelado`.
 - **Apagar:** remove arquivo.
 
 Não pode ignorar — usuário precisa decidir.
@@ -100,7 +100,7 @@ Variante do Rascunho disparada quando o usuário escolhe "Rascunho exploratório
 **1. Frontmatter:**
 
 ```yaml
-status: exploratorio   # (em vez de `status: rascunho`)
+status: exploratorio   # (em vez de `status: pendente`)
 ```
 
 **2. Despacho (Item 2) — instrução adicional ao especialista:**

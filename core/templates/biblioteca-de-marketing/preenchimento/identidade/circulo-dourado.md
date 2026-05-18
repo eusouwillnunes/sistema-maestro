@@ -2,7 +2,7 @@
 titulo: Círculo Dourado
 tipo: identidade
 camada: 1
-status: vazio
+status: pendente
 depende-de: []
 tags: [identidade, propósito, golden-circle, sinek]
 ---

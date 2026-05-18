@@ -303,6 +303,8 @@ Sessão encerrada! Resumo:
 - ⏳ [N] tarefas prontas para executar
 - 📋 [N] entrevistas pendentes [oferecer: "quer resolver alguma agora antes de fechar?"]
 - 🚫 [N] tarefas bloqueadas
+[Se aguardando_feedback >= 1, adicionar linha pluralizada. Contagem via grep "^status: entregue" em {projeto}/tarefas/:]
+- 🔄 [aguardando_feedback] entrega{s} pendente{s} de feedback — rode `/feedback` quando quiser fechar
 
 **Sugestão para próxima sessão:**
 [O que faz mais sentido atacar primeiro, com base em:]

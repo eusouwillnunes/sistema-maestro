@@ -2,7 +2,7 @@
 titulo: Banco de Prova Social
 tipo: produto
 camada: 3
-status: vazio
+status: pendente
 produto: [NOME DO PRODUTO]
 depende-de:
   - produto/dossie

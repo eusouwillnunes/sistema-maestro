@@ -2,7 +2,7 @@
 titulo: Big Idea & Hook
 tipo: produto
 camada: 3
-status: vazio
+status: pendente
 produto: [NOME DO PRODUTO]
 depende-de:
   - identidade/tom-de-voz
