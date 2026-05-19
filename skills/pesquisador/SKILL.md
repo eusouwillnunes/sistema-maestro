@@ -97,6 +97,7 @@ O Pesquisador usa 3 ferramentas de busca, organizadas por complexidade e custo:
 |-----------|------|-------|-------------|----------|
 | **WebSearch + WebFetch** | Nativo Claude Code | Grátis | Consultas simples, validação de dados, acesso direto a URLs | — |
 | **Perplexity Sonar** | Via OpenRouter | ~$0.03/pesquisa | Pesquisa rápida com citações, perguntas factuais | `perplexity/sonar` |
+| **Perplexity Sonar Pro** | Via OpenRouter | ~$0.02-0.05/pesquisa | Pesquisa intermediária com mais contexto e citações que o Sonar | `perplexity/sonar-pro` |
 | **Perplexity Sonar Deep Research** | Via OpenRouter | ~$0.04-0.15/pesquisa | Análise de mercado, concorrência, relatórios profundos | `perplexity/sonar-deep-research` |
 
 ### Lógica de seleção
@@ -107,6 +108,7 @@ O modo de pesquisa é determinado automaticamente com base na preferência salva
 |-----------------|-----------------|
 | `websearch` (ou vazio/ausente) | WebSearch do Claude Code |
 | `sonar` | Perplexity Sonar via OpenRouter |
+| `sonar-pro` | Perplexity Sonar Pro via OpenRouter |
 | `sonar-deep-research` | Perplexity Deep Research via OpenRouter |
 
 O usuário pode sobrescrever pontualmente pedindo um modo específico (ex: "pesquisa deep research sobre X"). Detalhes no Passo 3 do Protocolo de Encomenda.
@@ -115,9 +117,13 @@ O usuário pode sobrescrever pontualmente pedindo um modo específico (ex: "pesq
 
 ```yaml
 pesquisador:
-  ferramenta-default: websearch  # websearch | sonar | sonar-deep-research
+  ferramenta-default: websearch  # websearch | sonar | sonar-pro | sonar-deep-research
   openrouter-api-key: [configurar]
   pasta-pesquisas: pesquisas/    # caminho relativo no vault
+  max-tokens:                    # override opcional dos defaults (seção abaixo)
+    sonar: 6000
+    sonar-pro: 10000
+    sonar-deep-research: 16000
 ```
 
 ### Chamada OpenRouter
@@ -125,6 +131,22 @@ pesquisador:
 - Endpoint: `https://openrouter.ai/api/v1/chat/completions`
 - Header: `Authorization: Bearer $OPENROUTER_API_KEY`
 - Formato OpenAI-compatível
+
+#### Default de `max_tokens` por modo
+
+Sempre incluir `max_tokens` no payload — sem default, o modelo escolhe ad-hoc e costuma cortar respostas longas (Deep Research retorna 5-15k+ tokens). Precedência da resolução:
+
+1. Campo `max-tokens:` no bloco `---TAREFA---` (override pontual, modo Agent)
+2. Bloco `pesquisador.max-tokens.<modo>` em `~/.maestro/config.md` (override do usuário)
+3. Default abaixo
+
+| Modo | Default `max_tokens` | Justificativa |
+|---|---|---|
+| `sonar` | 6000 | Respostas rápidas costumam caber em 2-5k; folga cobre casos extensos sem corte. |
+| `sonar-pro` | 10000 | Modo intermediário com mais contexto e fontes. |
+| `sonar-deep-research` | 16000 | Análises profundas tipicamente 5-15k; piso de 16k evita corte do motivo de usar Deep. |
+
+**Exceção intencional:** o teste de conexão (seção "Fluxo de Teste de Conexão") usa `max_tokens: 30` porque pede só uma frase de validação. Não confundir com pesquisa real.
 
 ---
 
@@ -532,7 +554,7 @@ O **Protocolo de Encomenda** (clarificar objetivo, consultar existentes, pergunt
 Quando executado como Agent() (sem interação direta com o usuário), siga estas regras adicionais ao protocolo base definido em `core/protocolos/protocolo-agent.md`.
 
 ### Antes de executar
-1. Leia o bloco ---TAREFA--- — contém o objetivo da pesquisa e ferramenta sugerida
+1. Leia o bloco ---TAREFA--- — contém o objetivo da pesquisa, ferramenta sugerida e, opcionalmente, `max-tokens:` (override pontual da seção "Default de `max_tokens` por modo")
 2. Leia o bloco ---CONTEXTO--- — pode conter pesquisas anteriores, contexto do projeto, config do pesquisador
 3. Verifique se tem API key do OpenRouter no contexto (se a ferramenta sugerida for paga)
 4. Consulte o index de pesquisas (se passado no contexto) pra evitar duplicação
@@ -677,5 +699,6 @@ Tarefas de mapeamento podem rodar em paralelo (sem dependência cruzada). Sínte
 
 | Data | Versão | Alteração |
 |------|--------|-----------|
+| 2026-05-19 | v1.2 | Default de `max_tokens` por modo (seção 3) + override via config e via bloco TAREFA + modo `sonar-pro` adicionado. Fix do B-S55-19. |
 | 2026-04-10 | v1.1 | Seção 10 — Protocolo Agent() (compatibilidade com despacho via Agent tool, formato de report) |
 | 2026-04-08 | v1.0 | Criação da skill Pesquisador — funcional, sem persona, 3 ferramentas (WebSearch, Sonar, Deep Research) |
