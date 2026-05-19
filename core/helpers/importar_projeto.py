@@ -18,7 +18,7 @@ from pathlib import Path
 
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
-STATUS_LINE_RE = re.compile(r"^status\s*:\s*(.+)$", re.MULTILINE)
+STATUS_LINE_RE = re.compile(r"^status\s*:\s*(.*)$", re.MULTILINE)
 WIKILINK_RE = re.compile(r"\[\[([^\]\|]+)(\|[^\]]+)?\]\]")
 
 TEMPLATES_IDENTIDADE_ESPERADOS = {
@@ -179,24 +179,101 @@ def inspect_zip(zip_path: str) -> dict:
 
 
 def _ler_status(arquivo: Path) -> tuple:
-    """Retorna (status, motivo_se_invalido). Status None se quebrado."""
+    """Retorna (status, motivo_se_invalido).
+
+    Motivos canônicos:
+    - "frontmatter-invalido": regex não casa, leitura falhou, valor com `:` solto ou aspas
+    - "status-vazio": campo status presente mas sem valor (após strip)
+    - "status-ausente": frontmatter válido mas sem linha status:
+    """
     try:
         txt = arquivo.read_text(encoding="utf-8")
-    except Exception as e:
-        return None, f"leitura falhou: {e}"
+    except Exception:
+        return None, "frontmatter-invalido"
     m = FRONTMATTER_RE.match(txt)
     if not m:
-        return None, "frontmatter ausente"
+        return None, "frontmatter-invalido"
     fm = m.group(1)
     sm = STATUS_LINE_RE.search(fm)
     if not sm:
-        return None, "status ausente"
+        return None, "status-ausente"
     valor = sm.group(1).strip()
-    if not valor or ":" in valor or valor.startswith(("'", '"')):
-        # Heuristica simples de frontmatter quebrado
-        if ":" in valor:
-            return None, "frontmatter quebrado"
+    if not valor:
+        return None, "status-vazio"
+    if ":" in valor or valor.startswith(("'", '"')):
+        return None, "frontmatter-invalido"
     return valor, None
+
+
+# Cache do catálogo carregado 1x por processo
+_CATALOGO_STATUS = None
+
+
+def _carregar_catalogo():
+    """Carrega catálogo-status.md via patch_frontmatter.load_catalog."""
+    global _CATALOGO_STATUS
+    if _CATALOGO_STATUS is None:
+        sys.path.insert(0, str(Path(__file__).parent))
+        from patch_frontmatter import load_catalog
+        catalog_path = Path(__file__).parent.parent / "protocolos" / "catalogo-status.md"
+        try:
+            _CATALOGO_STATUS = load_catalog(catalog_path)
+        except Exception:
+            _CATALOGO_STATUS = {}
+    return _CATALOGO_STATUS
+
+
+def _validar_status_canonico(status: str, tipo: str) -> tuple:
+    """Verifica se status é válido pro tipo conforme catálogo.
+
+    Retorna (ok: bool, enum_valido: list[str]).
+    Tipo desconhecido → (False, []).
+    """
+    catalogo = _carregar_catalogo()
+    bloco = catalogo.get("tipos", {}).get(tipo)
+    if not bloco:
+        return False, []
+    canonicos = bloco.get("status-canonicos", [])
+    extensoes = bloco.get("extensoes", [])
+    enum = sorted(set(canonicos) | set(extensoes))
+    return (status in enum), enum
+
+
+TIPO_LINE_RE = re.compile(r"^tipo\s*:\s*(.+)$", re.MULTILINE)
+
+
+def _ler_tipo(arquivo: Path):
+    """Lê campo tipo: do frontmatter. None se ausente ou frontmatter quebrado."""
+    try:
+        txt = arquivo.read_text(encoding="utf-8")
+    except Exception:
+        return None
+    m = FRONTMATTER_RE.match(txt)
+    if not m:
+        return None
+    tm = TIPO_LINE_RE.search(m.group(1))
+    if not tm:
+        return None
+    valor = tm.group(1).strip()
+    return valor or None
+
+
+def _area_do_path(path: Path, source: Path) -> str:
+    """Deriva área a partir do path relativo ao source.
+
+    identidade/foo.md → "identidade"
+    produtos/curso-x/oferta.md → "produtos/curso-x"
+    """
+    try:
+        rel = path.relative_to(source)
+    except ValueError:
+        rel = path
+    parts = rel.parts
+    if not parts:
+        return ""
+    if parts[0] == "produtos" and len(parts) >= 3:
+        return f"produtos/{parts[1]}"
+    return parts[0]
 
 
 def _normalizar_aliases_no_tmp(tmp_path) -> dict:
@@ -244,19 +321,85 @@ def _normalizar_aliases_no_tmp(tmp_path) -> dict:
     return {"renames": renames, "erros": erros}
 
 
-def validate_pre_requisitos(layout: list) -> dict:
+def validate_pre_requisitos(layout: list, source: str = None) -> dict:
+    """Classifica arquivos em concluidos / inacabados / invalidos.
+
+    Schema de retorno (A1/A4 spec v2):
+    - concluidos: [paths absolutos]
+    - inacabados: [{path, status_atual, area}]
+    - invalidos: [{path, motivo, ...}]
+
+    Motivos de invalido:
+    - status-fora-do-enum (com status_atual e enum_esperado)
+    - status-vazio
+    - frontmatter-invalido
+    - tipo-ausente
+    - arquivo-nao-existe
+    """
+    concluidos = []
+    inacabados = []
     invalidos = []
+
+    # Inferir source do primeiro path se não passado (área deriva dele)
+    source_path = Path(source).resolve() if source else None
+
     for p in layout:
         arquivo = Path(p)
         if not arquivo.exists():
-            invalidos.append({"path": p, "motivo": "arquivo nao existe"})
+            invalidos.append({"path": p, "motivo": "arquivo-nao-existe"})
             continue
+
+        # Source default: 2 parents acima do arquivo (source/area/nome.md)
+        eff_source = source_path or arquivo.parent.parent
+
+        tipo = _ler_tipo(arquivo)
+        if not tipo:
+            # Pode ser frontmatter-invalido OU tipo-ausente — diferenciar
+            try:
+                txt = arquivo.read_text(encoding="utf-8")
+                if FRONTMATTER_RE.match(txt):
+                    invalidos.append({"path": p, "motivo": "tipo-ausente"})
+                else:
+                    invalidos.append({"path": p, "motivo": "frontmatter-invalido"})
+            except Exception:
+                invalidos.append({"path": p, "motivo": "frontmatter-invalido"})
+            continue
+
         status, motivo = _ler_status(arquivo)
-        if motivo:
-            invalidos.append({"path": p, "motivo": motivo})
-        elif status != "concluido":
-            invalidos.append({"path": p, "motivo": f"status: {status}"})
-    return {"ok": len(invalidos) == 0, "arquivos_invalidos": invalidos}
+        if motivo == "frontmatter-invalido":
+            invalidos.append({"path": p, "motivo": "frontmatter-invalido"})
+            continue
+        if motivo == "status-vazio":
+            invalidos.append({"path": p, "motivo": "status-vazio"})
+            continue
+        if motivo == "status-ausente":
+            invalidos.append({"path": p, "motivo": "status-vazio"})  # umbrella
+            continue
+
+        ok, enum = _validar_status_canonico(status, tipo)
+        if not ok:
+            invalidos.append({
+                "path": p,
+                "motivo": "status-fora-do-enum",
+                "status_atual": status,
+                "enum_esperado": enum,
+            })
+            continue
+
+        if status == "concluido":
+            concluidos.append(p)
+        else:
+            inacabados.append({
+                "path": p,
+                "status_atual": status,
+                "area": _area_do_path(arquivo, eff_source),
+            })
+
+    return {
+        "concluidos": concluidos,
+        "inacabados": inacabados,
+        "invalidos": invalidos,
+    }
 
 
 def validate_integrity(layout: dict) -> dict:
@@ -340,7 +483,16 @@ def extract_atomic(zip_path: str, tmp_externo: str) -> dict:
         return {"ok": False, "erro": str(e)}
 
 
-def detect_conflicts(target: str, source: str) -> dict:
+def detect_conflicts(target: str, source: str, inacabados_paths: list = None) -> dict:
+    """Detecta arquivos do source que já existem no target.
+
+    Quando inacabados_paths é passado (não-vazio), arquivos cujo path absoluto
+    resolvido bate com algum em inacabados_paths são EXCLUÍDOS dos conflitos
+    retornados — porque não vão entrar mesmo (C6 spec v2).
+
+    Schema do conflito: {"grupo": str, "arquivos": [filename, ...]}
+    onde `arquivos` são nomes de arquivo (sem path completo) dentro do grupo.
+    """
     target_path = Path(target)
     source_path = Path(source)
     conflitos = []
@@ -375,13 +527,60 @@ def detect_conflicts(target: str, source: str) -> dict:
                     "arquivos": sorted(choques),
                 })
 
+    # Filtrar inacabados antes de retornar (C6)
+    if inacabados_paths:
+        # Normalizar pra set de paths absolutos resolvidos
+        pula_set = set()
+        for p in inacabados_paths:
+            pp = Path(p)
+            if not pp.is_absolute():
+                pp = source_path / pp
+            pula_set.add(str(pp.resolve()))
+
+        # Cada grupo tem "grupo" (ex: "identidade" ou "produtos/slug") e "arquivos" (nomes).
+        # O path absoluto de cada arquivo no source é: source / grupo / nome_arquivo.
+        conflitos_filtrados = []
+        for grupo_dict in conflitos:
+            grupo = grupo_dict["grupo"]
+            arquivos_restantes = []
+            for nome in grupo_dict["arquivos"]:
+                path_abs = str((source_path / grupo / nome).resolve())
+                if path_abs not in pula_set:
+                    arquivos_restantes.append(nome)
+            if arquivos_restantes:
+                conflitos_filtrados.append({"grupo": grupo, "arquivos": arquivos_restantes})
+        conflitos = conflitos_filtrados
+
     return {"conflitos": conflitos}
 
 
-def apply_resolution(target: str, source: str, decisions: dict) -> dict:
+def apply_resolution(
+    target: str,
+    source: str,
+    decisions: dict,
+    incluir_inacabados: bool = False,
+    inacabados_paths: list = None,
+) -> dict:
+    """Move arquivos do source pro target conforme decisions e flag inacabados.
+
+    - decisions: dict {area: 'sobrescrever' | 'manter' | 'pular'} pra conflitos.
+    - incluir_inacabados: quando False, helper pula arquivos cujo path absoluto
+      resolvido bate com algum em inacabados_paths.
+    - inacabados_paths: paths absolutos OU relativos ao source. Helper normaliza
+      via (Path(source) / p).resolve() quando p não é absoluto.
+    """
     target_path = Path(target)
     source_path = Path(source)
     target_path.mkdir(parents=True, exist_ok=True)
+
+    # Normalizar inacabados_paths pra set de absolutos resolvidos (A9)
+    pula_set = set()
+    if not incluir_inacabados and inacabados_paths:
+        for p in inacabados_paths:
+            pp = Path(p)
+            if not pp.is_absolute():
+                pp = source_path / pp
+            pula_set.add(str(pp.resolve()))
 
     arquivos_importados = []
     removidos = []
@@ -401,6 +600,8 @@ def apply_resolution(target: str, source: str, decisions: dict) -> dict:
             tgt = target_path / "identidade"
             tgt.mkdir(parents=True, exist_ok=True)
             for arquivo in src_ident.glob("*.md"):
+                if str(arquivo.resolve()) in pula_set:
+                    continue
                 destino = tgt / arquivo.name
                 if destino.exists() and decisao == "manter":
                     continue
@@ -420,6 +621,8 @@ def apply_resolution(target: str, source: str, decisions: dict) -> dict:
             tgt_slug = target_path / "produtos" / slug_dir.name
             tgt_slug.mkdir(parents=True, exist_ok=True)
             for arquivo in slug_dir.glob("*.md"):
+                if str(arquivo.resolve()) in pula_set:
+                    continue
                 destino = tgt_slug / arquivo.name
                 if destino.exists() and decisao == "manter":
                     continue
@@ -495,6 +698,8 @@ def write_provenance(target: str, source_name: str, summary: dict) -> dict:
     arquivos_importados = summary.get("arquivos_importados", [])
     avisos = summary.get("avisos", [])
     orfaos = summary.get("wikilinks_orfaos", [])
+    decisao_inacabados = summary.get("decisao_inacabados", "nenhum-inacabado")
+    inacabados = summary.get("arquivos_inacabados_importados", [])
 
     # B-Imp-cand-5: aceita int (contagem direta) ou list (itera). Rejeita outros tipos.
     arquivos_count, arquivos_lista = _normalizar_campo_summary(
@@ -503,6 +708,9 @@ def write_provenance(target: str, source_name: str, summary: dict) -> dict:
     avisos_count, avisos_lista = _normalizar_campo_summary(avisos, "avisos")
     orfaos_count, orfaos_lista = _normalizar_campo_summary(orfaos, "wikilinks_orfaos")
 
+    # Inacabados: aceita list de dict {path, status_atual} ou list vazia
+    inacabados_count = len(inacabados) if isinstance(inacabados, list) else 0
+
     conteudo = f"""---
 tipo: log-importacao
 status: concluido
@@ -510,6 +718,8 @@ timestamp: {datetime.now().isoformat(timespec='seconds')}
 fonte: {source_name}
 projeto-destino: {summary.get('projeto_destino', '')}
 arquivos-importados: {arquivos_count}
+arquivos-inacabados-importados: {inacabados_count}
+decisao-inacabados: {decisao_inacabados}
 avisos: {avisos_count}
 wikilinks-orfaos: {orfaos_count}
 ---
@@ -521,6 +731,15 @@ wikilinks-orfaos: {orfaos_count}
 """
     for a in arquivos_lista:
         conteudo += f"- `{a}`\n"
+
+    if decisao_inacabados == "incluiu-inacabados" and inacabados_count > 0:
+        conteudo += f"\n## Arquivos inacabados importados ({inacabados_count})\n\n"
+        for item in inacabados:
+            if isinstance(item, dict):
+                conteudo += f"- `{item.get('path', '')}` — status: `{item.get('status_atual', '')}`\n"
+            else:
+                conteudo += f"- {item}\n"
+
     conteudo += f"\n## Avisos ({avisos_count})\n\n"
     for a in avisos_lista:
         conteudo += f"- {a}\n"
@@ -533,15 +752,15 @@ wikilinks-orfaos: {orfaos_count}
 
     arquivo.write_text(conteudo, encoding="utf-8")
 
-    # Append no _log.md agregador
+    # Append no _log.md agregador (header com colunas Inacabados e Decisao)
     log_agg = pasta_log / "_log.md"
     if not log_agg.exists():
         log_agg.write_text(
-            "# Log de Importacoes\n\n| Timestamp | Resultado | Arquivos | Erro |\n|---|---|---|---|\n",
+            "# Log de Importacoes\n\n| Timestamp | Resultado | Arquivos | Inacabados | Decisao | Fonte |\n|---|---|---|---|---|---|\n",
             encoding="utf-8",
         )
     with open(log_agg, "a", encoding="utf-8") as f:
-        f.write(f"| {timestamp} | ok | {arquivos_count} | {source_name} | - |\n")
+        f.write(f"| {timestamp} | ok | {arquivos_count} | {inacabados_count} | {decisao_inacabados} | {source_name} |\n")
 
     return {"arquivo_log": str(arquivo)}
 
@@ -629,6 +848,8 @@ def main():
     parser.add_argument("--paths", help="JSON com lista de paths pra scan")
     parser.add_argument("--source-name", help="Nome amigavel da fonte")
     parser.add_argument("--summary", help="JSON com sumario pro provenance")
+    parser.add_argument("--incluir-inacabados", help="true/false — opt-in pra trazer inacabados")
+    parser.add_argument("--inacabados-paths", help="JSON com lista de paths a pular quando incluir-inacabados=false")
     args = parser.parse_args()
 
     try:
@@ -640,17 +861,29 @@ def main():
             resultado = inspect_zip(args.zip)
         elif args.funcao == "validate_pre_requisitos":
             layout = _parse_json_arg(args.paths, "paths", args.funcao, expected_type=list)
-            resultado = validate_pre_requisitos(layout)
+            resultado = validate_pre_requisitos(layout, source=args.source)
         elif args.funcao == "validate_integrity":
             layout = _parse_json_arg(args.paths, "paths", args.funcao, expected_type=dict)
             resultado = validate_integrity(layout)
         elif args.funcao == "extract_atomic":
             resultado = extract_atomic(args.zip, args.tmp)
         elif args.funcao == "detect_conflicts":
-            resultado = detect_conflicts(args.target, args.source)
+            inacabados = None
+            if args.inacabados_paths is not None:
+                inacabados = _parse_json_arg(args.inacabados_paths, "inacabados_paths", args.funcao, expected_type=list)
+            resultado = detect_conflicts(args.target, args.source, inacabados_paths=inacabados)
         elif args.funcao == "apply_resolution":
             decisions = _parse_json_arg(args.decisions, "decisions", args.funcao, expected_type=dict)
-            resultado = apply_resolution(args.target, args.source, decisions)
+            incluir = (args.incluir_inacabados or "false").lower() == "true"
+            if args.inacabados_paths is not None:
+                inacabados = _parse_json_arg(args.inacabados_paths, "inacabados_paths", args.funcao, expected_type=list)
+            else:
+                inacabados = None
+            resultado = apply_resolution(
+                args.target, args.source, decisions,
+                incluir_inacabados=incluir,
+                inacabados_paths=inacabados,
+            )
         elif args.funcao == "scan_orphan_wikilinks":
             paths = _parse_json_arg(args.paths, "paths", args.funcao, expected_type=list)
             resultado = scan_orphan_wikilinks(paths, args.target)

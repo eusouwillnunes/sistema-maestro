@@ -113,7 +113,7 @@ MODO=$(echo "$SCAN" | python -c "import json,sys; print(json.load(sys.stdin)['mo
 
 - Se `modo=vazio` → "Não achei nada nessa pasta. Confere se copiou certinho e me avisa de novo." Loop até 3 tentativas. Após 3: aborta.
 - Se `modo=zip` → segue T6.
-- Se `modo=bare` → segue T6.
+- Se `modo=bare` → captura `SOURCE_NAME="$(basename "$TARGET")-import-$(date +%Y%m%d-%H%M)"` e segue T6 (A12).
 - Se `modo=mix` → AUQ "Encontrei um arquivo .zip E pastas descompactadas na mesma pasta. Qual quer usar? (O arquivo .zip / As pastas já descompactadas / Cancelar)". Atualiza `MODO` conforme escolha.
 
 ### Turno T6 — Extração / inspeção
@@ -123,6 +123,7 @@ Se `MODO=zip`:
 ```bash
 TMP_EXT="$TMP_REAL/maestro-import-$(date +%s)"
 ZIP_PATH=$(ls "$TARGET"/*.zip | head -1)
+SOURCE_NAME=$(basename "$ZIP_PATH" .zip)
 EXTRACT=$(python "$HELPERS/importar_projeto.py" extract_atomic --zip "$ZIP_PATH" --tmp "$TMP_EXT")
 OK=$(echo "$EXTRACT" | python -c "import json,sys; print(json.load(sys.stdin)['ok'])")
 if [ "$OK" != "True" ]; then
@@ -141,40 +142,166 @@ SOURCE="$TMP_EXT"
 
 Se `MODO=bare`: `SOURCE="$TARGET"`.
 
-### Turno T7 — Validar pré-requisitos (D11)
+### Turno T7 — Classificar arquivos por status (D11.1 / C6 / C7)
 
 ```bash
-ARQUIVOS=$(find "$SOURCE/identidade" "$SOURCE/produtos" -name "*.md" 2>/dev/null | python -c "import sys,json; print(json.dumps([l.strip() for l in sys.stdin]))")
-PRE=$(python "$HELPERS/importar_projeto.py" validate_pre_requisitos --paths "$ARQUIVOS")
-OK=$(echo "$PRE" | python -c "import json,sys; print(json.load(sys.stdin)['ok'])")
+# Inicialização defensiva (A5 — evita variável undefined em ramos não-tomados)
+INACABADOS_IMPORTADOS="[]"
+INACABADOS_PATHS="[]"
+INCLUIR_INACABADOS="false"
+DECISAO_INACABADOS="nenhum-inacabado"
+
+# B-Imp-cand-25: construir via Python+pathlib retorna paths nativos do SO (Windows: C:\... , Linux/Mac: /tmp/...).
+# Antes usava find + stdin: em MINGW retorna paths POSIX /c/tmp/... que Python no Windows não resolve.
+export SOURCE
+ARQUIVOS=$(python -c "
+import json, os
+from pathlib import Path
+src = Path(os.environ['SOURCE'])
+arquivos = []
+for area in ['identidade', 'produtos']:
+    d = src / area
+    if d.is_dir():
+        arquivos.extend(str(p) for p in d.rglob('*.md'))
+print(json.dumps(arquivos))
+")
+PRE=$(python "$HELPERS/importar_projeto.py" validate_pre_requisitos --paths "$ARQUIVOS" --source "$SOURCE")
+N_INVALIDOS=$(echo "$PRE" | python -c "import json,sys; print(len(json.load(sys.stdin)['invalidos']))")
+N_INACABADOS=$(echo "$PRE" | python -c "import json,sys; print(len(json.load(sys.stdin)['inacabados']))")
+N_CONCLUIDOS=$(echo "$PRE" | python -c "import json,sys; print(len(json.load(sys.stdin)['concluidos']))")
 ```
 
-Se `OK=False`:
-- Listar arquivos inválidos com o motivo de cada um
-- Render texto:
-  > "Encontrei arquivos no import que não estão marcados como concluídos no projeto-origem:
-  >
-  > [lista de arquivos + motivo]
-  >
-  > Import só rola pra projetos terminados. No projeto-origem, conclui esses arquivos primeiro (status vira `concluido` quando o trabalho fecha), exporta o ZIP de novo e tenta aqui."
-- Cleanup: `python "$HELPERS/importar_projeto.py" cleanup_tmp_externo --tmp "$TMP_EXT"`
-- Abortar.
+**Branch 1: `N_INVALIDOS > 0` — BLOQUEIO (A1/C7)**
+
+Listar inválidos com motivo traduzido:
+
+| Motivo do helper | Texto pro user |
+|---|---|
+| `status-fora-do-enum` | "status `<X>` não é válido (deveria ser um de: `<enum-esperado>`)" |
+| `status-vazio` | "campo `status:` está vazio" |
+| `frontmatter-invalido` | "frontmatter quebrado ou ausente" |
+| `tipo-ausente` | "campo `tipo:` ausente no frontmatter" |
+| `arquivo-nao-existe` | "arquivo listado mas não existe no ZIP" |
+
+Render literal:
+
+> "Encontrei arquivos no import que o sistema não consegue processar:
+>
+> [lista traduzida com motivo]
+>
+> Esses arquivos não dá pra importar como estão. Volta no projeto-origem, conserta lá e exporta de novo."
+
+Cleanup obrigatório + abort:
+```bash
+python "$HELPERS/importar_projeto.py" cleanup_tmp_externo --tmp "$TMP_EXT" >/dev/null 2>&1
+exit 1
+```
+
+**Branch 2: `N_INACABADOS == 0` — segue normal**
+
+Sem AUQ. `DECISAO_INACABADOS="nenhum-inacabado"` (já inicializada). Segue T8.
+
+**Branch 3: `N_INACABADOS > 0 AND N_CONCLUIDOS > 0` — AUQ 3 opções**
+
+Montar lista de inacabados em Markdown (truncar com `...e mais N` se > 10, A11):
+
+```bash
+LISTA_INACABADOS=$(echo "$PRE" | python -c "
+import json, sys
+data = json.load(sys.stdin)
+items = data['inacabados']
+trunc = items[:10]
+linhas = [f\"- \`{i['path']}\` — {i['status_atual']}\" for i in trunc]
+if len(items) > 10:
+    linhas.append(f\"- ...e mais {len(items)-10} arquivo(s). Lista completa no log depois do import.\")
+print('\\n'.join(linhas))
+")
+```
+
+Render literal:
+
+> "Trouxe arquivos que ainda não estão prontos no projeto-origem:
+>
+> $LISTA_INACABADOS
+>
+> O padrão é trazer só os arquivos terminados (mais seguro pro projeto novo). Mas se quiser trazer os inacabados também, dá pra fazer — eles vêm com o status original e você termina aqui."
+
+AUQ 3 opções:
+- **"Importar só os terminados (pula os inacabados acima)"** →
+  ```bash
+  INACABADOS_PATHS=$(echo "$PRE" | python -c "import json,sys; print(json.dumps([i['path'] for i in json.load(sys.stdin)['inacabados']]))")
+  INCLUIR_INACABADOS="false"
+  DECISAO_INACABADOS="pulou-inacabados"
+  ```
+- **"Importar tudo (inacabados vêm com status atual)"** →
+  ```bash
+  INACABADOS_IMPORTADOS=$(echo "$PRE" | python -c "import json,sys; print(json.dumps([{'path': i['path'], 'status_atual': i['status_atual']} for i in json.load(sys.stdin)['inacabados']]))")
+  INCLUIR_INACABADOS="true"
+  DECISAO_INACABADOS="incluiu-inacabados"
+  ```
+- **"Cancelar"** → cleanup + abort:
+  ```bash
+  python "$HELPERS/importar_projeto.py" cleanup_tmp_externo --tmp "$TMP_EXT" >/dev/null 2>&1
+  exit 0
+  ```
+
+**Branch 4: `N_INACABADOS > 0 AND N_CONCLUIDOS == 0` — AUQ 2 opções (C5)**
+
+Render literal:
+
+> "Os arquivos do import estão todos inacabados no projeto-origem:
+>
+> $LISTA_INACABADOS
+>
+> Dá pra importar mesmo assim — eles vêm com o status original. Você termina aqui no projeto novo."
+
+AUQ 2 opções:
+- **"Importar tudo (todos vêm com status atual)"** → mesma lógica do "Importar tudo" da Branch 3.
+- **"Cancelar"** → cleanup + abort (mesma lógica da Branch 3).
 
 ### Turno T8 — Validar integridade
 
-Construir layout JSON via Bash (lista arquivos em identidade/ e em cada produto/<slug>/), passar pra `validate_integrity`.
+```bash
+# B-Imp-cand-23: bloco Bash explícito (antes era prosa, Maestro inventava e errava).
+# validate_integrity espera dict {identidade: [arquivos], produtos: {slug: [arquivos]}}, NÃO list.
+LAYOUT=$(python -c "
+import json, os
+from pathlib import Path
+src = Path(os.environ['SOURCE'])
+layout = {}
+ident_dir = src / 'identidade'
+if ident_dir.is_dir():
+    layout['identidade'] = sorted([p.name for p in ident_dir.glob('*.md')])
+prod_dir = src / 'produtos'
+if prod_dir.is_dir():
+    layout['produtos'] = {}
+    for slug in sorted(prod_dir.iterdir()):
+        if slug.is_dir():
+            layout['produtos'][slug.name] = sorted([p.name for p in slug.glob('*.md')])
+print(json.dumps(layout))
+")
+INTEG=$(python "$HELPERS/importar_projeto.py" validate_integrity --paths "$LAYOUT")
+VERDICT=$(echo "$INTEG" | python -c "import json,sys; print(json.load(sys.stdin)['verdict'])")
+```
 
-Se `verdict=bloqueio` → render bloqueios + cleanup + abort.
+`SOURCE` é env var (já exportada nos turnos anteriores quando MINGW — usar `export SOURCE` antes do bloco se ainda não estiver). Isso garante que paths Windows não quebram a heredoc Python.
+
+Se `VERDICT=bloqueio` → render bloqueios + cleanup + abort.
 Se há avisos → guardar pra mostrar no T16.
 
 ### Turno T9 — Detectar conflitos
 
 ```bash
-CONFLITOS=$(python "$HELPERS/importar_projeto.py" detect_conflicts --target "$TARGET" --source "$SOURCE")
+CONFLITOS=$(python "$HELPERS/importar_projeto.py" detect_conflicts --target "$TARGET" --source "$SOURCE" --inacabados-paths "$INACABADOS_PATHS")
 N_CONFLITOS=$(echo "$CONFLITOS" | python -c "import json,sys; print(len(json.load(sys.stdin)['conflitos']))")
 ```
 
+Quando `INCLUIR_INACABADOS=false`, `INACABADOS_PATHS` contém os arquivos que serão pulados — o helper exclui esses dos conflitos retornados, eliminando AUQ ambíguo no T10 sobre arquivos que não vão entrar (C6 da spec v2). Quando `INCLUIR_INACABADOS=true`, `INACABADOS_PATHS` é `[]` (lista vazia) — todos os conflitos passam.
+
 ### Turno T10 — Resolver conflitos via AUQ
+
+> [!critical] Cleanup obrigatório em qualquer cancel (A6)
+> Toda saída via "Cancelar" — tanto do T7 (branches 1, 3, 4) quanto do T10 (esta etapa) — DEVE chamar `python "$HELPERS/importar_projeto.py" cleanup_tmp_externo --tmp "$TMP_EXT"` antes de abortar. Sem cleanup, o tmp fica órfão e a próxima sessão de `/importar-projeto` esbarra com fixtures de execuções abandonadas (B-Imp-cand-14).
 
 Se `N_CONFLITOS=0` → segue T11 com `DECISIONS='{}'`.
 
@@ -198,49 +325,93 @@ Se `N_CONFLITOS≥2` — AUQ por grupo (texto literal abaixo):
 
 Construir `DECISIONS=` JSON tipo `{"identidade": "sobrescrever", "produto/curso-x": "manter"}` conforme respostas. "Pular essa área" → `"pular"`.
 
-Se "Cancelar tudo" → cleanup + abort.
-
-### Turno T11 — Aplicar resolução
-
+Se "Cancelar tudo" — cleanup obrigatório:
 ```bash
-APPLY=$(python "$HELPERS/importar_projeto.py" apply_resolution --target "$TARGET" --source "$SOURCE" --decisions "$DECISIONS")
-IMPORTADOS=$(echo "$APPLY" | python -c "import json,sys; print(json.load(sys.stdin)['arquivos_importados'])")
+python "$HELPERS/importar_projeto.py" cleanup_tmp_externo --tmp "$TMP_EXT" >/dev/null 2>&1
+exit 0
 ```
 
-Cleanup do tmp externo + do ZIP original:
+### Turno T11+T12+T13 — Aplicar resolução, scan órfãos, write proveniência (BLOCO ÚNICO)
+
+> [!critical] Esses 3 turnos rodam num único bloco Bash (B-Imp-cand-24)
+> Cada `Bash(...)` tool call do Claude Code é um shell efêmero — `export VAR` no Bash 1 NÃO persiste no Bash 2. Solução: T11/T12/T13 ficam no mesmo bloco Bash + JSONs persistidos em arquivos temp pra evitar escape hell de paths Windows.
 
 ```bash
+# === T11 — apply_resolution ===
+APPLY=$(python "$HELPERS/importar_projeto.py" apply_resolution \
+  --target "$TARGET" --source "$SOURCE" \
+  --decisions "$DECISIONS" \
+  --incluir-inacabados "$INCLUIR_INACABADOS" \
+  --inacabados-paths "$INACABADOS_PATHS")
+# Persistir output do apply em arquivo temp — Python lê via json.load(open(...))
+# sem heredoc interpolation hell (B-Imp-cand-24 v3).
+echo "$APPLY" > "$TMP_REAL/m-apply.json"
+
+# Cleanup tmp + ZIP original
 python "$HELPERS/importar_projeto.py" cleanup_tmp_externo --tmp "$TMP_EXT" >/dev/null
 rm -f "$ZIP_PATH"
-```
 
-### Turno T12 — Scan wikilinks órfãos
-
-```bash
-PATHS_SCAN=$(python -c "import json; print(json.dumps(['$TARGET/identidade', '$TARGET/produtos']))")
-ORFAOS=$(python "$HELPERS/importar_projeto.py" scan_orphan_wikilinks --paths "$PATHS_SCAN" --target "$TARGET")
-TOTAL_PROC=$(echo "$ORFAOS" | python -c "import json,sys; print(json.load(sys.stdin)['total_arquivos_processados'])")
-```
-
-Se `TOTAL_PROC > 20`: durante a varredura mostrar "processando $TOTAL_PROC arquivos..." pro usuário (P12).
-
-### Turno T13 — Write proveniência
-
-Montar `SUMMARY=` JSON com `fonte`, `projeto_destino`, `arquivos_importados`, `avisos`, `wikilinks_orfaos`:
-
-```bash
-SUMMARY=$(python -c "
-import json
-print(json.dumps({
-  'fonte': '$SOURCE_NAME',
-  'projeto_destino': '$(basename $TARGET)',
-  'arquivos_importados': $IMPORTADOS_JSON,
-  'avisos': $AVISOS_JSON,
-  'wikilinks_orfaos': $ORFAOS_JSON,
-}))
+# === T12 — scan wikilinks órfãos ===
+export TARGET
+PATHS_SCAN=$(python -c "
+import json, os
+t = os.environ['TARGET']
+print(json.dumps([os.path.join(t, 'identidade'), os.path.join(t, 'produtos')]))
 ")
+ORFAOS=$(python "$HELPERS/importar_projeto.py" scan_orphan_wikilinks --paths "$PATHS_SCAN" --target "$TARGET")
+echo "$ORFAOS" > "$TMP_REAL/m-orfaos.json"
+TOTAL_PROC=$(echo "$ORFAOS" | python -c "import json,sys; print(json.load(sys.stdin)['total_arquivos_processados'])")
+
+# Se TOTAL_PROC > 20: mostrar "processando $TOTAL_PROC arquivos..." (P12).
+
+# === T13 — write_provenance ===
+# Persistir INACABADOS_IMPORTADOS e AVISOS em arquivos (defensivo — vars do Bash
+# podem ter caracteres especiais quando paths Windows envolvidos).
+echo "${INACABADOS_IMPORTADOS:-[]}" > "$TMP_REAL/m-inacabados.json"
+echo "${AVISOS_JSON:-[]}" > "$TMP_REAL/m-avisos.json"
+
+# Exporta vars simples (não-JSON) pro Python ler via os.environ
+export SOURCE_NAME
+export DECISAO_INACABADOS
+export PROJETO_DESTINO="$(basename "$TARGET")"
+export TMP_REAL
+
+# Heredoc SINGLE-QUOTED ('PYEOF') — Bash NÃO interpola nada dentro.
+# Python lê JSONs de arquivos (sem escape hell) e vars simples de env.
+SUMMARY=$(python <<'PYEOF'
+import json, os
+tmp = os.environ['TMP_REAL']
+with open(tmp + '/m-apply.json', encoding='utf-8') as f:
+    apply_data = json.load(f)
+with open(tmp + '/m-orfaos.json', encoding='utf-8') as f:
+    orfaos_data = json.load(f)
+with open(tmp + '/m-inacabados.json', encoding='utf-8') as f:
+    inacabados = json.load(f)
+with open(tmp + '/m-avisos.json', encoding='utf-8') as f:
+    avisos = json.load(f)
+print(json.dumps({
+    'fonte': os.environ['SOURCE_NAME'],
+    'projeto_destino': os.environ['PROJETO_DESTINO'],
+    'arquivos_importados': apply_data.get('arquivos_importados', []),
+    'arquivos_inacabados_importados': inacabados,
+    'decisao_inacabados': os.environ['DECISAO_INACABADOS'],
+    'avisos': avisos,
+    'wikilinks_orfaos': orfaos_data.get('orfaos', []),
+}))
+PYEOF
+)
+
 python "$HELPERS/importar_projeto.py" write_provenance --target "$TARGET" --source-name "$SOURCE_NAME" --summary "$SUMMARY"
+
+# Cleanup dos arquivos temp do summary
+rm -f "$TMP_REAL/m-apply.json" "$TMP_REAL/m-orfaos.json" "$TMP_REAL/m-inacabados.json" "$TMP_REAL/m-avisos.json"
 ```
+
+**Por que funciona:**
+1. `<<'PYEOF'` (single-quoted) impede Bash de interpolar `$VAR` dentro do heredoc.
+2. JSONs vêm de arquivos via `json.load(open(...))` — sem string Python intermediária que processe `\\`.
+3. Vars simples (não-JSON) vêm de `os.environ` — env vars são bytes intactos.
+4. Cleanup automático dos 4 arquivos temp depois do write_provenance.
 
 ### Turno T14 — Bibliotecário scaffolda resto
 
@@ -267,8 +438,11 @@ Se estado inicial era 1, 2 ou 3:
 ```
 Skill("maestro:maestro-onboarding", args: "FLUXO: NOVO_PROJETO
 modo: pos-import-skip-T14
-path-projeto: $TARGET")
+path-projeto: $TARGET
+contexto-import: $DECISAO_INACABADOS")
 ```
+
+O onboarding lê `contexto-import` (valores: `nenhum-inacabado`, `pulou-inacabados`, `incluiu-inacabados`) e adapta o texto inicial quando `incluiu-inacabados` — avisa o user que arquivos vieram inacabados e oferece atalho pra terminá-los no painel (A8).
 
 Onboarding é skill, não subagent — não usar `Agent(subagent_type="maestro:maestro-onboarding", ...)` (não existe esse subagent type; tentativa de Agent retorna erro "Agent type not found" e quebra o fluxo).
 
@@ -280,13 +454,23 @@ Render literal (substituir variáveis):
 
 > "Importação concluída.
 >
-> Importados: <N> arquivos:
+> Importados: `<N>` arquivos:
 > - <lista por área>
 >
-> Avisos: <N>
-> - <lista de avisos amigáveis>
+> Avisos: `<N>`
+> - <lista de avisos amigáveis>"
+
+**Bloco extra de inacabados — renderizar SÓ se `DECISAO_INACABADOS == "incluiu-inacabados"` (A7):**
+
+> "⚠️ Importados como inacabados (`<N>` arquivos):
+> - `<path>` (status: `<status_atual>`)
+> - ...
 >
-> Ligações pra resolver: <N> referências apontam pra arquivos que não vieram no import. Elas vão se resolver sozinhas quando você criar esses arquivos — o Obsidian liga automaticamente. Se não criar, ficam como link quebrado dentro do arquivo (sem perder nada).
+> Esses arquivos vão aparecer no painel da Identidade (e dos Produtos, se for o caso) com o ícone `⚙️ Em andamento`, `⏳ Pendente` ou `🔍 Em revisão`, em vez de `✅ Aprovado`. Esse é o seu sinal pra terminar eles aqui no projeto novo."
+
+**Bloco de wikilinks órfãos (lógica existente):**
+
+> "Ligações pra resolver: `<N>` referências apontam pra arquivos que não vieram no import. Elas vão se resolver sozinhas quando você criar esses arquivos — o Obsidian liga automaticamente. Se não criar, ficam como link quebrado dentro do arquivo (sem perder nada).
 >
 > [lista de wikilinks órfãos: arquivo + link]
 >

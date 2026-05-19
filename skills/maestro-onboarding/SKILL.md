@@ -1333,6 +1333,16 @@ Ler `~/.maestro/memorias/nome-usuario.md` para recuperar o nome do usuário (`<N
 - Se cache local (`<workspace>/.maestro/cache/projeto-ativo.md`, onde `<workspace>` é o CWD atual no Fluxo Novo Projeto) existe e tem campo `workspace:`, ler de lá.
 - Senão, inferir do basename do CWD: `WORKSPACE_LEGIVEL=$(basename "$CWD")` (capitalizado pra exibição: substituir hifens por espaço e capitalizar).
 
+**1.ter Verificar contexto de inacabados (pós-import):**
+
+Procurar no bloco CONTEXTO do dispatch por campo `contexto-import`.
+
+Se `contexto-import == "incluiu-inacabados"`, renderizar ANTES da apresentação do T1B:
+
+> Antes da gente começar: vi que sua identidade veio com arquivos inacabados do projeto-origem. Eles ficaram com o status original (⚙️ em andamento, ⏳ pendente ou 🔍 em revisão). Quando quiser terminá-los, abre o painel `_identidade.md` aqui no Obsidian e clica nos que estão com ícone diferente de ✅.
+
+Se `contexto-import` é qualquer outro valor (`nenhum-inacabado`, `pulou-inacabados`, ausente) → continuar normalmente sem renderizar o aviso.
+
 **1.bis Detectar contexto (Caso 4 vs Casos 1-3):**
 
 ```bash
