@@ -64,7 +64,13 @@ A partir de T2, todas as mensagens que tenham `<NOME>` no template usam o valor 
 - **Renderize literal:**
 
 ---TEXTO-T2---
-Antes de mais nada, preciso fazer algumas verificações no seu computador para entender se tenho tudo o que eu preciso instalado. Pode ser que eu precise te pedir algumas permissões.
+Antes de seguir, vou checar se você tem as ferramentas que o Maestro precisa no seu computador:
+
+• **Python** — roda os scripts internos do sistema
+• **Pandoc** — converte documentos quando você importa material de referência
+• **Libs de leitura de documentos** (docx, xlsx, pdf) — leem arquivos quando você absorve material existente
+
+Pode ser que eu precise te pedir alguma permissão durante a checagem.
 ---END-TEXTO-T2---
 
 ### T3 — Consentimento (AUQ)

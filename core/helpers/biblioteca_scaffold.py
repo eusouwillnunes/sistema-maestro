@@ -160,6 +160,7 @@ def scaffold(destino_arg: str, empresa_nome: str, plugin_dir_arg: str, skip_area
         "memorias",
         "memorias/auditoria",
         "memorias/auditoria/canarios-ativos",
+        "memorias/auditoria/checks-de-ferramenta",
         "memorias/pendencias-aceitas",
         "maestro",
         "maestro/checklists",
@@ -225,6 +226,7 @@ def scaffold(destino_arg: str, empresa_nome: str, plugin_dir_arg: str, skip_area
         (templates_root / "_pendencias-aceitas-historico-template.md", "memorias/pendencias-aceitas/historico.md"),
         (biblioteca_templates / "auditoria" / "_historico.md", "memorias/auditoria/historico.md"),
         (biblioteca_templates / "auditoria" / "_defesa-anti-hallucination.md", "memorias/auditoria/_defesa-anti-hallucination.md"),
+        (biblioteca_templates / "auditoria" / "_historico-checks.md", "memorias/auditoria/_historico-checks.md"),
     ]
     for src, dst_rel in fixos:
         _copy_idempotent(src, destino / dst_rel, destino, criados, pulados, warnings)

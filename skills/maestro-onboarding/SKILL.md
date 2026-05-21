@@ -53,7 +53,7 @@ PROJETOS_NA_WORKSPACE=$(find "$CWD" -mindepth 3 -maxdepth 3 -path "*/maestro/con
 > [!danger] OBRIGATÓRIO — pular qualquer Camada = bug crítico
 > As 4 Camadas abaixo são **defesa estrutural por construção**, não cerimônia opcional. As Camadas 3 e 4 (state file + markers + hook auditor) têm efeito INVISÍVEL pro user (audit trail), mas ativam a proteção contra B-F1-10 e disparos precoces. **NÃO PULAR sob nenhum pretexto** — incluindo "pra encurtar", "pra agilizar", "sistema funciona sem", "TodoWrite não importa", "marker pode ficar pra depois". Confessar o pulo depois NÃO é aceitável; defesa precisa estar ativa por construção. Aprendizados #38, #56, #57 e #58 do CLAUDE.md — Opus 4.7 elimina ATIVAMENTE passos de audit trail invisíveis sob justificativa "funcionalmente OK". Esta seção bloqueia esse comportamento.
 
-**Camada 1 — TodoWrite obrigatório.** ANTES de renderizar T1, abrir TodoWrite com 16 itens (T1, T1.5, T2-T6, T6.5, T7-T9, T11-T15 conforme `turnos-onboarding.md`). Marcar `in_progress` antes do turno e `completed` depois. Pular item deixa rastro visível na UI.
+**Camada 1 — TodoWrite obrigatório.** ANTES de renderizar T1, abrir TodoWrite com 17 itens (T1, T1.5, T2-T6, T6.5, T7-T9, T9.5, T11-T15 conforme `turnos-onboarding.md`). Marcar `in_progress` antes do turno e `completed` depois. Pular item deixa rastro visível na UI.
 
 > Nota Sessão 74: T1.5 (captura nome do usuário cedo) substitui T10 (que vinha tarde demais). Se `~/.maestro/memorias/nome-usuario.md` já existe, T1.5 não emite AUQ — apenas lê o nome e marca o item como `completed`.
 
@@ -70,6 +70,7 @@ TodoWrite([
     {"content": "T7 — AUQ nome Área de Trabalho", "status": "pending", "activeForm": "Aguardando nome workspace"},
     {"content": "T8 — AUQ nome do projeto", "status": "pending", "activeForm": "Aguardando nome projeto"},
     {"content": "T9 — Confirmação estrutura + criação pastas", "status": "pending", "activeForm": "Criando estrutura"},
+    {"content": "T9.5 — Persistir verificações (log + mirror config.md)", "status": "pending", "activeForm": "Persistindo verificações"},
     {"content": "T11 — Recado Comunidade Automators (texto literal)", "status": "pending", "activeForm": "Apresentando Comunidade"},
     {"content": "T12 — AUQ Biblioteca", "status": "pending", "activeForm": "Aguardando decisão Biblioteca"},
     {"content": "T13 — AUQ Pesquisa inicial", "status": "pending", "activeForm": "Aguardando decisão Pesquisa"},
@@ -170,28 +171,108 @@ Marcar TodoWrite T3 `completed` e seguir pra 2.0.B (verificações técnicas).
 
 ### 2.0.B Verificações técnicas pós-consentimento (Turno 4)
 
-ANTES de criar tasks ou iniciar qualquer etapa, verificar silenciosamente o que já está configurado no ambiente do usuário:
+> [!critical]
+> Maestro nunca monta comando `winget install`, `brew install` ou `sudo apt install` direto. Toda verificação e instalação vai via `python plugin/core/helpers/check_tools.py`. O helper retorna JSON estruturado que o Maestro traduz pro user em pt-br.
 
-1. **Dependências:** testar `python --version`, `pandoc --version` e bibliotecas (`docx`, `openpyxl`, `pdfplumber`)
-2. **Permissões:** verificar se `.claude/settings.local.json` já tem a seção `permissions` do Maestro
-3. **Memórias e config:** verificar se `maestro/config.md` e `maestro/memorias/` existem
-4. **Biblioteca:** verificar se a pasta da empresa já existe com scaffold
-5. **Pesquisador:** ler `~/.maestro/config.md` e verificar se `openrouter-api-key` tem valor
-6. **Status Line:** ler `~/.claude/settings.json` e verificar se `statusLine` já está configurada
-7. **Obsidian:** verificar se está instalado usando TODOS os métodos abaixo (em ordem):
-   - Windows: testar se existe `$LOCALAPPDATA/Obsidian/Obsidian.exe` ou `$APPDATA/../Local/Obsidian/Obsidian.exe`
-   - macOS: testar se existe `/Applications/Obsidian.app`
-   - Linux: testar `which obsidian`
-   - **NÃO usar `where obsidian`** — o Obsidian não registra no PATH do Windows
-   - Se encontrado em qualquer método, marcar como instalado
+#### Tabela de fallback (consultar quando ferramenta ausente)
 
-Guardar o resultado em memória para uso nos passos seguintes. Etapas já concluídas serão puladas automaticamente com aviso ao usuário (ex: "Dependências já instaladas. Pulando.").
+| Ferramenta | Papel | Impacto se ausente | Link manual |
+|---|---|---|---|
+| Python 3.10+ | Roda scripts internos do sistema. | **Bloqueante.** Sem Python, fluxos quebram. | https://www.python.org/downloads/ |
+| Pandoc 2.0+ | Converte documentos (.docx/.odt/HTML) na importação. | **Degradado.** Importar Word/HTML falha — só Markdown puro. | https://pandoc.org/installing.html |
+| Libs Python | Leem .docx, .xlsx e .pdf na absorção de material. | **Degradado por tipo.** Sem cada lib, o tipo falha. | `pip install python-docx openpyxl pdfplumber` |
+| Obsidian (etapa 2.7) | Editor visual + Dataview + bookmarks. | **Degradado.** Sistema funciona via terminal, perde UX visual. | https://obsidian.md/download |
 
-**Exceção:** a etapa do Obsidian (2.7) NUNCA é pulada pelo checklist. Mesmo se detectado como instalado, sempre apresentar a etapa (o usuário pode precisar configurar o vault).
+#### Fluxo T4
+
+1. **Invocar helper:**
+
+```
+Bash: python plugin/core/helpers/check_tools.py detect
+```
+
+Capture stdout como `BASH_OUTPUT`.
+
+2. **Parse JSON com fallback (M2):**
+
+Tentar `payload = json.loads(BASH_OUTPUT)`. Se falhar (JSONDecodeError):
+
+> Renderizar AskUserQuestion: "Não consegui ler o resultado da verificação. O que prefere?"
+> Opções:
+> - "Re-tentar verificação" → voltar pro passo 1.
+> - "Seguir sem checar" → narrar "Tudo bem, sigo sem verificar agora — você pode rodar `python plugin/core/helpers/check_tools.py detect` no terminal a qualquer momento" e ir pro passo 9 (com `ferramentas-detectadas: {}`, `ferramentas-instaladas: []`).
+
+3. **Computar `ausentes`:** lista de ferramentas com `instalado: false` em `payload.ferramentas`, **excluindo `obsidian`** (vai pra 2.7).
+
+4. **Branch A — todas instaladas (ausentes vazia):**
+
+Narrar: "Tudo certo, todas as ferramentas estão instaladas." Ir pro passo 9.
+
+5. **Branch B — `ausentes` não-vazia E `payload["package-manager"] == "none"`:**
+
+Renderizar linhas relevantes da tabela de fallback (papel + impacto + link manual). Renderizar AskUserQuestion binário:
+- "Parar pra instalar manualmente" → narrar "Beleza, abre o link de cada ferramenta, instala, e volta com `/maestro-onboarding`."
+- "Seguir sem essas ferramentas" → narrar "Tudo bem, sigo sem isso — o sistema vai funcionar mas algumas features (importação de Word/PDF) vão falhar até você instalar."
+
+Ir pro passo 9 com `ferramentas-puladas` populado.
+
+6. **Branch C — `ausentes` não-vazia E gerenciador disponível:**
+
+Renderizar AskUserQuestion **multi-select** (`multiSelect: true`):
+- Pergunta: "Posso instalar as ferramentas que estão faltando? Marque o que quer."
+- 1 option por ferramenta em `ausentes`, montada assim:
+  - `label`: `"<Ferramenta> — <papel curto>"` (≤60 chars). Exemplos:
+    - `"Pandoc — Converte Word/PDF/HTML"`
+    - `"Python — Roda scripts do sistema"`
+    - `"Libs de leitura — Lê .docx/.xlsx/.pdf"`
+  - `description`: `"<impacto curto>"` (**≤80 caracteres — M5**). Exemplos:
+    - `"Sem isso, importar material em Word/HTML falha."`
+    - `"Sem isso, sistema não roda."`
+    - `"Sem isso, importação de Word/Excel/PDF falha por tipo."`
+- Sempre incluir option final: `{label: "Nenhuma — sigo sem instalar", description: "Posso instalar depois manualmente quando precisar."}`.
+
+7. **Para cada ferramenta marcada pelo user**, na ordem da lista:
+
+   a. Narrar "Instalando {ferramenta}...".
+
+   b. Bash:
+   ```
+   python plugin/core/helpers/check_tools.py install <ferramenta> --os <payload.os>
+   ```
+
+   c. Parse JSON do retorno. Tratar `status`:
+      - `"ok"` → narrar `payload["mensagem-natural"]`. Adicionar ferramenta em `ferramentas-instaladas`.
+      - `"falhou"` → narrar mensagem da tabela: "Não consegui instalar **{ferramenta}**. Ela serve pra **{papel}**. Sem ela, **{impacto}**. Se quiser instalar manualmente: **{link}**." Renderizar AUQ "Continuar com as outras / Parar pra resolver".
+      - `"timeout"` → narrar `payload["mensagem-natural"]`. Mesmo AUQ.
+      - `"sudo-sem-tty"` → narrar `payload["mensagem-natural"]` (já tem o comando exato). Mesmo AUQ.
+      - `"sem-gerenciador"` → narrar mensagem + link manual. Mesmo AUQ.
+
+8. **User pulou (marcou "Nenhuma" ou parou):** popular `ferramentas-puladas` com o que faltou.
+
+9. **Persistir resultado (parcial — só state marker neste ponto):**
+
+   **State file** — escrever marker `t-verificacoes` no state file do hub (comportamento preservado do F-Onb-2A — segue convenção `python plugin/core/helpers/onboarding_state.py mark <state-file> t-verificacoes`).
+
+   **Guardar em memória** (variáveis Bash do turno atual ou TodoWrite description) os valores que serão persistidos em T9.5 quando `$WORKSPACE_PATH` e `$PROJETO_PATH` existirem:
+   - `CHECK_OS` = payload.os (ex: "windows")
+   - `CHECK_PACKAGE_MANAGER` = payload.package-manager (ex: "winget")
+   - `CHECK_DETECTADO_JSON` = `ferramentas-detectadas` (dict completo do JSON do detect)
+   - `CHECK_INSTALADAS` = lista de ferramentas que foram instaladas nesta execução (vazio em Branch A)
+   - `CHECK_PULADAS` = lista de ferramentas puladas (vazio em Branch A)
+   - `CHECK_DURACAO` = segundos decorridos da 2.0.B inteira
+   - `CHECK_TIMESTAMP_ISO` = `date -u +%Y-%m-%dT%H:%M:%SZ`
+
+10. Continuar pra 2.0.C (Roadmap T5).
+
+> [!critical]
+> Os Bashes de log Markdown (`check_tools.py log`) e mirror em `maestro/config.md` (`patch_frontmatter.py`) **NÃO rodam aqui** — dependem de `$WORKSPACE_PATH` e `$PROJETO_PATH` que só nascem após T7/T9 + setup técnico (2.5). Esses Bashes rodam no Turno T9.5 (seção 2.5.5), após o setup criar `<projeto>/maestro/config.md`. Aqui só o marker `t-verificacoes` no state file (independente de path do vault). Aprendizado da Sessão 95 (B-OnbUX-2C-1): Bash com placeholder de path tardio é pulado silenciosamente pelo Opus — defesa correta é mover pra Turno que roda APÓS o path nascer.
 
 ### 2.0.C Roadmap (Turno 5)
 
 **Turno T5.** Marcar TodoWrite T5 `in_progress`. Renderizar literal o bloco `---TEXTO-T5---` de `turnos-onboarding.md`. Marcar TodoWrite T5 `completed`.
+
+> [!important]
+> Não pular o `TaskUpdate(T5, completed)` ANTES de seguir pra 2.0.1. Aprendizado da Sessão 95 (B-OnbUX-2C-4): T5 ficou `pending` no TodoWrite mesmo após render do texto literal — drift visual entre execução e tracking. Marcar `completed` é obrigatório, não cosmético.
 
 ### 2.0.1 Tasks visuais
 
@@ -710,6 +791,52 @@ Se a tarefa de onboarding ainda não foi criada (pasta `tarefas/` foi criada ago
 - Acionar Gerente de Projetos via Agent(haiku) com o mesmo payload descrito em 2.0.2
 - Guardar caminho do arquivo de tarefa para usar na conclusão (step 2.12.1)
 
+### 2.5.5 Persistir verificações (Turno T9.5)
+
+Marcar TodoWrite T9.5 `in_progress`.
+
+> [!critical] Bashes OBRIGATÓRIOS — não pular sob nenhuma circunstância
+> Estes são os 2 Bashes do passo 9 da 2.0.B que NÃO puderam rodar antes porque `$WORKSPACE_PATH` e `$PROJETO_PATH` ainda não existiam. Agora o setup técnico (2.5) criou a estrutura — rodar AGORA, em ordem, sem pular nenhum dos dois.
+>
+> Sem o Bash A: painel `<projeto>/memorias/auditoria/_historico-checks.md` fica vazio (Dataview não tem dados pra agregar).
+> Sem o Bash B: `<projeto>/maestro/config.md` fica sem rastro de quando/quais ferramentas foram verificadas.
+>
+> Aprendizado #58 do CLAUDE.md: Opus pode pular audit trail invisível ao user mesmo com callout — pre-output verification obrigatório ANTES de marcar TodoWrite T9.5 `completed`.
+
+**Bash A — Log Markdown** (cria entrada nova em `<projeto>/memorias/auditoria/checks-de-ferramenta/`, que o painel `_historico-checks.md` agrega via Dataview):
+
+```bash
+python "$HELPERS/check_tools.py" log \
+  --workspace "$PROJETO_PATH" \
+  --json "{\"timestamp-iso\":\"$CHECK_TIMESTAMP_ISO\",\"os\":\"$CHECK_OS\",\"package-manager\":\"$CHECK_PACKAGE_MANAGER\",\"ferramentas-detectadas\":$CHECK_DETECTADO_JSON,\"ferramentas-instaladas\":$CHECK_INSTALADAS,\"ferramentas-puladas\":$CHECK_PULADAS,\"duracao-segundos\":$CHECK_DURACAO}"
+```
+
+Note `--workspace "$PROJETO_PATH"` — o helper `check_tools.py log` escreve em `<arg>/memorias/auditoria/checks-de-ferramenta/`. Como esses logs ficam dentro da pasta do projeto (não do workspace), passar `$PROJETO_PATH`.
+
+**Bash B — Mirror em `maestro/config.md`** (D9):
+
+```bash
+python "$HELPERS/patch_frontmatter.py" \
+  --file "$PROJETO_PATH/maestro/config.md" \
+  --set ultima-verificacao-ok="$CHECK_TIMESTAMP_ISO" \
+  --set ferramentas-verificadas="[python,pandoc,libs,obsidian]"
+```
+
+**Pre-output verification (OBRIGATÓRIO antes de marcar T9.5 completed):**
+
+```bash
+# Confirmar que ambos os artefatos foram criados antes de seguir
+test -d "$PROJETO_PATH/memorias/auditoria/checks-de-ferramenta" && \
+  ls "$PROJETO_PATH/memorias/auditoria/checks-de-ferramenta/" | grep -q '\.md$' && \
+  grep -q '^ultima-verificacao-ok:' "$PROJETO_PATH/maestro/config.md" && \
+  echo "[OK] T9.5 persistido" || \
+  echo "[ABORTAR] T9.5 falhou — re-rodar Bashes A+B antes de seguir" >&2
+```
+
+Se a verificação retornar `[OK]`, marcar TodoWrite T9.5 `completed`. Se `[ABORTAR]`, NÃO marcar — debugar e re-rodar.
+
+> Esses Bashes não exigem CHECK_PULADAS / CHECK_INSTALADAS não-vazios em Branch A (tudo instalado). Listas vazias `[]` são válidas no JSON.
+
 ### 2.6 Biblioteca de Marketing (Turno 12)
 
 Marcar task "Criar Biblioteca de Marketing" como `in_progress`. Marcar TodoWrite T12 `in_progress`.
@@ -785,16 +912,19 @@ Ajustar o fluxo conforme a escolha:
 
 **Se sim:**
 
-1. Verificar se o Obsidian já está instalado:
-   - Windows: `test -f "$LOCALAPPDATA/Obsidian/Obsidian.exe"` (caminho padrão de instalação)
-   - macOS: `test -d "/Applications/Obsidian.app"`
-   - Linux: `which obsidian 2>/dev/null`
-   - **NÃO usar `where obsidian`** — o Obsidian não registra no PATH do Windows
-   - **Se encontrado:** informar "Obsidian já está instalado!" e pular para o passo 3
-   - **Se NÃO encontrado:** perguntar ao usuário antes de assumir que não tem:
-     > "Não consegui detectar o Obsidian instalado no seu computador. Você pode me confirmar se de fato ainda não instalou essa ferramenta?"
-     - **Se o usuário confirma que já tem:** informar "Entendido! Vamos direto pra configuração do vault." e pular para o passo 3
-     - **Se o usuário confirma que não tem:** seguir para o passo 2
+1. Verificar se o Obsidian já está instalado consultando o JSON do `check_tools.py` (já rodado na 2.0.B; se a 2.0.B foi pulada por motivo qualquer, re-rodar agora):
+
+```bash
+python plugin/core/helpers/check_tools.py detect
+```
+
+Parsear JSON e ler `payload["ferramentas"]["obsidian"]["instalado"]`.
+
+- **Se `true`:** informar "Obsidian já está instalado!" e pular para o passo 3.
+- **Se `false`:** seguir para o passo 2 (guia de instalação).
+
+> [!note]
+> A detecção do Obsidian é robusta — checa 4 paths no Windows + Microsoft Store + paths nativos no Mac/Linux. Se o user tem Obsidian instalado mas o helper marca como ausente, é caso raro: confirmar com user via AUQ "Já instalou o Obsidian? Posso seguir com o guia ou pular?".
 
 2. Guiar a instalação:
    > "Baixe o Obsidian em https://obsidian.md/ (é grátis). Instale normalmente e abra o app.
@@ -1003,11 +1133,26 @@ Se "Pausa" → encerrar skill silenciosamente.
 
 ### 2.11 Status Line
 
-**Se o checklist pré-onboarding (item 6) detectou que `statusLine` já está configurada em `~/.claude/settings.json`:** pular esta etapa silenciosamente. Não perguntar nada. Marcar task como `completed` e seguir.
-
-**Se não está configurada:**
-
 Marcar task "Configurar Status Line" como `in_progress`.
+
+**Passo 1 — Detectar se Status Line já está configurada** (Bash inline, NÃO depender de "checklist pré-onboarding"):
+
+```bash
+if grep -qE '"statusLine"\s*:\s*\{' "$HOME/.claude/settings.json" 2>/dev/null; then
+    STATUS_LINE_JA_CONFIGURADA=sim
+else
+    STATUS_LINE_JA_CONFIGURADA=nao
+fi
+```
+
+**Se `STATUS_LINE_JA_CONFIGURADA=sim`:** informar brevemente "Barra de status já está ativada — sigo." Marcar task como `completed` e pular pra T15.
+
+**Se `STATUS_LINE_JA_CONFIGURADA=nao`:** seguir Passo 2.
+
+> [!critical]
+> NÃO pular essa seção sob pretexto "não sei se está configurada" ou "talvez já esteja". O Bash acima resolve a ambiguidade — sempre executar antes de decidir. Aprendizado da Sessão 95 (B-OnbUX-2C-5): referência fantasma a "checklist pré-onboarding item 6" fez Opus pular a seção inteira em produção.
+
+**Passo 2 — Perguntar ao usuário:**
 
 Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
 - question: "Quer ativar uma barra de status no terminal?"
@@ -1109,6 +1254,7 @@ Independente do CASO A ou B acima, **toda finalização do Fluxo de Primeira Vez
 **Persistir markers da Camada 3 após resposta:**
 
 ```bash
+set -e  # B-OnbUX-2C-3: falhar fast e expor qual comando deu erro (não engolir exit code intermediário)
 python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-auq-identidade"
 python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-conclusao"
 python "$HELPERS/onboarding_state.py" archive "$STATE_DIR" "$SLUG"
