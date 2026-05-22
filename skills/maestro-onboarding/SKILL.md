@@ -22,7 +22,7 @@ Ao ser acionado, verificar o estado atual cruzando 3 sinais físicos do CWD:
 | (1) sim E (2) ≥1 | **Fluxo de Novo Projeto** (seção 2B) — adiciona projeto na Área de Trabalho existente |
 | (1) sim E (2) = 0 | **Recuperação** — Área de Trabalho meia-criada (marker existe mas nenhum projeto). Tratada na seção 2B.-1 com AUQ "Continuar configuração / Cancelar e recomeçar / Voltar" |
 | (3) sim sem (1) | CWD = projeto Maestro existente. Tratado na seção 2B.-1 com AUQ ramificado: "Criar projeto novo na mesma Área de Trabalho" / "Reconfigurar este projeto" (Seção 3) / "Voltar" |
-| nenhum dos 3 | Verificar se `~/.maestro/config.md` existe (sistema já configurado antes). Se sim → **Fluxo de Novo Projeto, Caso 4** de 2B.-1 (pasta vazia + Maestro globalmente configurado). Se não → **Fluxo de Primeira Vez** (seção 2) — onboarding completo, com confirmação de pasta no T6.5 antes de criar estrutura |
+| nenhum dos 3 | Verificar se `~/.maestro/config.md` existe (sistema já configurado antes). Se sim → **Fluxo de Novo Projeto, Caso 4** de 2B.-1 (pasta vazia + Maestro globalmente configurado). Se não → **Fluxo de Primeira Vez** (seção 2) — onboarding completo, com confirmação de pasta no T7 antes de criar estrutura |
 
 **Após qualquer branch resolver:** se `<CWD>/maestro/config.md` for lido E `onboarding-completo: true` → desviar pro **Fluxo de Re-execução** (Seção 3) ANTES de executar 2/2B.
 
@@ -53,7 +53,7 @@ PROJETOS_NA_WORKSPACE=$(find "$CWD" -mindepth 3 -maxdepth 3 -path "*/maestro/con
 > [!danger] OBRIGATÓRIO — pular qualquer Camada = bug crítico
 > As 4 Camadas abaixo são **defesa estrutural por construção**, não cerimônia opcional. As Camadas 3 e 4 (state file + markers + hook auditor) têm efeito INVISÍVEL pro user (audit trail), mas ativam a proteção contra B-F1-10 e disparos precoces. **NÃO PULAR sob nenhum pretexto** — incluindo "pra encurtar", "pra agilizar", "sistema funciona sem", "TodoWrite não importa", "marker pode ficar pra depois". Confessar o pulo depois NÃO é aceitável; defesa precisa estar ativa por construção. Aprendizados #38, #56, #57 e #58 do CLAUDE.md — Opus 4.7 elimina ATIVAMENTE passos de audit trail invisíveis sob justificativa "funcionalmente OK". Esta seção bloqueia esse comportamento.
 
-**Camada 1 — TodoWrite obrigatório.** ANTES de renderizar T1, abrir TodoWrite com 17 itens (T1, T1.5, T2-T6, T6.5, T7-T9, T9.5, T11-T15 conforme `turnos-onboarding.md`). Marcar `in_progress` antes do turno e `completed` depois. Pular item deixa rastro visível na UI.
+**Camada 1 — TodoWrite obrigatório.** ANTES de renderizar T1, abrir TodoWrite com 17 itens (T1, T1.5, T2-T6, T7, T8-T10, T11, T12-T16 conforme `turnos-onboarding.md`). Marcar `in_progress` antes do turno e `completed` depois. Pular item deixa rastro visível na UI.
 
 > Nota Sessão 74: T1.5 (captura nome do usuário cedo) substitui T10 (que vinha tarde demais). Se `~/.maestro/memorias/nome-usuario.md` já existe, T1.5 não emite AUQ — apenas lê o nome e marca o item como `completed`.
 
@@ -66,16 +66,16 @@ TodoWrite([
     {"content": "T4 — Verificações técnicas (Bash silencioso)", "status": "pending", "activeForm": "Verificando"},
     {"content": "T5 — Roadmap (texto literal)", "status": "pending", "activeForm": "Mostrando roadmap"},
     {"content": "T6 — Apresentação estrutura (texto literal)", "status": "pending", "activeForm": "Apresentando estrutura"},
-    {"content": "T6.5 — AUQ confirmar pasta (3 opções)", "status": "pending", "activeForm": "Aguardando confirmação de pasta"},
-    {"content": "T7 — AUQ nome Área de Trabalho", "status": "pending", "activeForm": "Aguardando nome workspace"},
-    {"content": "T8 — AUQ nome do projeto", "status": "pending", "activeForm": "Aguardando nome projeto"},
-    {"content": "T9 — Confirmação estrutura + criação pastas", "status": "pending", "activeForm": "Criando estrutura"},
-    {"content": "T9.5 — Persistir verificações (log + mirror config.md)", "status": "pending", "activeForm": "Persistindo verificações"},
-    {"content": "T11 — Recado Comunidade Automators (texto literal)", "status": "pending", "activeForm": "Apresentando Comunidade"},
-    {"content": "T12 — AUQ Biblioteca", "status": "pending", "activeForm": "Aguardando decisão Biblioteca"},
-    {"content": "T13 — AUQ Pesquisa inicial", "status": "pending", "activeForm": "Aguardando decisão Pesquisa"},
-    {"content": "T14 — AUQ Material referência", "status": "pending", "activeForm": "Aguardando decisão Material"},
-    {"content": "T15 — Finalização + AUQ identidade", "status": "pending", "activeForm": "Finalizando"},
+    {"content": "T7 — AUQ confirmar pasta (3 opções)", "status": "pending", "activeForm": "Aguardando confirmação de pasta"},
+    {"content": "T8 — AUQ nome Área de Trabalho", "status": "pending", "activeForm": "Aguardando nome workspace"},
+    {"content": "T9 — AUQ nome do projeto", "status": "pending", "activeForm": "Aguardando nome projeto"},
+    {"content": "T10 — Confirmação estrutura + criação pastas", "status": "pending", "activeForm": "Criando estrutura"},
+    {"content": "T11 — Persistir verificações (log + mirror config.md)", "status": "pending", "activeForm": "Persistindo verificações"},
+    {"content": "T12 — Recado Comunidade Automators (texto literal)", "status": "pending", "activeForm": "Apresentando Comunidade"},
+    {"content": "T13 — AUQ Biblioteca", "status": "pending", "activeForm": "Aguardando decisão Biblioteca"},
+    {"content": "T14 — AUQ Pesquisa inicial", "status": "pending", "activeForm": "Aguardando decisão Pesquisa"},
+    {"content": "T15 — AUQ Material referência", "status": "pending", "activeForm": "Aguardando decisão Material"},
+    {"content": "T16 — Finalização + AUQ identidade", "status": "pending", "activeForm": "Finalizando"},
 ])
 ```
 
@@ -87,7 +87,7 @@ TodoWrite([
 python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "<marker>"
 ```
 
-onde `$HELPERS=$PLUGIN_DIR/core/helpers`, `$STATE_DIR=$CWD/memorias/onboarding` (path que o hook auditor inspeciona — relativo ao CWD do tool call), `$SLUG=<workspace>-<projeto>` (após T7+T8) ou `_tmp_<timestamp>` (antes). Após capturar `projeto_slug` em T8, renomear `state-_tmp_*.md` → `state-<slug>.md`.
+onde `$HELPERS=$PLUGIN_DIR/core/helpers`, `$STATE_DIR=$CWD/memorias/onboarding` (path que o hook auditor inspeciona — relativo ao CWD do tool call), `$SLUG=<workspace>-<projeto>` (após T8+T9) ou `_tmp_<timestamp>` (antes). Após capturar `projeto_slug` em T9, renomear `state-_tmp_*.md` → `state-<slug>.md`.
 
 **Camada 4 — Hook auditor.** Hook `onboarding-orquestra.py` valida marker antes de dispatch Bibliotecário CRIAR / Pesquisador / SCAFFOLD WORKSPACE. Se hook bloquear (mensagem `marker-ausente` no `permissionDecisionReason`), Maestro lê `plugin/skills/maestro/limites-maestro.md` seção "Bloqueio de turno onboarding" e re-emite a AUQ correspondente antes de tentar de novo.
 
@@ -253,7 +253,7 @@ Renderizar AskUserQuestion **multi-select** (`multiSelect: true`):
 
    **State file** — escrever marker `t-verificacoes` no state file do hub (comportamento preservado do F-Onb-2A — segue convenção `python plugin/core/helpers/onboarding_state.py mark <state-file> t-verificacoes`).
 
-   **Guardar em memória** (variáveis Bash do turno atual ou TodoWrite description) os valores que serão persistidos em T9.5 quando `$WORKSPACE_PATH` e `$PROJETO_PATH` existirem:
+   **Guardar em memória** (variáveis Bash do turno atual ou TodoWrite description) os valores que serão persistidos em T11 quando `$WORKSPACE_PATH` e `$PROJETO_PATH` existirem:
    - `CHECK_OS` = payload.os (ex: "windows")
    - `CHECK_PACKAGE_MANAGER` = payload.package-manager (ex: "winget")
    - `CHECK_DETECTADO_JSON` = `ferramentas-detectadas` (dict completo do JSON do detect)
@@ -265,7 +265,7 @@ Renderizar AskUserQuestion **multi-select** (`multiSelect: true`):
 10. Continuar pra 2.0.C (Roadmap T5).
 
 > [!critical]
-> Os Bashes de log Markdown (`check_tools.py log`) e mirror em `maestro/config.md` (`patch_frontmatter.py`) **NÃO rodam aqui** — dependem de `$WORKSPACE_PATH` e `$PROJETO_PATH` que só nascem após T7/T9 + setup técnico (2.5). Esses Bashes rodam no Turno T9.5 (seção 2.5.5), após o setup criar `<projeto>/maestro/config.md`. Aqui só o marker `t-verificacoes` no state file (independente de path do vault). Aprendizado da Sessão 95 (B-OnbUX-2C-1): Bash com placeholder de path tardio é pulado silenciosamente pelo Opus — defesa correta é mover pra Turno que roda APÓS o path nascer.
+> Os Bashes de log Markdown (`check_tools.py log`) e mirror em `maestro/config.md` (`patch_frontmatter.py`) **NÃO rodam aqui** — dependem de `$WORKSPACE_PATH` e `$PROJETO_PATH` que só nascem após T8/T10 + setup técnico (2.5). Esses Bashes rodam no Turno T11 (seção 2.5.5), após o setup criar `<projeto>/maestro/config.md`. Aqui só o marker `t-verificacoes` no state file (independente de path do vault). Aprendizado da Sessão 95 (B-OnbUX-2C-1): Bash com placeholder de path tardio é pulado silenciosamente pelo Opus — defesa correta é mover pra Turno que roda APÓS o path nascer.
 
 ### 2.0.C Roadmap (Turno 5)
 
@@ -338,7 +338,17 @@ Ao iniciar cada etapa, exibir um separador visual antes da mensagem ao usuário:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-Onde N é o número do passo atual e T é o total de passos a executar (descontando os pulados pelo checklist). Isso ajuda o usuário a saber onde está no processo.
+Onde N é o número do passo atual e T é **fixo = 11** (as 11 etapas listadas no callout acima). NUNCA descontar etapas antes de entrar.
+
+"Entrar na seção" exige **TODAS** as 3 condições abaixo (não basta uma):
+
+1. Render do marcador `📌 Passo N de 11` literal.
+2. Execução completa do AUQ da seção (quando a seção tem AUQ — todas as 11 etapas com marcador têm). Narração SEM AUQ NÃO conta como entrada.
+3. Marker de entrada gravado no state file APÓS a resposta da AUQ (não antes — proibido marcar antes de o user responder).
+
+Se o user responder "Depois/Pular/Já tenho", marca TodoWrite `completed` (não `pending`) e segue. Mas o AUQ precisou aparecer e ser respondido.
+
+Isso ajuda o usuário a saber onde está no processo.
 
 ### 2.1 Apresentação da estrutura (Turno 6)
 
@@ -346,11 +356,11 @@ Marcar task "Configurar projeto" como `in_progress`.
 
 **Turno T6.** Marcar TodoWrite T6 `in_progress`. Renderizar literal o bloco `---TEXTO-T6---` de `turnos-onboarding.md`. Marcar TodoWrite T6 `completed`.
 
-### 2.1.5 Confirmação de localização (Turno T6.5)
+### 2.1.5 Confirmação de localização (Turno T7)
 
 > Princípio "perguntar antes de criar" (F-Onb-2A). User precisa ter agência sobre onde a Área de Trabalho será criada. 3 opções: criar na pasta atual, criar em subpasta, ou ir pra outra pasta.
 
-**Turno T6.5.** Marcar TodoWrite T6.5 `in_progress`. Renderizar literal o bloco `---TEXTO-T6.5---` de `turnos-onboarding.md` (substituindo `<CWD>` pelo CWD atual).
+**Turno T7.** Marcar TodoWrite T7 `in_progress`. Renderizar literal o bloco `---TEXTO-T7---` de `turnos-onboarding.md` (substituindo `<CWD>` pelo CWD atual).
 
 `AskUserQuestion`:
 - question: "Onde quer criar a Área de Trabalho?"
@@ -361,31 +371,31 @@ Marcar task "Configurar projeto" como `in_progress`.
 
 **Pós-resposta:**
 
-- **"Aqui mesmo nesta pasta"** → guardar `SUBFOLDER_CHOICE=aqui`. Renderizar literal `---TEXTO-T6.5-AQUI---`. Persistir marker:
+- **"Aqui mesmo nesta pasta"** → guardar `SUBFOLDER_CHOICE=aqui`. Renderizar literal `---TEXTO-T7-AQUI---`. Persistir marker:
 
   ```bash
   SUBFOLDER_CHOICE=aqui
   python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG_TMP" "t-confirmacao-pasta"
   ```
 
-  Marcar TodoWrite T6.5 `completed`. Prosseguir pra 2.2 (T7). Em T9 (criação de pastas), `WORKSPACE_PATH=$CWD`.
+  Marcar TodoWrite T7 `completed`. Prosseguir pra 2.2 (T8). Em T10 (criação de pastas), `WORKSPACE_PATH=$CWD`.
 
-- **"Em uma subpasta nova"** → guardar `SUBFOLDER_CHOICE=subpasta`. Renderizar literal `---TEXTO-T6.5-SUBPASTA---`. Persistir marker:
+- **"Em uma subpasta nova"** → guardar `SUBFOLDER_CHOICE=subpasta`. Renderizar literal `---TEXTO-T7-SUBPASTA---`. Persistir marker:
 
   ```bash
   SUBFOLDER_CHOICE=subpasta
   python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG_TMP" "t-confirmacao-pasta"
   ```
 
-  Marcar TodoWrite T6.5 `completed`. Prosseguir pra 2.2 (T7). Em T9 (criação de pastas), `WORKSPACE_PATH=$CWD/$workspace_slug` (slug derivado do nome da Área de Trabalho capturado em T7).
+  Marcar TodoWrite T7 `completed`. Prosseguir pra 2.2 (T8). Em T10 (criação de pastas), `WORKSPACE_PATH=$CWD/$workspace_slug` (slug derivado do nome da Área de Trabalho capturado em T8).
 
-- **"Em outra pasta"** → renderizar literal `---TEXTO-T6.5-OUTRA---` e encerrar skill. Não criar marker `.maestro-workspace`. Não rodar mkdir. State file `state-_tmp_*.md` fica órfão e é limpo no próximo `/ola-maestro` (>24h).
+- **"Em outra pasta"** → renderizar literal `---TEXTO-T7-OUTRA---` e encerrar skill. Não criar marker `.maestro-workspace`. Não rodar mkdir. State file `state-_tmp_*.md` fica órfão e é limpo no próximo `/ola-maestro` (>24h).
 
-> Decisão `SUBFOLDER_CHOICE` é consumida em 2.5 (criação de estrutura): `WORKSPACE_PATH` é resolvido conforme acima APÓS T7 capturar `workspace_slug`.
+> Decisão `SUBFOLDER_CHOICE` é consumida em 2.5 (criação de estrutura): `WORKSPACE_PATH` é resolvido conforme acima APÓS T8 capturar `workspace_slug`.
 
-### 2.2 Nome da Área de Trabalho e nome do primeiro projeto (Turnos 7-9)
+### 2.2 Nome da Área de Trabalho e nome do primeiro projeto (Turnos 8-10)
 
-> Marcar TodoWrite T7 `in_progress` antes do passo 1; T7 `completed` após guardar `workspace_legivel`. Marcar TodoWrite T8 `in_progress` antes do passo 2; T8 `completed` após guardar `projeto_legivel`. Os AUQs abaixo correspondem aos blocos de T7 e T8 em `turnos-onboarding.md` — texto e opções devem bater literalmente com a tabela.
+> Marcar TodoWrite T8 `in_progress` antes do passo 1; T8 `completed` após guardar `workspace_legivel`. Marcar TodoWrite T9 `in_progress` antes do passo 2; T9 `completed` após guardar `projeto_legivel`. Os AUQs abaixo correspondem aos blocos de T8 e T9 em `turnos-onboarding.md` — texto e opções devem bater literalmente com a tabela.
 
 **1. Coletar nome da Área de Trabalho via `AskUserQuestion`:**
 
@@ -463,24 +473,24 @@ Onde `$WORKSPACE_NAME=<workspace_legivel>` e `$PROJETO_NAME=<projeto_legivel>` s
 
 Marcar task "Configurar projeto" como `completed`.
 
-### 2.2.bis Confirmação da estrutura e aviso do marker (Turno 9)
+### 2.2.bis Confirmação da estrutura e aviso do marker (Turno 10)
 
-**Turno T9.** Marcar TodoWrite T9 `in_progress`. Renderizar literal o bloco `---TEXTO-T9---` de `turnos-onboarding.md`, substituindo `{workspace_legivel}` e `{projeto_legivel}` pelos valores capturados nos Turnos 7 e 8. Marcar TodoWrite T9 `completed` somente após o setup técnico (seção 2.5) terminar de criar a estrutura física.
+**Turno T10.** Marcar TodoWrite T10 `in_progress`. Renderizar literal o bloco `---TEXTO-T10---` de `turnos-onboarding.md`, substituindo `{workspace_legivel}` e `{projeto_legivel}` pelos valores capturados nos Turnos 7 e 8. Marcar TodoWrite T10 `completed` somente após o setup técnico (seção 2.5) terminar de criar a estrutura física.
 
 ### 2.2.ter — REMOVIDO (Sessão 74, refinamento F-Onb-2A)
 
 > Captura do nome do usuário foi movida pra **T1.5** (seção 2.0.A, logo após T1 Apresentação humana). A persistência em `~/.maestro/memorias/nome-usuario.md` e o marker `t-nome-usuario` agora acontecem em T1.5/após init. Este placeholder existe pra manter numeração de seções subsequentes; nada a executar aqui.
 
-### 2.2.qua Recado da Comunidade Automators (Turno 11)
+### 2.2.qua Recado da Comunidade Automators (Turno 12)
 
-**Turno T11.** Marcar TodoWrite T11 `in_progress`. Renderizar literal o bloco `---TEXTO-T11---` de `turnos-onboarding.md`. Marcar TodoWrite T11 `completed`.
+**Turno T12.** Marcar TodoWrite T12 `in_progress`. Renderizar literal o bloco `---TEXTO-T12---` de `turnos-onboarding.md`. Marcar TodoWrite T12 `completed`.
 
-> [!critical] Renderizar TEXTO-T11 INTEGRAL — proibido omitir o link da Comunidade (B-OnbUX-2A-13)
+> [!critical] Renderizar TEXTO-T12 INTEGRAL — proibido omitir o link da Comunidade (B-OnbUX-2A-13)
 > O bloco tem 3 parágrafos e a linha final com URL `https://automators.com.br` é parte literal — NÃO opcional. Aprendizado #52: Opus tende a paragrafrar e cortar a última linha quando "parece redundante" ou "fora do tom". Resista. Pre-output verification: confirme que a string `automators.com.br` aparece no que você vai renderizar antes de mandar.
 
 Marcar task "Apresentar o Sistema Maestro" como `completed`.
 
-**Após renderizar T11, emitir `AskUserQuestion` de continuidade:**
+**Após renderizar T12, emitir `AskUserQuestion` de continuidade:**
 
 - question: "Podemos continuar?"
 - options:
@@ -672,7 +682,7 @@ Marcar task "Setup técnico" como `in_progress`.
 
 Executar silenciosamente (sem mensagens detalhadas para cada item):
 
-1. **Resolver `WORKSPACE_PATH` e criar estrutura** (baseado em `SUBFOLDER_CHOICE` capturado em T6.5):
+1. **Resolver `WORKSPACE_PATH` e criar estrutura** (baseado em `SUBFOLDER_CHOICE` capturado em T7):
 
    ```bash
    if [ "$SUBFOLDER_CHOICE" = "aqui" ]; then
@@ -791,9 +801,9 @@ Se a tarefa de onboarding ainda não foi criada (pasta `tarefas/` foi criada ago
 - Acionar Gerente de Projetos via Agent(haiku) com o mesmo payload descrito em 2.0.2
 - Guardar caminho do arquivo de tarefa para usar na conclusão (step 2.12.1)
 
-### 2.5.5 Persistir verificações (Turno T9.5)
+### 2.5.5 Persistir verificações (Turno T11)
 
-Marcar TodoWrite T9.5 `in_progress`.
+Marcar TodoWrite T11 `in_progress`.
 
 > [!critical] Bashes OBRIGATÓRIOS — não pular sob nenhuma circunstância
 > Estes são os 2 Bashes do passo 9 da 2.0.B que NÃO puderam rodar antes porque `$WORKSPACE_PATH` e `$PROJETO_PATH` ainda não existiam. Agora o setup técnico (2.5) criou a estrutura — rodar AGORA, em ordem, sem pular nenhum dos dois.
@@ -801,7 +811,7 @@ Marcar TodoWrite T9.5 `in_progress`.
 > Sem o Bash A: painel `<projeto>/memorias/auditoria/_historico-checks.md` fica vazio (Dataview não tem dados pra agregar).
 > Sem o Bash B: `<projeto>/maestro/config.md` fica sem rastro de quando/quais ferramentas foram verificadas.
 >
-> Aprendizado #58 do CLAUDE.md: Opus pode pular audit trail invisível ao user mesmo com callout — pre-output verification obrigatório ANTES de marcar TodoWrite T9.5 `completed`.
+> Aprendizado #58 do CLAUDE.md: Opus pode pular audit trail invisível ao user mesmo com callout — pre-output verification obrigatório ANTES de marcar TodoWrite T11 `completed`.
 
 **Bash A — Log Markdown** (cria entrada nova em `<projeto>/memorias/auditoria/checks-de-ferramenta/`, que o painel `_historico-checks.md` agrega via Dataview):
 
@@ -822,28 +832,28 @@ python "$HELPERS/patch_frontmatter.py" \
   --set ferramentas-verificadas="[python,pandoc,libs,obsidian]"
 ```
 
-**Pre-output verification (OBRIGATÓRIO antes de marcar T9.5 completed):**
+**Pre-output verification (OBRIGATÓRIO antes de marcar T11 completed):**
 
 ```bash
 # Confirmar que ambos os artefatos foram criados antes de seguir
 test -d "$PROJETO_PATH/memorias/auditoria/checks-de-ferramenta" && \
   ls "$PROJETO_PATH/memorias/auditoria/checks-de-ferramenta/" | grep -q '\.md$' && \
   grep -q '^ultima-verificacao-ok:' "$PROJETO_PATH/maestro/config.md" && \
-  echo "[OK] T9.5 persistido" || \
-  echo "[ABORTAR] T9.5 falhou — re-rodar Bashes A+B antes de seguir" >&2
+  echo "[OK] T11 persistido" || \
+  echo "[ABORTAR] T11 falhou — re-rodar Bashes A+B antes de seguir" >&2
 ```
 
-Se a verificação retornar `[OK]`, marcar TodoWrite T9.5 `completed`. Se `[ABORTAR]`, NÃO marcar — debugar e re-rodar.
+Se a verificação retornar `[OK]`, marcar TodoWrite T11 `completed`. Se `[ABORTAR]`, NÃO marcar — debugar e re-rodar.
 
 > Esses Bashes não exigem CHECK_PULADAS / CHECK_INSTALADAS não-vazios em Branch A (tudo instalado). Listas vazias `[]` são válidas no JSON.
 
-### 2.6 Biblioteca de Marketing (Turno 12)
+### 2.6 Biblioteca de Marketing (Turno 13)
 
-Marcar task "Criar Biblioteca de Marketing" como `in_progress`. Marcar TodoWrite T12 `in_progress`.
+Marcar task "Criar Biblioteca de Marketing" como `in_progress`. Marcar TodoWrite T13 `in_progress`.
 
-**Turno T12.** Renderizar literal o bloco `---TEXTO-T12---` de `turnos-onboarding.md` (substituir `{nome-alvo}` por `<projeto_legivel>`).
+**Turno T13.** Renderizar literal o bloco `---TEXTO-T13---` de `turnos-onboarding.md` (substituir `{nome-alvo}` por `<projeto_legivel>`).
 
-Em seguida, emitir AUQ correspondente a T12:
+Em seguida, emitir AUQ correspondente a T13:
 
 - question: "Quer criar a Biblioteca de Marketing agora?"
 - options:
@@ -863,7 +873,7 @@ python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-auq-bibliotec
 **Se não/depois:**
 - Informar literal: "Sem problema! Quando quiser criar, é só pedir: 'cria minha biblioteca de marketing'."
 
-Marcar task "Criar Biblioteca de Marketing" como `completed`. Marcar TodoWrite T12 `completed`.
+Marcar task "Criar Biblioteca de Marketing" como `completed`. Marcar TodoWrite T13 `completed`.
 
 ### 2.6.1 Validação automática
 
@@ -890,6 +900,14 @@ Se "Pausa" → encerrar skill silenciosamente.
 
 ### 2.7 Obsidian
 
+> [!critical] OBRIGATÓRIO entrar nesta seção (B-OnbUX-2C-7)
+> NÃO pular esta seção sob pretexto "user já tem", "default funciona", "user não pediu" ou similar. As 3 condições da seção 2.0.3 são obrigatórias: render do marcador `📌 Passo 6 de 11` + AUQ executada e respondida + marker no state file gravado APÓS a resposta.
+>
+> **Frase contextual obrigatória ANTES da AUQ:**
+> "⚡ Etapa rápida — só pra eu te apresentar o editor visual. Se já tem Obsidian instalado ou prefere terminal, é 1 clique."
+>
+> Se user responder "Depois/Pular/Já tenho", marca TodoWrite `completed` e segue. Aprendizado #58 reincidência: defesa textual sozinha não convence Opus; este callout é parte da triple defense junto com T=11 fixo (2.0.3) e pre-output verification (2.12).
+
 Marcar task "Configurar Obsidian" como `in_progress`.
 
 Explicar:
@@ -904,6 +922,12 @@ Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
   - label: "Guiar instalação (Recomendado)", description: "Te guio passo a passo na instalação e configuração do vault"
   - label: "Já tenho instalado", description: "Pula pra configuração do vault direto"
   - label: "Depois", description: "Tudo funciona no terminal. Configura quando quiser via /maestro:onboarding"
+
+**Imediatamente APÓS o user responder (independente da escolha — Guiar/Já tenho/Depois)**, gravar marker no state file. PROIBIDO gravar antes da resposta (defesa P1 da spec F-Onb-2D):
+
+```bash
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG_TMP" "t-secao-2-7-entrada"
+```
 
 Ajustar o fluxo conforme a escolha:
 - "Guiar instalação" → segue pra detecção + instalação (passo 2 da seção)
@@ -978,6 +1002,14 @@ Se "Pausa" → encerrar skill silenciosamente.
 
 ### 2.8 Pesquisador
 
+> [!critical] OBRIGATÓRIO entrar nesta seção (B-OnbUX-2C-6)
+> NÃO pular esta seção sob pretexto "user já tem", "default funciona", "user não pediu" ou similar. As 3 condições da seção 2.0.3 são obrigatórias: render do marcador `📌 Passo 7 de 11` + AUQ executada e respondida + marker no state file gravado APÓS a resposta.
+>
+> **Frase contextual obrigatória ANTES da AUQ:**
+> "⚡ Etapa rápida — só pra você escolher entre o WebSearch grátis (default) ou o avançado pago. 1 clique."
+>
+> Se user responder "Depois/Pular", marca TodoWrite `completed` e segue. Aprendizado #58 reincidência: defesa textual sozinha não convence Opus; este callout é parte da triple defense junto com T=11 fixo (2.0.3) e pre-output verification (2.12).
+
 Marcar task "Configurar Pesquisador" como `in_progress`.
 
 Explicar:
@@ -996,6 +1028,12 @@ Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
   - label: "Básico (Recomendado)", description: "Usa WebSearch do Claude Code. Grátis, já funciona sem configuração"
   - label: "Avançado", description: "Usa Perplexity via OpenRouter. Pago (~centavos por pesquisa), resultados mais precisos com fontes"
   - label: "Depois", description: "Começa com o básico. Configura o avançado quando quiser"
+
+**Imediatamente APÓS o user responder (independente da escolha — Básico/Avançado/Depois)**, gravar marker no state file. PROIBIDO gravar antes da resposta (defesa P1 da spec F-Onb-2D):
+
+```bash
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG_TMP" "t-secao-2-8-entrada"
+```
 
 **Se quer configurar agora:**
 - Perguntar: "Você já tem uma API key do OpenRouter?"
@@ -1059,13 +1097,13 @@ curl -s -w "\n%{http_code}" https://openrouter.ai/api/v1/chat/completions \
 
 Se a chave falhou (401/403), **remover** o valor salvo em `~/.maestro/config.md` e setar `ferramenta-default: websearch`.
 
-### 2.9 Pesquisa inicial do negócio (Turno 13)
+### 2.9 Pesquisa inicial do negócio (Turno 14)
 
-Marcar task "Pesquisa inicial do negócio" como `in_progress`. Marcar TodoWrite T13 `in_progress`.
+Marcar task "Pesquisa inicial do negócio" como `in_progress`. Marcar TodoWrite T14 `in_progress`.
 
-**Só executar se a biblioteca foi criada no passo 2.6.** Se o usuário pulou a biblioteca, pular esta etapa também (e marcar TodoWrite T13 `completed` sem dispatch).
+**Só executar se a biblioteca foi criada no passo 2.6.** Se o usuário pulou a biblioteca, pular esta etapa também (e marcar TodoWrite T14 `completed` sem dispatch).
 
-**Turno T13.** Renderizar literal o bloco `---TEXTO-T13---` de `turnos-onboarding.md` (substituir `{nome-alvo}` por `<projeto_legivel>`). Aguardar resposta livre do usuário (site ou pular).
+**Turno T14.** Renderizar literal o bloco `---TEXTO-T14---` de `turnos-onboarding.md` (substituir `{nome-alvo}` por `<projeto_legivel>`). Aguardar resposta livre do usuário (site ou pular).
 
 **Persistir marker da Camada 3 ANTES de despachar Pesquisador:**
 
@@ -1091,19 +1129,19 @@ O fluxo cobre todo o pipeline obrigatório: Gerente cria tarefa → Pesquisador 
 **Se não tem site ou prefere pular:**
 - Informar literal: "Sem problema! Quando quiser, peça: 'pesquisa sobre minha empresa'."
 
-Marcar task "Pesquisa inicial do negócio" como `completed` somente após o ciclo de validação retornar aprovado (ou após o usuário confirmar que pulou). Marcar TodoWrite T13 `completed`.
+Marcar task "Pesquisa inicial do negócio" como `completed` somente após o ciclo de validação retornar aprovado (ou após o usuário confirmar que pulou). Marcar TodoWrite T14 `completed`.
 
-### 2.10 Importar Material de Referência (Turno 14)
+### 2.10 Importar Material de Referência (Turno 15)
 
-**Se `SKIP_T14=true` (cenário pós-import via /importar-projeto):** pular esta seção inteira. Render literal "A importação já trouxe seu material — vamos pro próximo passo." e marcar TodoWrite T14 como `completed`. Seguir pro próximo turno.
+**Se `SKIP_T14=true` (cenário pós-import via /importar-projeto):** pular esta seção inteira. Render literal "A importação já trouxe seu material — vamos pro próximo passo." e marcar TodoWrite T15 como `completed`. Seguir pro próximo turno.
 
 Caso contrário, manter fluxo atual.
 
-Marcar task "Importar material de referência" como `in_progress`. Marcar TodoWrite T14 `in_progress`.
+Marcar task "Importar material de referência" como `in_progress`. Marcar TodoWrite T15 `in_progress`.
 
-**Só executar se a biblioteca foi criada no passo 2.6.** Se o usuário pulou a biblioteca, pular esta etapa também (e marcar TodoWrite T14 `completed`).
+**Só executar se a biblioteca foi criada no passo 2.6.** Se o usuário pulou a biblioteca, pular esta etapa também (e marcar TodoWrite T15 `completed`).
 
-**Turno T14.** Renderizar literal o bloco `---TEXTO-T14---` de `turnos-onboarding.md` (substituir `{nome-alvo}` e `{empresa}` pelos valores corretos).
+**Turno T15.** Renderizar literal o bloco `---TEXTO-T15---` de `turnos-onboarding.md` (substituir `{nome-alvo}` e `{empresa}` pelos valores corretos).
 
 **Persistir marker da Camada 3 após resposta:**
 
@@ -1120,7 +1158,7 @@ python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-auq-material"
 **Se não/depois:**
 - Informar literal: "Sem problema! Quando tiver material, coloca na pasta `referencias/` e pede: 'lê meus arquivos de referência'."
 
-Marcar task "Importar material de referência" como `completed`. Marcar TodoWrite T14 `completed`.
+Marcar task "Importar material de referência" como `completed`. Marcar TodoWrite T15 `completed`.
 
 **Emitir `AskUserQuestion` de continuidade (B-S55-8):**
 
@@ -1132,6 +1170,14 @@ Marcar task "Importar material de referência" como `completed`. Marcar TodoWrit
 Se "Pausa" → encerrar skill silenciosamente.
 
 ### 2.11 Status Line
+
+> [!critical] OBRIGATÓRIO entrar nesta seção (B-OnbUX-2C-5)
+> NÃO pular esta seção sob pretexto "user já tem", "default funciona", "user não pediu" ou similar. As 3 condições da seção 2.0.3 são obrigatórias: render do marcador `📌 Passo 10 de 11` + AUQ executada e respondida + marker no state file gravado APÓS a resposta.
+>
+> **Frase contextual obrigatória ANTES da AUQ:**
+> "⚡ Etapa rápida — barra opcional no terminal que mostra contexto/modelo. 1 clique pra ativar ou pular."
+>
+> Se user responder "Não ativar", marca TodoWrite `completed` e segue. Aprendizado #58 reincidência (a 2.11 já tinha callout que NÃO segurou na v2.40.1) — este callout é parte da triple defense junto com T=11 fixo (2.0.3) e pre-output verification (2.12).
 
 Marcar task "Configurar Status Line" como `in_progress`.
 
@@ -1145,12 +1191,9 @@ else
 fi
 ```
 
-**Se `STATUS_LINE_JA_CONFIGURADA=sim`:** informar brevemente "Barra de status já está ativada — sigo." Marcar task como `completed` e pular pra T15.
+**Se `STATUS_LINE_JA_CONFIGURADA=sim`:** informar brevemente "Barra de status já está ativada — sigo." Marcar task como `completed` e pular pra T16.
 
 **Se `STATUS_LINE_JA_CONFIGURADA=nao`:** seguir Passo 2.
-
-> [!critical]
-> NÃO pular essa seção sob pretexto "não sei se está configurada" ou "talvez já esteja". O Bash acima resolve a ambiguidade — sempre executar antes de decidir. Aprendizado da Sessão 95 (B-OnbUX-2C-5): referência fantasma a "checklist pré-onboarding item 6" fez Opus pular a seção inteira em produção.
 
 **Passo 2 — Perguntar ao usuário:**
 
@@ -1159,6 +1202,12 @@ Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
 - options:
   - label: "Ativar (Recomendado)", description: "Mostra em tempo real contexto, limites da API e modelo. Desliga quando quiser"
   - label: "Não ativar", description: "Pula por agora. Ativa depois com /maestro-statusline"
+
+**Imediatamente APÓS o user responder (independente da escolha — Ativar/Não ativar)**, gravar marker no state file. PROIBIDO gravar antes da resposta (defesa P1 da spec F-Onb-2D):
+
+```bash
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG_TMP" "t-secao-2-11-entrada"
+```
 
 **Se sim:**
 1. Ler o template do script em `core/statusline/maestro-statusline.sh`
@@ -1198,12 +1247,12 @@ Usar `AskUserQuestion` (conforme [[protocolo-interacao]]):
 
 Marcar task "Configurar Status Line" como `completed`.
 
-### 2.12 Finalização (Turno 15)
+### 2.12 Finalização (Turno 16)
 
-Marcar task "Finalizar onboarding" como `in_progress`. Marcar TodoWrite T15 `in_progress`.
+Marcar task "Finalizar onboarding" como `in_progress`. Marcar TodoWrite T16 `in_progress`.
 
 > [!critical] Pre-output verification OBRIGATÓRIO
-> ANTES de prosseguir, verificar via Bash que o state file ativo existe em `$STATE_DIR`. Se ausente, as Camadas 3+4 nunca foram ativadas (state nunca foi criado em T3) — ABORTAR o T15 e re-rodar o Bash de init do T3 antes de seguir. Aprendizado #58: Opus pode declarar "tudo OK" mesmo com audit trail vazio.
+> ANTES de prosseguir, verificar via Bash que o state file ativo existe em `$STATE_DIR`. Se ausente, as Camadas 3+4 nunca foram ativadas (state nunca foi criado em T3) — ABORTAR o T16 e re-rodar o Bash de init do T3 antes de seguir. Aprendizado #58: Opus pode declarar "tudo OK" mesmo com audit trail vazio.
 >
 > ```bash
 > if ! ls "$STATE_DIR"/state-*.md >/dev/null 2>&1; then
@@ -1211,6 +1260,37 @@ Marcar task "Finalizar onboarding" como `in_progress`. Marcar TodoWrite T15 `in_
 >     exit 1
 > fi
 > ```
+
+> [!critical] Pre-output verification F-Onb-2D OBRIGATÓRIO
+> Validar que os 3 markers de entrada das seções opcionais (2.7 Obsidian, 2.8 Pesquisador, 2.11 Status Line) existem no state file. Se algum ausente, ABORTAR T16 e voltar pra seção pulada.
+>
+> ```bash
+> # Pre-output verification F-Onb-2D — validar markers das 3 seções opcionais
+> STATE_FILE=$(ls "$STATE_DIR"/state-*.md 2>/dev/null | head -1)
+> MISSING=()
+> grep -q "t-secao-2-7-entrada" "$STATE_FILE" || MISSING+=("Obsidian")
+> grep -q "t-secao-2-8-entrada" "$STATE_FILE" || MISSING+=("Pesquisador")
+> grep -q "t-secao-2-11-entrada" "$STATE_FILE" || MISSING+=("Status Line")
+> if [ ${#MISSING[@]} -gt 0 ]; then
+>     echo "ABORT_F_ONB_2D: ${MISSING[0]}"  # log interno — não vaza pro user
+>     exit 1
+> fi
+> ```
+>
+> **Se o Bash retornar exit 1**, renderizar literal o **TEXTO-ABORT-T16** (substituindo `<nome-secao>` por `${MISSING[0]}`):
+>
+> ```
+> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+> ⚠️ Antes de finalizar
+> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+> Percebi que pulei a etapa de <nome-secao>. Vou voltar lá rapidinho — leva uns 30 segundos. Depois finalizo o onboarding.
+> ```
+>
+> Onde `<nome-secao>` é literal pt-br: "Obsidian" / "Pesquisador" / "Status Line".
+>
+> Após renderizar o texto, voltar pra seção correspondente (2.7 se "Obsidian", 2.8 se "Pesquisador", 2.11 se "Status Line"), executar a seção do começo (render do marcador + frase contextual + AUQ + marker), e retomar a 2.12 após o marker ser gravado.
+>
+> **Princípio:** mensagem ao user é UX pt-br (não jargão técnico). O `echo "ABORT_F_ONB_2D..."` do Bash é log interno do hub — não vaza pro user. Aprendizado #55 (não expor jargão técnico ao user).
 
 1. Atualizar `maestro/config.md`: setar `onboarding-completo: true` (somente após verificação acima passar).
 
@@ -1235,14 +1315,14 @@ Marcar task "Finalizar onboarding" como `in_progress`. Marcar TodoWrite T15 `in_
 
 3. **Renderizar mensagem de encerramento conforme `FASE`:**
 
-   - Se `FASE=completa` → renderizar literal o bloco `---TEXTO-T15-CASO-A---` de `turnos-onboarding.md`, substituindo `<workspace-path-absoluto-normalizado>`, `<workspace-path>` e `{nome-alvo}` pelos valores reais.
-   - Se `FASE=reduzida` → renderizar literal o bloco `---TEXTO-T15-CASO-B---` de `turnos-onboarding.md`, substituindo `<workspace_legivel>`, `<CWD>/<workspace_slug>/` e `<projeto_legivel>`.
+   - Se `FASE=completa` → renderizar literal o bloco `---TEXTO-T16-CASO-A---` de `turnos-onboarding.md`, substituindo `<workspace-path-absoluto-normalizado>`, `<workspace-path>` e `{nome-alvo}` pelos valores reais.
+   - Se `FASE=reduzida` → renderizar literal o bloco `---TEXTO-T16-CASO-B---` de `turnos-onboarding.md`, substituindo `<workspace_legivel>`, `<CWD>/<workspace_slug>/` e `<projeto_legivel>`.
 
    **Path normalizado pro SO nativo:** detectar SO antes de mostrar (backslash em Windows, forward em Mac/Linux).
 
 4. **Finalização enfática — preencher identidade.**
 
-Independente do CASO A ou B acima, **toda finalização do Fluxo de Primeira Vez** termina com a renderização de `---TEXTO-T15-IDENTIDADE---` de `turnos-onboarding.md` (substituindo `{nome-alvo}`) seguida da AUQ correspondente. Não pular.
+Independente do CASO A ou B acima, **toda finalização do Fluxo de Primeira Vez** termina com a renderização de `---TEXTO-T16-IDENTIDADE---` de `turnos-onboarding.md` (substituindo `{nome-alvo}`) seguida da AUQ correspondente. Não pular.
 
 `AskUserQuestion`:
 - question: "Como prefere preencher a identidade de {nome-alvo}?"
@@ -1264,11 +1344,11 @@ python "$HELPERS/onboarding_state.py" archive "$STATE_DIR" "$SLUG"
 
 - **"Guia no chat"** → invocar fluxo do Entrevistador via despacho padrão (Gerente cria tarefa primeiro, depois Entrevistador conduz coleta de identidade pergunta-a-pergunta).
 
-- **"Vou preencher no Obsidian"** → renderizar literal o bloco `---TEXTO-T15-OBSIDIAN---` de `turnos-onboarding.md` (substituindo `<workspace>`, `<projeto_slug>` e `{nome-alvo}`).
+- **"Vou preencher no Obsidian"** → renderizar literal o bloco `---TEXTO-T16-OBSIDIAN---` de `turnos-onboarding.md` (substituindo `<workspace>`, `<projeto_slug>` e `{nome-alvo}`).
 
-- **"Agora não"** → renderizar literal o bloco `---TEXTO-T15-DEPOIS---` de `turnos-onboarding.md` (substituindo `{nome-alvo}`).
+- **"Agora não"** → renderizar literal o bloco `---TEXTO-T16-DEPOIS---` de `turnos-onboarding.md` (substituindo `{nome-alvo}`).
 
-Marcar task "Finalizar onboarding" como `completed`. Marcar TodoWrite T15 `completed`.
+Marcar task "Finalizar onboarding" como `completed`. Marcar TodoWrite T16 `completed`.
 
 ### 2.12.1 Concluir tarefa no vault
 
@@ -1286,7 +1366,7 @@ Acionar Gerente de Projetos via Agent(haiku):
 **Parsing de modo (se vier no CONTEXTO):**
 
 - Procurar linha `modo: <valor>` no bloco CONTEXTO.
-- Se `modo == pos-import-skip-T14`: setar variável `SKIP_T14=true` (no escopo da skill). Os demais turnos rodam normais.
+- Se `modo == pos-import-skip-T15`: setar variável `SKIP_T14=true` (no escopo da skill). Os demais turnos rodam normais.
 - Outros valores ou ausente: rodar fluxo padrão (`SKIP_T14=false`).
 
 Onboarding leve para quando o usuário já tem o Sistema Maestro configurado (`~/.maestro/` existe) mas está num projeto novo. Pula dependências, permissões, Obsidian, status line e apresentação.
@@ -1817,7 +1897,7 @@ Marcar task "Finalizar projeto" como `in_progress`. Marcar TodoWrite T12B `in_pr
 1. Atualizar `$PROJETO_PATH/maestro/config.md`: setar `onboarding-completo: true` (cache já foi escrito na etapa 2B.2 passo 7; somente após verificação acima passar).
 
    > [!critical] Use Bash sed — NÃO use tool Edit com `$PROJETO_PATH` literal
-   > Mesma regra do T15 do Fluxo de Primeira Vez (B-OnbUX-2A-3): variável Bash só expande no Bash. Use:
+   > Mesma regra do T16 do Fluxo de Primeira Vez (B-OnbUX-2A-3): variável Bash só expande no Bash. Use:
    >
    > ```bash
    > sed -i 's/^onboarding-completo:.*/onboarding-completo: true/' "$PROJETO_PATH/maestro/config.md"

@@ -120,7 +120,7 @@ Tudo certo. Agora vou te guiar pelo setup — vai levar uns 20 minutos pra deixa
 O Maestro trabalha com dois conceitos: **Área de Trabalho** e **Projetos**. Uma Área de Trabalho contém vários projetos dentro. Um projeto pode ser um cliente, uma marca, uma unidade de negócios — fica a seu critério. Vou te perguntar primeiro o nome da Área de Trabalho e depois o nome do primeiro projeto.
 ---END-TEXTO-T6---
 
-### T6.5 — Confirmação de localização (AUQ, 3 opções)
+### T7 — Confirmação de localização (AUQ, 3 opções)
 
 - **Tipo:** AUQ
 - **Marker pós-resposta:** `t-confirmacao-pasta` (audit trail) — só nas opções "aqui" e "subpasta".
@@ -128,9 +128,9 @@ O Maestro trabalha com dois conceitos: **Área de Trabalho** e **Projetos**. Uma
 - **Pré-condição:** ler `<CWD>` (pasta atual onde Claude Code está aberto).
 - **Renderize literal antes do AUQ** (substituindo `<CWD>`):
 
----TEXTO-T6.5---
+---TEXTO-T7---
 Antes de continuar, preciso confirmar onde vou criar tudo. A pasta atual é `<CWD>`.
----END-TEXTO-T6.5---
+---END-TEXTO-T7---
 
 - **AUQ:**
   - Pergunta: "Onde quer criar a Área de Trabalho?"
@@ -139,47 +139,47 @@ Antes de continuar, preciso confirmar onde vou criar tudo. A pasta atual é `<CW
     - label: "Em uma subpasta nova", description: "Crio uma subpasta com o nome da Área de Trabalho dentro da pasta atual e monto tudo lá dentro."
     - label: "Em outra pasta", description: "Encerro o onboarding aqui — abre o Claude Code na pasta que você quer e me chama de novo."
 - **Pós-resposta:**
-  - "Aqui mesmo nesta pasta" → guardar `SUBFOLDER_CHOICE=aqui`. Renderizar literal `---TEXTO-T6.5-AQUI---`. Escrever marker `t-confirmacao-pasta`. Prosseguir pra T7.
-  - "Em uma subpasta nova" → guardar `SUBFOLDER_CHOICE=subpasta`. Renderizar literal `---TEXTO-T6.5-SUBPASTA---`. Escrever marker `t-confirmacao-pasta`. Prosseguir pra T7. Workspace path final = `<CWD>/<workspace_slug>/` (slug derivado em T7).
-  - "Em outra pasta" → renderizar literal `---TEXTO-T6.5-OUTRA---` e encerrar skill (sem marker, sem mkdir).
+  - "Aqui mesmo nesta pasta" → guardar `SUBFOLDER_CHOICE=aqui`. Renderizar literal `---TEXTO-T7-AQUI---`. Escrever marker `t-confirmacao-pasta`. Prosseguir pra T8.
+  - "Em uma subpasta nova" → guardar `SUBFOLDER_CHOICE=subpasta`. Renderizar literal `---TEXTO-T7-SUBPASTA---`. Escrever marker `t-confirmacao-pasta`. Prosseguir pra T8. Workspace path final = `<CWD>/<workspace_slug>/` (slug derivado em T8).
+  - "Em outra pasta" → renderizar literal `---TEXTO-T7-OUTRA---` e encerrar skill (sem marker, sem mkdir).
 
----TEXTO-T6.5-AQUI---
+---TEXTO-T7-AQUI---
 Beleza, vou usar `<CWD>` como Área de Trabalho.
----END-TEXTO-T6.5-AQUI---
+---END-TEXTO-T7-AQUI---
 
----TEXTO-T6.5-SUBPASTA---
+---TEXTO-T7-SUBPASTA---
 Beleza, depois de você me dar o nome da Área de Trabalho, vou criar uma subpasta com esse nome aqui em `<CWD>` e montar tudo dentro dela.
----END-TEXTO-T6.5-SUBPASTA---
+---END-TEXTO-T7-SUBPASTA---
 
----TEXTO-T6.5-OUTRA---
+---TEXTO-T7-OUTRA---
 Sem problema. Encerra essa sessão, abre o Claude Code na pasta que você quer usar como Área de Trabalho e roda `oi maestro` ou `/maestro-onboarding` de novo.
----END-TEXTO-T6.5-OUTRA---
+---END-TEXTO-T7-OUTRA---
 
-### T7 — Nome da Área de Trabalho (AUQ)
+### T8 — Nome da Área de Trabalho (AUQ)
 
 - **Tipo:** AUQ (resposta livre)
 - **Marker pós-resposta:** `t-nome-workspace`
-- **Origem:** SKILL.md seção 2.2 passo 1
+- **Origem:** SKILL.md seção 2.2 passo 1 — slot T8 pós F-Onb-2D
 - **AUQ:**
   - Pergunta: "Qual o nome dessa Área de Trabalho?"
   - Placeholder/exemplo: "ex: 'Marketing Primum', 'Agência X', 'Meus Clientes'"
 - **Pós-resposta:** guardar `workspace_legivel`; computar `workspace_slug_proposto = slugify(workspace_legivel)`.
 
-### T8 — Nome do primeiro projeto (AUQ)
+### T9 — Nome do primeiro projeto (AUQ)
 
 - **Tipo:** AUQ (resposta livre)
 - **Marker pós-resposta:** `t-nome-projeto`
-- **Origem:** SKILL.md seção 2.2 passo 2
+- **Origem:** SKILL.md seção 2.2 passo 2 — slot T9 pós F-Onb-2D
 - **AUQ:**
   - Pergunta: "E qual é o nome do primeiro projeto?"
   - Placeholder/exemplo: "uma empresa, cliente ou marca que você vai trabalhar"
 - **Pós-resposta:** guardar `projeto_legivel` (este valor é o `{nome-alvo}` referenciado nas mensagens subsequentes); computar `projeto_slug_proposto = slugify(projeto_legivel)`.
 
-### T8.1 — Validação anti-colisão (condicional, AUQ)
+### T9.1 — Validação anti-colisão (condicional, AUQ)
 
 - **Tipo:** AUQ condicional (só dispara se `workspace_slug_proposto == projeto_slug_proposto`)
 - **Marker pós-resposta:** —
-- **Origem:** SKILL.md seção 2.2 passo 3
+- **Origem:** SKILL.md seção 2.2 passo 3 — slot T9.1 pós F-Onb-2D
 - **AUQ:**
   - Pergunta: "Os dois ficaram com o mesmo nome curto (`<workspace_slug_proposto>`). Sugiro deixar a Área de Trabalho mais geral (ex: 'Meu Trabalho') e o projeto específico (ex: '`<projeto_legivel>`'). Quer trocar?"
   - Opções:
@@ -187,11 +187,11 @@ Sem problema. Encerra essa sessão, abre o Claude Code na pasta que você quer u
     - label: "Trocar projeto", description: "Volta pro passo 2 e digita outro nome"
     - label: "Manter assim", description: "Aceita os slugs idênticos sob seu risco"
 
-### T8.2 — Preview de slugs (AUQ)
+### T9.2 — Preview de slugs (AUQ)
 
 - **Tipo:** AUQ
 - **Marker pós-resposta:** —
-- **Origem:** SKILL.md seção 2.2 passo 4
+- **Origem:** SKILL.md seção 2.2 passo 4 — slot T9.2 pós F-Onb-2D
 - **Pergunta varia por `SUBFOLDER_CHOICE`** (B-OnbUX-2A-7) — escolha um dos dois textos:
 
 **Variante AQUI (`SUBFOLDER_CHOICE=aqui`):**
@@ -205,22 +205,31 @@ Sem problema. Encerra essa sessão, abre o Claude Code na pasta que você quer u
 - label: "Mudar Área de Trabalho", description: "Digito o slug direto (sem espaço, só letras minúsculas, números e hífens)"
 - label: "Mudar projeto", description: "Digito o slug direto"
 
-### T9 — Confirmação da estrutura e aviso do marker
+### T10 — Confirmação da estrutura e aviso do marker
 
 - **Tipo:** texto-literal
 - **Marker pós-render:** —
-- **Origem:** SKILL.md seção 2.2.bis (Turno 10)
-- **Renderize literal** (substituindo `{workspace_legivel}` e `{projeto_legivel}` pelos valores capturados em T7 e T8):
+- **Origem:** SKILL.md seção 2.2.bis (Turno 10) — slot T10 pós F-Onb-2D
+- **Renderize literal** (substituindo `{workspace_legivel}` e `{projeto_legivel}` pelos valores capturados em T8 e T9):
 
----TEXTO-T9---
+---TEXTO-T10---
 Beleza, vou montar a Área de Trabalho **{workspace_legivel}** com **{projeto_legivel}** como primeiro projeto. Detalhe: vou criar um arquivo invisível chamado `.maestro-workspace` no canto pra eu reconhecer essa pasta como Área de Trabalho — não apague, ele que segura a estrutura.
----END-TEXTO-T9---
+---END-TEXTO-T10---
 
-### T10 — REMOVIDO
+### T10-LEGACY — REMOVIDO no schema antigo (Sessão 74, refinamento F-Onb-2A)
 
-> **Removido na Sessão 74 (refinamento F-Onb-2A).** A captura do nome do usuário foi movida pra **T1.5** (logo após T1 Apresentação humana). Motivação: `<NOME>` precisa estar disponível em todo o fluxo subsequente pra personalizar mensagens — pedir só agora era tarde demais. T1.5 grava em `~/.maestro/memorias/nome-usuario.md` e marca `t-nome-usuario` no state. Item de TodoWrite com mesma posição (entre T9 e T11) foi removido pela mesma razão — nome já capturado.
+> Esta seção marcava o slot T10 ANTES da F-Onb-2D (v2.40.2). Com a renumeração da F-Onb-2D, o conteúdo de "Confirmação da estrutura" (era T9 no schema antigo) ocupa o slot T10 atual. Esta nota fica como rastreabilidade histórica — não é mais um slot vazio operacional.
+>
+> **Detalhe histórico:** a captura do nome do usuário foi movida pra **T1.5** (logo após T1 Apresentação humana) na Sessão 74. Motivação: `<NOME>` precisa estar disponível em todo o fluxo subsequente pra personalizar mensagens — pedir só no slot T10 antigo era tarde demais. T1.5 grava em `~/.maestro/memorias/nome-usuario.md` e marca `t-nome-usuario` no state.
 
-### T11 — Recado da Comunidade Automators
+### T11 — Persistir verificações (Bash silencioso)
+
+- **Tipo:** Bash silencioso (não renderizar texto ao usuário)
+- **Marker pós-render:** `t-verificacoes` (já gravado em T4; aqui é o passo pós-estrutura)
+- **Origem:** SKILL.md seção 2.5.5 (adicionado em F-Onb-2C) — roda APÓS setup técnico (2.5) criar `<projeto>/maestro/config.md`
+- **Ações:** executar Bashes A+B da seção 2.5.5 (`check_tools.py log` + `patch_frontmatter.py mirror em config.md`). Detalhes completos na seção 2.5.5 do SKILL.md. Verificação obrigatória antes de marcar `completed` — ver pre-output verification do SKILL.md.
+
+### T12 — Recado da Comunidade Automators
 
 - **Tipo:** texto-literal
 - **Marker pós-render:** —
@@ -231,7 +240,7 @@ Beleza, vou montar a Área de Trabalho **{workspace_legivel}** com **{projeto_le
 
 - **Renderize literal:**
 
----TEXTO-T11---
+---TEXTO-T12---
 Antes de começarmos, um recado rápido:
 
 O Sistema Maestro foi carinhosamente construído por Willian Nunes (@eusouwillnunes) para o time da Primum e para os membros da Comunidade Automators. Nosso foco é criar treinamentos rápidos, práticos e que resolvam problemas reais de marketing e vendas usando inteligência artificial, automações e vibe coding.
@@ -239,20 +248,20 @@ O Sistema Maestro foi carinhosamente construído por Willian Nunes (@eusouwillnu
 Na Comunidade você encontra o treinamento completo sobre o Sistema Maestro e todos os seus recursos. Além disso, enquanto sua assinatura estiver ativa, você recebe todas as atualizações automaticamente.
 
 Conheça a Comunidade Automators e os benefícios de ser assinante em https://automators.com.br
----END-TEXTO-T11---
+---END-TEXTO-T12---
 
 Após renderizar, perguntar (Turno 13): "Podemos continuar?" e aguardar resposta antes de prosseguir.
 
-### T12 — Biblioteca de Marketing (texto + AUQ)
+### T13 — Biblioteca de Marketing (texto + AUQ)
 
 - **Tipo:** texto-literal + AUQ
 - **Marker pós-resposta:** `t-auq-biblioteca`
 - **Origem:** SKILL.md seção 2.6
 - **Renderize literal antes do AUQ:**
 
----TEXTO-T12---
+---TEXTO-T13---
 A Biblioteca de Marketing é onde guardamos todo o contexto de **{nome-alvo}**: identidade, produtos, público, tom de voz. É uma estrutura organizada com templates prontos pra preencher.
----END-TEXTO-T12---
+---END-TEXTO-T13---
 
 - **AUQ:**
   - Pergunta: "Quer criar a Biblioteca de Marketing agora?"
@@ -263,7 +272,7 @@ A Biblioteca de Marketing é onde guardamos todo o contexto de **{nome-alvo}**: 
   - Se "Criar agora" → despachar Bibliotecário FLUXO=CRIAR; informar literal: "Biblioteca criada! Você pode preencher os templates quando quiser. O sistema funciona mesmo sem eles preenchidos."
   - Se "Depois" → informar literal: "Sem problema! Quando quiser criar, é só pedir: 'cria minha biblioteca de marketing'."
 
-### T13 — Pesquisa inicial do negócio (texto + AUQ implícito)
+### T14 — Pesquisa inicial do negócio (texto + AUQ implícito)
 
 - **Tipo:** texto-literal + resposta livre
 - **Marker pós-resposta:** `t-auq-pesquisa`
@@ -271,19 +280,19 @@ A Biblioteca de Marketing é onde guardamos todo o contexto de **{nome-alvo}**: 
 - **Pré-condição:** só executar se biblioteca foi criada em T12.
 - **Renderize literal:**
 
----TEXTO-T13---
+---TEXTO-T14---
 Quer que eu faça uma pesquisa rápida sobre **{nome-alvo}**? Posso analisar o site e redes sociais pra já ter um primeiro retrato.
 
 Isso ajuda a preencher a biblioteca com informações reais desde o início.
 
 Qual o site da {nome-alvo}?
----END-TEXTO-T13---
+---END-TEXTO-T14---
 
 - **Pós-resposta:**
   - Se informou site → executar `fluxo-entrega.md` com Pesquisador conforme parâmetros da seção 2.9 do SKILL.md.
   - Se não tem site / pular → informar literal: "Sem problema! Quando quiser, peça: 'pesquisa sobre minha empresa'."
 
-### T14 — Importar Material de Referência (texto-literal)
+### T15 — Importar Material de Referência (texto-literal)
 
 - **Tipo:** texto-literal + resposta livre
 - **Marker pós-resposta:** `t-auq-material`
@@ -291,32 +300,32 @@ Qual o site da {nome-alvo}?
 - **Pré-condição:** só executar se biblioteca foi criada em T12.
 - **Renderize literal:**
 
----TEXTO-T14---
+---TEXTO-T15---
 Você tem documentos sobre **{nome-alvo}**? Manuais de marca, apresentações, planilhas de produto, textos internos, qualquer coisa com informação sobre a empresa.
 
 Se sim, coloca tudo na pasta `{empresa}/referencias/` e me avisa. Eu leio os arquivos e cruzo com o que já encontrei na pesquisa pra preencher o máximo possível da biblioteca.
----END-TEXTO-T14---
+---END-TEXTO-T15---
 
 - **Pós-resposta:**
   - Se sim → seguir fluxo de importação (sub-skill `maestro/biblioteca` seção 9).
   - Se não/depois → informar literal: "Sem problema! Quando tiver material, coloca na pasta `referencias/` e pede: 'lê meus arquivos de referência'."
 
-### T15 — Finalização (texto-literal + AUQ enfática de identidade)
+### T16 — Finalização (texto-literal + AUQ enfática de identidade)
 
 - **Tipo:** texto-literal + AUQ
 - **Marker pós-resposta:** `t-auq-identidade` + `t-conclusao`
-- **Origem:** SKILL.md seção 2.12 (passos 3 e 4)
+- **Origem:** SKILL.md seção 2.12 (passos 3 e 4) — Turno 16
 - **Renderize literal — CASO A** (`FASE = completa`, F4 já mergeada — `<workspace>/.obsidian/bookmarks.json` existe):
 
----TEXTO-T15-CASO-A---
+---TEXTO-T16-CASO-A---
 ✅ Tudo configurado! Sua Área de Trabalho está em `<workspace-path-absoluto-normalizado>` com seu primeiro projeto dentro.
 
 📊 Pra acessar **{nome-alvo}** rapidamente: abre o Obsidian na pasta `<workspace-path>` → painel **Bookmarks** (ícone de marcador na lateral esquerda) → clica em **📊 Painel da Área de Trabalho** ou no nome do projeto.
----END-TEXTO-T15-CASO-A---
+---END-TEXTO-T16-CASO-A---
 
 - **Renderize literal — CASO B** (`FASE = reduzida`, F2/F3/F4 ainda em construção):
 
----TEXTO-T15-CASO-B---
+---TEXTO-T16-CASO-B---
 🎉 Área de Trabalho '`<workspace_legivel>`' criada em `<CWD>/<workspace_slug>/`, com o projeto '`<projeto_legivel>`' dentro.
 
 Pra ver tudo no Obsidian:
@@ -326,13 +335,13 @@ Pra ver tudo no Obsidian:
 4. Clique em 'Select Folder'
 
 Painel agregado e Bookmarks chegam em versões futuras — por enquanto navegue pelo painel de arquivos (Files) na sidebar esquerda.
----END-TEXTO-T15-CASO-B---
+---END-TEXTO-T16-CASO-B---
 
 - **Renderize literal — finalização enfática (independente de CASO A ou B, NÃO PULAR):**
 
----TEXTO-T15-IDENTIDADE---
+---TEXTO-T16-IDENTIDADE---
 Pronto! Agora a parte mais importante: **antes de qualquer agente trabalhar bem, ele precisa conhecer {nome-alvo}**. Topa começar a preencher a identidade da marca agora? Posso te guiar no chat (uma pergunta de cada vez) ou você abre os arquivos no Obsidian e preenche direto nas Properties — geralmente é mais rápido.
----END-TEXTO-T15-IDENTIDADE---
+---END-TEXTO-T16-IDENTIDADE---
 
 - **AUQ:**
   - Pergunta: "Como prefere preencher a identidade de {nome-alvo}?"
@@ -344,15 +353,15 @@ Pronto! Agora a parte mais importante: **antes de qualquer agente trabalhar bem,
   - "Guia no chat" → invocar fluxo do Entrevistador via despacho padrão (Gerente cria tarefa primeiro).
   - "Vou preencher no Obsidian" → renderizar literal:
 
----TEXTO-T15-OBSIDIAN---
+---TEXTO-T16-OBSIDIAN---
 Beleza! Os arquivos da identidade estão em `<workspace>/<projeto_slug>/biblioteca-de-marketing/`. Abre o `_index-biblioteca.md` no Obsidian — ele lista todos os templates da identidade (manifesto, círculo dourado, posicionamento, perfil do público, tom de voz, personalidade da marca, identidade visual, história dos fundadores). Cada um tem **Properties** no topo do arquivo — clica em qualquer Property pra editar visualmente. Quando quiser, manda `quero preencher a identidade de {nome-alvo}` no chat e eu te guio pelo que faltar.
----END-TEXTO-T15-OBSIDIAN---
+---END-TEXTO-T16-OBSIDIAN---
 
   - "Agora não" → renderizar literal:
 
----TEXTO-T15-DEPOIS---
+---TEXTO-T16-DEPOIS---
 Beleza, quando quiser, manda `quero preencher a identidade de {nome-alvo}`.
----END-TEXTO-T15-DEPOIS---
+---END-TEXTO-T16-DEPOIS---
 
 Após resposta, escrever marker `t-conclusao` e despachar Gerente para concluir tarefa de onboarding (SKILL.md seção 2.12.1).
 
@@ -374,14 +383,16 @@ Olá de novo, `<NOME>`! Você já tem o Sistema Maestro configurado, mas esta pa
 
 > Se `<NOME>` não estiver disponível em `~/.maestro/memorias/nome-usuario.md`, omitir vocativo: "Você já tem o Sistema Maestro..." (sem `Olá de novo, X!`).
 
-- **AUQ** (apenas 2 opções — fluxo enxuto pra retornante; subpasta só na Primeira Vez):
+- **AUQ** (3 opções — ver SKILL.md seção 2B.-1 para detalhes do Bash crítico):
   - Pergunta: "Vou usar esta pasta como Área de Trabalho?"
   - Opções:
     - label: "Sim, usar esta pasta", description: "Crio o marker `.maestro-workspace` aqui e sigo o setup do primeiro projeto."
     - label: "Não, quero outra pasta", description: "Encerro o onboarding aqui — abre o Claude Code na pasta certa e me chama de novo."
+    - label: "Cancelar", description: "Não fazer nada agora."
 - **Pós-resposta:**
-  - "Sim, usar esta pasta" → renderizar literal `---TEXTO-T0-SIM---`, inicializar state file, escrever markers `t-consentimento` + `t-confirmacao-pasta`, criar marker `.maestro-workspace`, prosseguir pra T1B (nome do novo projeto).
+  - "Sim, usar esta pasta" → renderizar literal `---TEXTO-T0-SIM---`, inicializar state file (Bash obrigatório — ver SKILL.md), escrever markers `t-consentimento` + `t-confirmacao-pasta`, criar marker `.maestro-workspace`, prosseguir pra T1B (nome do novo projeto).
   - "Não, quero outra pasta" → renderizar literal `---TEXTO-T0-NAO---` e encerrar skill (sem marker, sem mkdir).
+  - "Cancelar" → renderizar literal `---TEXTO-T0-CANCEL---` e encerrar skill (mesmo tratamento de "Não").
 
 ---TEXTO-T0-SIM---
 Beleza! Vou montar a Área de Trabalho aqui em `<CWD>` e já criar o primeiro projeto dentro.
@@ -390,6 +401,10 @@ Beleza! Vou montar a Área de Trabalho aqui em `<CWD>` e já criar o primeiro pr
 ---TEXTO-T0-NAO---
 Sem problema. Encerra essa sessão, abre o Claude Code na pasta que você quer usar como Área de Trabalho e roda `oi maestro` ou `/maestro-onboarding` de novo.
 ---END-TEXTO-T0-NAO---
+
+---TEXTO-T0-CANCEL---
+Sem problema. Encerra essa sessão, abre o Claude Code na pasta que você quer usar como Área de Trabalho e roda `oi maestro` ou `/maestro-onboarding` de novo.
+---END-TEXTO-T0-CANCEL---
 
 ### T1B — Boas-vindas + nome do novo projeto (texto + AUQ)
 
