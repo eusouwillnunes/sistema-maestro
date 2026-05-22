@@ -343,18 +343,31 @@ Onde N é o número do passo atual e T é **fixo = 11** (as 11 etapas listadas n
 "Entrar na seção" exige **TODAS** as 3 condições abaixo (não basta uma):
 
 1. Render do marcador `📌 Passo N de 11` literal.
-2. Execução completa do AUQ da seção (quando a seção tem AUQ — todas as 11 etapas com marcador têm). Narração SEM AUQ NÃO conta como entrada.
-3. Marker de entrada gravado no state file APÓS a resposta da AUQ (não antes — proibido marcar antes de o user responder).
+2. Execução completa da **ação principal** da seção:
+   - Seções com AUQ (2.3, 2.4, 2.6, 2.7, 2.8, 2.11, 2.12): AUQ executada e respondida pelo user. Narração SEM AUQ NÃO conta.
+   - Seções sem AUQ direta (2.1 Apresentação T6, 2.5 Setup técnico, 2.9 Pesquisa T14, 2.10 Material T15): render do TEXTO literal correspondente e/ou execução dos Bashes obrigatórios.
+3. Marker `t-secao-2-X-entrada` gravado no state file APÓS completar a ação principal (não antes — proibido marcar antes da resposta da AUQ ou antes do TEXTO renderizar).
 
-Se o user responder "Depois/Pular/Já tenho", marca TodoWrite `completed` (não `pending`) e segue. Mas o AUQ precisou aparecer e ser respondido.
+Se o user responder "Depois/Pular/Já tenho" em seções com AUQ, marca TodoWrite `completed` (não `pending`) e segue. Mas o AUQ precisou aparecer e ser respondido.
+
+**B-OnbUX-2D-1 (polish v2.40.3):** triple defense estendida pras 11 etapas obrigatórias — todas têm callout `[!critical]` no início e gravam marker `t-secao-2-X-entrada` após ação principal. Pre-output verification do T16 valida os 10 markers das etapas 2.1 a 2.11 (a 2.12 é o próprio T16). Aprendizado #79 do CLAUDE.md.
 
 Isso ajuda o usuário a saber onde está no processo.
 
 ### 2.1 Apresentação da estrutura (Turno 6)
 
+> [!critical] OBRIGATÓRIO entrar nesta seção (B-OnbUX-2D-1)
+> NÃO pular sob pretexto "user já sabe", "redundante", "vou consolidar com o próximo passo" ou similar. As 3 condições da seção 2.0.3 são obrigatórias: render do marcador `📌 Passo 1 de 11` + render do TEXTO-T6 literal + marker `t-secao-2-1-entrada` gravado APÓS o render.
+
 Marcar task "Configurar projeto" como `in_progress`.
 
 **Turno T6.** Marcar TodoWrite T6 `in_progress`. Renderizar literal o bloco `---TEXTO-T6---` de `turnos-onboarding.md`. Marcar TodoWrite T6 `completed`.
+
+**Imediatamente APÓS o render**, gravar marker no state file (defesa B-OnbUX-2D-1):
+
+```bash
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG_TMP" "t-secao-2-1-entrada"
+```
 
 ### 2.1.5 Confirmação de localização (Turno T7)
 
@@ -501,6 +514,9 @@ Se "Pausa" → encerrar skill silenciosamente (state file fica como órfão, cle
 
 ### 2.3 Verificar dependências
 
+> [!critical] OBRIGATÓRIO entrar nesta seção (B-OnbUX-2D-1)
+> NÃO pular sob pretexto "tudo já verificado em 2.0.B", "dependências OK", "rápido" ou similar. As 3 condições da seção 2.0.3 são obrigatórias: render do marcador `📌 Passo 2 de 11` + AUQ de continuidade executada e respondida + marker `t-secao-2-3-entrada` gravado APÓS a resposta. Aprendizado #79: defesa escopada só em 2.7/2.8/2.11 não cobriu 2.3 e bug B-OnbUX-2D-1 reincidiu.
+
 Marcar task "Verificar dependências" como `in_progress`.
 
 O Maestro precisa de ferramentas instaladas pra ler diferentes formatos de arquivo (PDF, DOCX, XLSX, etc.). Verificar e instalar o que for necessário.
@@ -579,6 +595,12 @@ Marcar task "Verificar dependências" como `completed`.
   - label: "Sim, vamos seguir", description: "Continua pra próxima etapa do onboarding."
   - label: "Pausa", description: "Encerra aqui — você retoma depois com /maestro-onboarding."
 
+**Imediatamente APÓS o user responder**, gravar marker no state file (defesa B-OnbUX-2D-1):
+
+```bash
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG_TMP" "t-secao-2-3-entrada"
+```
+
 Se "Pausa" → encerrar skill silenciosamente.
 
 ### 2.3.5 Verificar ~/.maestro/
@@ -613,6 +635,9 @@ Executar silenciosamente, sem mensagem detalhada ao usuário:
 Informar brevemente apenas se precisou criar: "Diretório `~/.maestro/` criado para suas configurações globais."
 
 ### 2.4 Permissões do projeto
+
+> [!critical] OBRIGATÓRIO entrar nesta seção (B-OnbUX-2D-1)
+> NÃO pular sob pretexto "permissões já estão OK", "settings.local.json já tem", "rápido" ou similar. As 3 condições da seção 2.0.3 são obrigatórias: render do marcador `📌 Passo 3 de 11` + AUQ executada e respondida + marker `t-secao-2-4-entrada` gravado APÓS a resposta.
 
 Marcar task "Configurar permissões" como `in_progress`.
 
@@ -674,9 +699,18 @@ Marcar task "Configurar permissões" como `completed`.
   - label: "Sim, vamos seguir", description: "Continua pra próxima etapa do onboarding."
   - label: "Pausa", description: "Encerra aqui — você retoma depois com /maestro-onboarding."
 
+**Imediatamente APÓS o user responder**, gravar marker no state file (defesa B-OnbUX-2D-1):
+
+```bash
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG_TMP" "t-secao-2-4-entrada"
+```
+
 Se "Pausa" → encerrar skill silenciosamente.
 
 ### 2.5 Setup técnico
+
+> [!critical] OBRIGATÓRIO entrar nesta seção (B-OnbUX-2D-1)
+> NÃO pular sob pretexto "estrutura já existe", "já criei em 2.4", "silenciosa, não precisa marcar" ou similar. As 3 condições da seção 2.0.3 são obrigatórias: render do marcador `📌 Passo 4 de 11` + execução do bloco de setup técnico (criação de estrutura, marker workspace, memórias, config, CLAUDE.md, cache) + marker `t-secao-2-5-entrada` gravado APÓS o setup completar.
 
 Marcar task "Setup técnico" como `in_progress`.
 
@@ -793,6 +827,12 @@ Executar silenciosamente (sem mensagens detalhadas para cada item):
 
 Informar brevemente: "Estrutura da Área de Trabalho e do projeto criadas."
 
+**Imediatamente APÓS o setup completar**, gravar marker no state file (defesa B-OnbUX-2D-1):
+
+```bash
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-secao-2-5-entrada"
+```
+
 Marcar task "Setup técnico" como `completed`.
 
 ### 2.5.1 Criar tarefa no vault (se não criada em 2.0.2)
@@ -849,6 +889,9 @@ Se a verificação retornar `[OK]`, marcar TodoWrite T11 `completed`. Se `[ABORT
 
 ### 2.6 Biblioteca de Marketing (Turno 13)
 
+> [!critical] OBRIGATÓRIO entrar nesta seção (B-OnbUX-2D-1)
+> NÃO pular sob pretexto "biblioteca já scaffoldada", "user vai criar depois", "rápido" ou similar. As 3 condições da seção 2.0.3 são obrigatórias: render do marcador `📌 Passo 5 de 11` + AUQ executada e respondida + marker `t-secao-2-6-entrada` gravado APÓS a resposta.
+
 Marcar task "Criar Biblioteca de Marketing" como `in_progress`. Marcar TodoWrite T13 `in_progress`.
 
 **Turno T13.** Renderizar literal o bloco `---TEXTO-T13---` de `turnos-onboarding.md` (substituir `{nome-alvo}` por `<projeto_legivel>`).
@@ -860,10 +903,11 @@ Em seguida, emitir AUQ correspondente a T13:
   - label: "Criar agora (Recomendado)", description: "Monta a estrutura com todos os templates prontos pra preencher"
   - label: "Depois", description: "Pula por enquanto. Você cria quando quiser pedindo 'cria minha biblioteca'"
 
-**Persistir marker da Camada 3 ANTES de qualquer dispatch:**
+**Persistir markers da Camada 3 ANTES de qualquer dispatch:**
 
 ```bash
 python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-auq-biblioteca"
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-secao-2-6-entrada"
 ```
 
 **Se sim:**
@@ -1099,16 +1143,26 @@ Se a chave falhou (401/403), **remover** o valor salvo em `~/.maestro/config.md`
 
 ### 2.9 Pesquisa inicial do negócio (Turno 14)
 
+> [!critical] OBRIGATÓRIO entrar nesta seção (B-OnbUX-2D-1)
+> NÃO pular sob pretexto "user não tem site", "biblioteca pulada antes", "vou consolidar com Material" ou similar. As 3 condições da seção 2.0.3 são obrigatórias: render do marcador `📌 Passo 8 de 11` + TEXTO-T14 renderizado + marker `t-secao-2-9-entrada` gravado APÓS a resposta livre do user. Mesmo no fluxo "biblioteca pulada → pular esta etapa", o marcador 📌 Passo 8 e marker `t-secao-2-9-entrada` DEVEM ser gravados pra evidenciar entrada (com mensagem "Pulada por dependência" pro user).
+
 Marcar task "Pesquisa inicial do negócio" como `in_progress`. Marcar TodoWrite T14 `in_progress`.
 
-**Só executar se a biblioteca foi criada no passo 2.6.** Se o usuário pulou a biblioteca, pular esta etapa também (e marcar TodoWrite T14 `completed` sem dispatch).
+**Se a biblioteca foi pulada no passo 2.6:** renderizar literal "Pulada por dependência: a Pesquisa precisa da Biblioteca de Marketing pra montar o material." Em seguida gravar o marker da seção e marcar TodoWrite T14 `completed`:
+
+```bash
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-secao-2-9-entrada"
+```
+
+E pular pro próximo passo (2.10). NÃO pular o render do marcador `📌 Passo 8 de 11` nem o marker — pre-output verification do T16 exige.
 
 **Turno T14.** Renderizar literal o bloco `---TEXTO-T14---` de `turnos-onboarding.md` (substituir `{nome-alvo}` por `<projeto_legivel>`). Aguardar resposta livre do usuário (site ou pular).
 
-**Persistir marker da Camada 3 ANTES de despachar Pesquisador:**
+**Persistir markers da Camada 3 ANTES de despachar Pesquisador:**
 
 ```bash
 python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-auq-pesquisa"
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-secao-2-9-entrada"
 ```
 
 **Se informou o site:**
@@ -1133,20 +1187,36 @@ Marcar task "Pesquisa inicial do negócio" como `completed` somente após o cicl
 
 ### 2.10 Importar Material de Referência (Turno 15)
 
-**Se `SKIP_T14=true` (cenário pós-import via /importar-projeto):** pular esta seção inteira. Render literal "A importação já trouxe seu material — vamos pro próximo passo." e marcar TodoWrite T15 como `completed`. Seguir pro próximo turno.
+> [!critical] OBRIGATÓRIO entrar nesta seção (B-OnbUX-2D-1)
+> NÃO pular sob pretexto "user não tem material", "biblioteca pulada", "SKIP_T14=true" sem renderizar marcador ou similar. As 3 condições da seção 2.0.3 são obrigatórias: render do marcador `📌 Passo 9 de 11` + TEXTO-T15 (ou mensagem condicional) + marker `t-secao-2-10-entrada` gravado APÓS a resposta ou no fim do fluxo SKIP.
+
+**Se `SKIP_T14=true` (cenário pós-import via /importar-projeto):** render literal do marcador `📌 Passo 9 de 11 — Importar material de referência`, depois "A importação já trouxe seu material — vamos pro próximo passo." Gravar marker e marcar TodoWrite T15 como `completed`:
+
+```bash
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-secao-2-10-entrada"
+```
+
+Seguir pro próximo turno.
 
 Caso contrário, manter fluxo atual.
 
 Marcar task "Importar material de referência" como `in_progress`. Marcar TodoWrite T15 `in_progress`.
 
-**Só executar se a biblioteca foi criada no passo 2.6.** Se o usuário pulou a biblioteca, pular esta etapa também (e marcar TodoWrite T15 `completed`).
+**Se a biblioteca foi pulada no passo 2.6:** renderizar literal "Pulada por dependência: o import de material precisa da Biblioteca de Marketing." Gravar marker e marcar TodoWrite T15 `completed`:
+
+```bash
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-secao-2-10-entrada"
+```
+
+E pular pro próximo passo (2.11). NÃO pular o render do marcador `📌 Passo 9 de 11`.
 
 **Turno T15.** Renderizar literal o bloco `---TEXTO-T15---` de `turnos-onboarding.md` (substituir `{nome-alvo}` e `{empresa}` pelos valores corretos).
 
-**Persistir marker da Camada 3 após resposta:**
+**Persistir markers da Camada 3 após resposta:**
 
 ```bash
 python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-auq-material"
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-secao-2-10-entrada"
 ```
 
 **Se sim:**
@@ -1249,6 +1319,9 @@ Marcar task "Configurar Status Line" como `completed`.
 
 ### 2.12 Finalização (Turno 16)
 
+> [!critical] OBRIGATÓRIO entrar nesta seção (B-OnbUX-2D-1)
+> NÃO pular sob pretexto "user já viu o resumo", "rápido" ou similar. As 3 condições da seção 2.0.3 são obrigatórias: render do marcador `📌 Passo 11 de 11` + TEXTO-T16 + AUQ de identidade executada e respondida + marker `t-secao-2-12-entrada` gravado APÓS a resposta da AUQ. A 2.12 é o T16 propriamente dito; pre-output verification valida 2.1 a 2.11 (10 markers) ANTES dessa seção começar.
+
 Marcar task "Finalizar onboarding" como `in_progress`. Marcar TodoWrite T16 `in_progress`.
 
 > [!critical] Pre-output verification OBRIGATÓRIO
@@ -1261,15 +1334,22 @@ Marcar task "Finalizar onboarding" como `in_progress`. Marcar TodoWrite T16 `in_
 > fi
 > ```
 
-> [!critical] Pre-output verification F-Onb-2D OBRIGATÓRIO
-> Validar que os 3 markers de entrada das seções opcionais (2.7 Obsidian, 2.8 Pesquisador, 2.11 Status Line) existem no state file. Se algum ausente, ABORTAR T16 e voltar pra seção pulada.
+> [!critical] Pre-output verification F-Onb-2D OBRIGATÓRIO (polish v2.40.3 — cobertura completa)
+> Validar que os 10 markers de entrada das seções 2.1 a 2.11 existem no state file. Se algum ausente, ABORTAR T16 e voltar pra seção pulada. A 2.12 (este próprio T16) NÃO entra na lista — o marker dela grava após a AUQ de identidade.
 >
 > ```bash
-> # Pre-output verification F-Onb-2D — validar markers das 3 seções opcionais
+> # Pre-output verification F-Onb-2D — validar markers das 10 etapas obrigatórias (2.1 a 2.11)
 > STATE_FILE=$(ls "$STATE_DIR"/state-*.md 2>/dev/null | head -1)
 > MISSING=()
-> grep -q "t-secao-2-7-entrada" "$STATE_FILE" || MISSING+=("Obsidian")
-> grep -q "t-secao-2-8-entrada" "$STATE_FILE" || MISSING+=("Pesquisador")
+> grep -q "t-secao-2-1-entrada"  "$STATE_FILE" || MISSING+=("Configurar projeto")
+> grep -q "t-secao-2-3-entrada"  "$STATE_FILE" || MISSING+=("Verificar dependências")
+> grep -q "t-secao-2-4-entrada"  "$STATE_FILE" || MISSING+=("Configurar permissões")
+> grep -q "t-secao-2-5-entrada"  "$STATE_FILE" || MISSING+=("Setup técnico")
+> grep -q "t-secao-2-6-entrada"  "$STATE_FILE" || MISSING+=("Biblioteca de Marketing")
+> grep -q "t-secao-2-7-entrada"  "$STATE_FILE" || MISSING+=("Obsidian")
+> grep -q "t-secao-2-8-entrada"  "$STATE_FILE" || MISSING+=("Pesquisador")
+> grep -q "t-secao-2-9-entrada"  "$STATE_FILE" || MISSING+=("Pesquisa inicial")
+> grep -q "t-secao-2-10-entrada" "$STATE_FILE" || MISSING+=("Material de referência")
 > grep -q "t-secao-2-11-entrada" "$STATE_FILE" || MISSING+=("Status Line")
 > if [ ${#MISSING[@]} -gt 0 ]; then
 >     echo "ABORT_F_ONB_2D: ${MISSING[0]}"  # log interno — não vaza pro user
@@ -1286,11 +1366,11 @@ Marcar task "Finalizar onboarding" como `in_progress`. Marcar TodoWrite T16 `in_
 > Percebi que pulei a etapa de <nome-secao>. Vou voltar lá rapidinho — leva uns 30 segundos. Depois finalizo o onboarding.
 > ```
 >
-> Onde `<nome-secao>` é literal pt-br: "Obsidian" / "Pesquisador" / "Status Line".
+> Onde `<nome-secao>` é o literal pt-br devolvido pelo Bash acima (qualquer das 10 etapas).
 >
-> Após renderizar o texto, voltar pra seção correspondente (2.7 se "Obsidian", 2.8 se "Pesquisador", 2.11 se "Status Line"), executar a seção do começo (render do marcador + frase contextual + AUQ + marker), e retomar a 2.12 após o marker ser gravado.
+> Após renderizar o texto, voltar pra seção correspondente e executar a seção do começo (render do marcador + ação principal + marker), e retomar a 2.12 após o marker ser gravado.
 >
-> **Princípio:** mensagem ao user é UX pt-br (não jargão técnico). O `echo "ABORT_F_ONB_2D..."` do Bash é log interno do hub — não vaza pro user. Aprendizado #55 (não expor jargão técnico ao user).
+> **Princípio:** mensagem ao user é UX pt-br (não jargão técnico). O `echo "ABORT_F_ONB_2D..."` do Bash é log interno do hub — não vaza pro user. Aprendizado #55 (não expor jargão técnico ao user). Aprendizado #79: defesa estrutural escopada só nas seções reportadas não cobre todas as seções similares — agora cobre as 10.
 
 1. Atualizar `maestro/config.md`: setar `onboarding-completo: true` (somente após verificação acima passar).
 
@@ -1336,6 +1416,7 @@ Independente do CASO A ou B acima, **toda finalização do Fluxo de Primeira Vez
 ```bash
 set -e  # B-OnbUX-2C-3: falhar fast e expor qual comando deu erro (não engolir exit code intermediário)
 python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-auq-identidade"
+python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-secao-2-12-entrada"
 python "$HELPERS/onboarding_state.py" mark "$STATE_DIR" "$SLUG" "t-conclusao"
 python "$HELPERS/onboarding_state.py" archive "$STATE_DIR" "$SLUG"
 ```

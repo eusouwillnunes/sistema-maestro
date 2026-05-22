@@ -334,7 +334,7 @@ Pra ver tudo no Obsidian:
 3. Navegue até `<CWD>/<workspace_slug>/`
 4. Clique em 'Select Folder'
 
-Painel agregado e Bookmarks chegam em versões futuras — por enquanto navegue pelo painel de arquivos (Files) na sidebar esquerda.
+Pra navegar pelos arquivos, use o painel **Files** (ícone de pasta na sidebar esquerda do Obsidian). Se você abrir o painel **Bookmarks** (ícone de marcador na lateral esquerda), também encontra atalhos rápidos pros painéis de tarefas, projetos e biblioteca já scaffoldados.
 ---END-TEXTO-T16-CASO-B---
 
 - **Renderize literal — finalização enfática (independente de CASO A ou B, NÃO PULAR):**
