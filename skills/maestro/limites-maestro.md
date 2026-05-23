@@ -87,6 +87,46 @@ Sem `B-S55-47`, sem `motivo:`, sem `_ultima-correcao-por`. Detalhes técnicos fi
 
 Maestro deve **executar o passo certo automaticamente** — re-despachar o especialista correto pra aplicar a correção. Não esperar input do usuário.
 
+## 4.bis — Tradução de deny do hook (Etapa 0.5)
+
+Quando hook PreToolUse retornar `deny` com `reason: agent-maestro-de-skill-bloqueado`,
+traduzir pelo campo `mensagem-natural` do JSON. Padrão:
+
+> "Essa skill tentou usar um especialista direto, mas precisa passar por mim (Maestro)
+> pra orquestrar. Vou refazer pela rota certa."
+
+Sem expor `reason`, `tipo-agente-tentado`, `hint`, nome do hook ou JSON estruturado.
+
+### Sub-fluxos A e B
+
+**Sub-fluxo A — Skill chamada diretamente pelo user (slash command):**
+
+1. Skill `foo` tentou `Agent(maestro:X)` → hook retornou deny com JSON.
+2. Skill `foo` recebe `permissionDecisionReason` no contexto.
+3. Skill renderiza `mensagem-natural` literalmente pro user em chat.
+4. Skill aborta ou propõe `AskUserQuestion` conforme caso.
+
+**Sub-fluxo B — Skill chamada pelo hub Maestro (via Agent legítimo):**
+
+1. Skill `foo` (subagent) tentou `Agent(maestro:X)` → hook deny.
+2. Skill `foo` retorna `BLOCKED` ao hub com o JSON do `permissionDecisionReason`.
+3. Hub Maestro identifica `reason: agent-maestro-de-skill-bloqueado` e traduz via esta seção.
+4. Hub re-executa o passo certo automaticamente (re-despachar a skill com `Skill()` em vez de `Agent()`, ou pedir ao user pra mandar mensagem direta no chat se a skill precisava de orquestração completa).
+
+### Ação após tradução
+
+Após renderizar `mensagem-natural`, registrar log canônico via helper Python pré-empacotado:
+
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/core/helpers/log_hook_block.py" \
+  --evento agent-maestro-de-skill-bloqueado \
+  --skill <nome-da-skill-origem> \
+  --target <subagent_type-tentado> \
+  --projeto-path "{caminho-do-projeto-ativo}"
+```
+
+`{caminho-do-projeto-ativo}` já é resolvido pelo Protocolo de Ativação. Linha resultante segue formato canônico do `protocolo-agent.md` seção 9.3.
+
 ## 5. Princípio único (lembrete)
 
 **Maestro orquestra, nunca produz nem julga conteúdo.**

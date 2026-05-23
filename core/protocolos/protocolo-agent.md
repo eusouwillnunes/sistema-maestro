@@ -377,6 +377,9 @@ A regra "todo despacho de especialista passa pelo Gerente" se aplica a **conteú
 
 **Bibliotecário e Entrevistador como exceções formais.** Skills paralelas ao hub (como `maestro-onboarding`) podem invocá-los direto via `Skill()`. Esta é a única forma legítima de invocação fora do hub do Maestro.
 
+> [!important] Skills paralelas NÃO podem invocar `Agent(maestro:*)`
+> Reforço estrutural da regra "sem tarefa = sem despacho" — hook PreToolUse Etapa 0.5 bloqueia case-insensitive (discriminador `not (agent_id or agent_type)`, achado Fase 0.5 da S99). Skills que precisam orquestrar usam `Skill()` (in-context, sync) ou pedem ao user pra mandar mensagem direta no chat (classifier roteia pro hub). Tradução pedagógica em `limites-maestro.md` seção 4.bis. Ver Decisão 109.
+
 ---
 
 ## 8. Quem aplica correções pós-Revisor

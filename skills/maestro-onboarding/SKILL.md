@@ -1783,7 +1783,41 @@ Executar silenciosamente:
 
    O Bibliotecário cria `$PROJETO_PATH/CLAUDE.md` (ou anexa seção `## Maestro` se já existir). Hook PreToolUse libera porque Bibliotecário é subagente (tem `agent_id`). Idempotente — se Bibliotecário retornar `ALREADY_EXISTS`, prosseguir silencioso.
 
-5. **Despachar Bibliotecário REGENERATE PAINEL (stub em F1, F2/F4 preenchem):**
+5. **Despachar Bibliotecário (SCAFFOLD WORKSPACE em Caso 4, REGENERATE PAINEL em Casos 1-3):**
+
+   No Caso 4 (ATALHO_AREA), a workspace acabou de nascer no T0 — precisa do SCAFFOLD pra montar hierarquia base de bookmarks (`📁 Projetos > <slug>` + grupo Auditoria). Nos Casos 1-3 a workspace já existe e o projeto novo é irmão de projetos existentes — REGENERATE basta (também cria Auditoria, S101 Decisão 110).
+
+   **Re-detectar contexto antes do dispatch** (não confiar em var de Bash anterior — cada Bash do Claude Code é shell efêmero, aprendizado B-Imp-cand-24 S90):
+
+   ```bash
+   STATE_DIR="$CWD/memorias/onboarding"
+   SLUG=$(python "$PLUGIN_DIR/core/helpers/onboarding_state.py" slug "$WORKSPACE_LEGIVEL" "$PROJETO_LEGIVEL")
+   if grep -q "^t-confirmacao-pasta:" "$STATE_DIR/state-$SLUG.md" 2>/dev/null; then
+       CONTEXTO_T1B="caso-4"
+   else
+       CONTEXTO_T1B="caso-1-3"
+   fi
+   echo "CONTEXTO_T1B=$CONTEXTO_T1B"
+   ```
+
+   **Dispatch baseado no contexto re-detectado:**
+
+   Se `CONTEXTO_T1B = caso-4`:
+
+   ```python
+   Agent(
+     subagent_type="maestro:bibliotecario",
+     prompt="""
+     CONTEXTO:
+     workspace: $WORKSPACE_PATH
+     projeto-slug: <projeto_slug>
+
+     FLUXO: SCAFFOLD WORKSPACE
+     """
+   )
+   ```
+
+   Se `CONTEXTO_T1B = caso-1-3`:
 
    ```python
    Agent(
@@ -1797,6 +1831,8 @@ Executar silenciosamente:
      """
    )
    ```
+
+   Hook `t-consentimento` já foi marcado em T0 (Caso 4) — SCAFFOLD WORKSPACE libera. Para Casos 1-3, REGENERATE PAINEL libera por defeito.
 
    Em F1 retorna `STATUS: DONE`. Em F2 vai regenerar FROM clauses dos painéis Dataview. Em F4 vai atualizar bookmarks.
 

@@ -227,6 +227,7 @@ def scaffold(destino_arg: str, empresa_nome: str, plugin_dir_arg: str, skip_area
         (biblioteca_templates / "auditoria" / "_historico.md", "memorias/auditoria/historico.md"),
         (biblioteca_templates / "auditoria" / "_defesa-anti-hallucination.md", "memorias/auditoria/_defesa-anti-hallucination.md"),
         (biblioteca_templates / "auditoria" / "_historico-checks.md", "memorias/auditoria/_historico-checks.md"),
+        (biblioteca_templates / "auditoria" / "_bloqueios-hook-index.md", "memorias/auditoria/_bloqueios-hook-index.md"),
     ]
     for src, dst_rel in fixos:
         _copy_idempotent(src, destino / dst_rel, destino, criados, pulados, warnings)

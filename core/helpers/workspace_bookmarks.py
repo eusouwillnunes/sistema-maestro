@@ -237,6 +237,65 @@ def add_library_to_projeto(workspace: Path, slug: str, items: list[dict]) -> Non
     save_bookmarks(workspace, data)
 
 
+def add_auditoria_grupo(workspace: Path, slug: str) -> None:
+    """
+    Adiciona grupo '🔒 Auditoria' dentro de Projetos > <slug>, irmão de
+    📚 Biblioteca. Idempotente por path interno.
+
+    No-op silencioso se:
+      - '📁 Projetos' não existe no bookmarks (workspace pré-F4)
+      - subgrupo <slug> não existe dentro de '📁 Projetos'
+
+    Defesa estrutural visível da Decisão 109 — materializa pra user leigo
+    com vocabulário sem jargão técnico (Decisão 110).
+    """
+    data = load_bookmarks(workspace)
+
+    projetos = find_group_at_root(data, "📁 Projetos")
+    if projetos is None:
+        return  # workspace pré-F4 — no-op
+
+    sub = next(
+        (g for g in projetos.get("items", [])
+         if g.get("type") == "group" and g.get("title") == slug),
+        None,
+    )
+    if sub is None:
+        return  # subgrupo do projeto não existe — no-op
+
+    # Idempotência por path do primeiro item
+    bloqueios_path = f"{slug}/memorias/auditoria/_bloqueios-hook-index.md"
+    if has_path_anywhere(data, bloqueios_path):
+        return  # já existe
+
+    ctime = _now_ms()
+    grupo = {
+        "type": "group",
+        "title": "🔒 Auditoria",
+        "description": "Acompanhe o que o Maestro bloqueou ou auditou enquanto trabalha",
+        "ctime": ctime,
+        "items": [
+            {"type": "file",
+             "path": bloqueios_path,
+             "title": "📊 Bloqueios automáticos",
+             "description": "Painel dos despachos que o sistema barrou antes de rodar",
+             "ctime": ctime},
+            {"type": "file",
+             "path": f"{slug}/memorias/auditoria/_defesa-anti-hallucination.md",
+             "title": "📊 Verificações de leitura",
+             "description": "Painel das vezes que o sistema conferiu se o agente leu o arquivo certo",
+             "ctime": ctime},
+            {"type": "file",
+             "path": f"{slug}/memorias/auditoria/historico.md",
+             "title": "📊 Linha do tempo",
+             "description": "Histórico cronológico geral da auditoria do projeto",
+             "ctime": ctime},
+        ],
+    }
+    sub.setdefault("items", []).append(grupo)
+    save_bookmarks(workspace, data)
+
+
 def inject_callout_index(workspace: Path) -> None:
     """Injeta callout no _painel/index.md (idempotente por marker)."""
     index = workspace / "_painel" / "index.md"
@@ -312,6 +371,7 @@ def regenerate(workspace: Path) -> dict:
     slugs = list_active_projetos(workspace)
     for slug in slugs:
         add_projeto_subgrupo(workspace, slug)
+        add_auditoria_grupo(workspace, slug)  # S101 — Decisão 110 (cobertura uniforme)
 
     # Detecao de 2+ projetos
     aviso_pendente = False
@@ -343,6 +403,7 @@ def main() -> int:
         slug = sys.argv[3]
         add_painel_workspace(workspace)
         add_projeto_subgrupo(workspace, slug)
+        add_auditoria_grupo(workspace, slug)  # S101 — Decisão 110
         return 0
 
     elif action == "regenerate":

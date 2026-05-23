@@ -253,7 +253,7 @@ Acionado pelo `maestro-onboarding/SKILL.md` etapa 2.5 (Fluxo de Primeira Vez). F
    ```bash
    python "$HELPERS/workspace_bookmarks.py" scaffold <workspace> <projeto-slug>
    ```
-   Cria grupo `📊 Painel da Área de Trabalho` (3 items) + grupo `📁 Projetos > <projeto-slug>` (Painel/Pasta/Biblioteca aninhada). Idempotente por path interno.
+   Cria grupo `📊 Painel da Área de Trabalho` (3 items) + grupo `📁 Projetos > <projeto-slug>` (Painel do projeto / Pasta / 📚 Biblioteca aninhada / 🔒 Auditoria com 3 items: Bloqueios automáticos, Verificações de leitura, Linha do tempo). Idempotente por path interno. Grupo Auditoria materializa Decisão 109 (defesa estrutural visível) com vocabulário acessível ao user leigo (Decisão 110).
 
 7. **Liberar lock:**
    ```bash
@@ -502,7 +502,7 @@ Acionado como passo final do Fluxo CRIAR (após criar todas as pastas, indexes e
    }
    ```
 
-   Lista canônica (mesma da v1 — copiar do template `plugin/core/templates/_bookmarks-projeto.json` se quiser, mas helper aceita qualquer):
+   Lista canônica (14 áreas em ordem — Identidade primeiro, Operacional por último):
 
    - Identidade, Produtos, Escada de Valor, Lead Magnets, Funis, Lançamentos, Campanhas, Social, Pesquisas, Entregas, Referências, Memórias, Tarefas, Entrevistas (14 áreas).
 

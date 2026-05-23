@@ -280,7 +280,7 @@ Dispare em um **único bloco** após o Turno 1 concluir:
   done | wc -l
   ```
 
-Turno 2 tem **4 tool calls** (1 Read + 3 Bash), independente do tamanho do vault — escala O(1) em tool calls, não O(N).
+Turno 2 tem **5 tool calls** (1 Read + 4 Bash), independente do tamanho do vault — escala O(1) em tool calls, não O(N). A 5ª Bash é a checagem dos bloqueios da Etapa 0.5 do hook (rearq Fase 1).
 
 ### Checagem — defesa anti-hallucination (B-S59-1)
 
@@ -305,6 +305,30 @@ echo "Disparos de defesa últimos 7 dias: $last_7d"
 ```
 
 Se `last_7d < 3`, dashboard normal sem o aviso.
+
+### Checagem — bloqueios da Etapa 0.5 do hook (rearq Fase 1)
+
+Antes de montar o dashboard final, contar disparos da Etapa 0.5 nos últimos 7 dias.
+
+1. Glob `{projeto}/memorias/auditoria/historico.md` (mesmo arquivo usado pela defesa anti-hallucination).
+2. Se existe, Bash:
+
+```
+date_threshold=$(date -d "7 days ago" +"%Y-%m-%d")
+bloqueios_hook=$(grep "agent-maestro-de-skill-bloqueado" {projeto}/memorias/auditoria/historico.md 2>/dev/null \
+  | awk -v d="$date_threshold" '$2 >= d' \
+  | wc -l)
+echo "Bloqueios Etapa 0.5 últimos 7 dias: $bloqueios_hook"
+```
+
+3. Se `bloqueios_hook >= 1`, adicionar bloco de aviso ao dashboard:
+
+```markdown
+> [!warning] Skills tentaram invocar especialistas direto ({bloqueios_hook} vez(es) — últimos 7 dias)
+> Abrir [[_bloqueios-hook-index]] pra investigar — pode indicar feature nova com design errado.
+```
+
+Se `bloqueios_hook == 0`, dashboard normal sem o aviso.
 
 ### Turno 3 — Montagem e interação (sequencial, sem mais I/O)
 

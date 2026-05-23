@@ -284,6 +284,39 @@ def main():
             if deny_reason is not None:
                 return emit("deny", json.dumps(deny_reason, ensure_ascii=False))
 
+        # Etapa 0.5 — bloquear Agent(maestro:*) invocado do main thread.
+        # Skills paralelas (slash commands) que tentam usar hub ou especialistas
+        # como subagent reabrem o furo do aprendizado #61: hub-como-subagent
+        # vaza contexto pro Revisor + desliga este hook (Etapa 1 libera todo
+        # subagent). Caso legitimo (especialista despachado pelo HUB, seja
+        # como subagent fresh ou como sticky — agent_type sempre preenchido):
+        # Etapa 1 libera normalmente.
+        # Achado Fase 0.5 (S99): hub-as-sticky tem agent_type filled mas
+        # agent_id=None. Discriminador espelha Etapa 1 (agent_id OR agent_type).
+        if tool_name == "Agent" and not (payload.get("agent_id") or payload.get("agent_type")):
+            target = ""
+            if isinstance(tool_input, dict):
+                raw_target = tool_input.get("subagent_type")
+                if isinstance(raw_target, str):
+                    target = raw_target
+            # Case-insensitive pra evitar burla por capitalizacao
+            if target.lower().startswith("maestro:"):
+                return emit("deny", json.dumps({
+                    "reason": "agent-maestro-de-skill-bloqueado",
+                    "tipo-agente-tentado": target,
+                    "hint": (
+                        "Skills nao podem invocar Agent(maestro:*) — viola pipeline "
+                        "e desliga este hook. Use Skill() (in-context, sync) ou "
+                        "peca ao user pra mandar mensagem direta no chat (classifier "
+                        "roteia pro hub)."
+                    ),
+                    "mensagem-natural": (
+                        "Essa skill tentou usar um especialista direto, mas "
+                        "precisa passar por mim (Maestro) pra orquestrar. "
+                        "Vou refazer pela rota certa."
+                    ),
+                }, ensure_ascii=False))
+
         # Etapa 1 — subagente? (libera apos schema validado)
         if payload.get("agent_id") or payload.get("agent_type"):
             return emit("allow")
