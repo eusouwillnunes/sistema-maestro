@@ -6,5 +6,5 @@ description: >
   e atualiza status.
 skills:
   - entrevistador
-model: claude-sonnet-4-6
+model: sonnet
 ---

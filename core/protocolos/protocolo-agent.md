@@ -269,18 +269,20 @@ Artefato: {projeto}/funis/funil-webinario-curso-x.md
 
 ### Defaults do sistema
 
+Os valores são **aliases** (`opus`/`sonnet`/`haiku`) que resolvem para o modelo mais recente de cada família — não versões fixas. Política: criativo = `opus` (mais recente); operacional = `sonnet` (piso 4.6); mecânico = `haiku`. Pra fixar uma versão específica num agente, usar o override em `~/.maestro/config.md`. Ver Decisão 113.
+
 | Agente | Modelo default | Justificativa |
 |--------|---------------|---------------|
-| QA | haiku | Verificação mecânica de checklist |
+| QA | sonnet | Verificação binária estrita de checklist (decisão 075) |
 | Gerente de Projetos | haiku/sonnet | CRUD (haiku), decomposição e conclusão (sonnet) |
-| Bibliotecário | haiku | Criação de estrutura de pastas |
-| Pesquisador | sonnet | Síntese de dados, sem criação |
-| Revisor | sonnet | Julgamento de qualidade textual |
-| Copywriter | sonnet | Criação com frameworks estruturados |
-| Estrategista | sonnet | Criação com frameworks estruturados |
-| Marca | sonnet | Criação com frameworks estruturados |
-| Mídias Sociais | sonnet | Criação com frameworks estruturados |
-| Performance | sonnet | Criação com frameworks estruturados |
+| Bibliotecário | haiku/sonnet | Scaffold/CRUD via helper (haiku), schema de índices (sonnet) |
+| Pesquisador | opus | Síntese + pesquisa que o usuário lê |
+| Revisor | sonnet | Julgamento de qualidade textual (loop adversarial — decisão 083) |
+| Copywriter | opus | Criação de copy que o usuário lê |
+| Estrategista | opus | Criação com frameworks estruturados |
+| Marca | opus | Criação com frameworks estruturados |
+| Mídias Sociais | opus | Criação com frameworks estruturados |
+| Performance | opus | Criação com frameworks estruturados |
 | Entrevistador | sonnet | Condução de sessões de coleta |
 
 ### Overrides do usuário

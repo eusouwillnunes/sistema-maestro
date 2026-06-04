@@ -7,7 +7,7 @@ description: >
   Acionado quando o pedido envolver conteúdo, post, reels, stories,
   carrossel, YouTube, TikTok, LinkedIn, Instagram, calendário editorial,
   repurposing, engajamento, viral, hook ou thumbnail.
-model: claude-opus-4-7
+model: opus
 skills:
   - midias-sociais
 ---

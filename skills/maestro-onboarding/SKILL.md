@@ -51,7 +51,7 @@ PROJETOS_NA_WORKSPACE=$(find "$CWD" -mindepth 3 -maxdepth 3 -path "*/maestro/con
 #### Camadas de defesa do Fluxo de Primeira Vez (F-Onb-2A)
 
 > [!danger] OBRIGATÓRIO — pular qualquer Camada = bug crítico
-> As 4 Camadas abaixo são **defesa estrutural por construção**, não cerimônia opcional. As Camadas 3 e 4 (state file + markers + hook auditor) têm efeito INVISÍVEL pro user (audit trail), mas ativam a proteção contra B-F1-10 e disparos precoces. **NÃO PULAR sob nenhum pretexto** — incluindo "pra encurtar", "pra agilizar", "sistema funciona sem", "TodoWrite não importa", "marker pode ficar pra depois". Confessar o pulo depois NÃO é aceitável; defesa precisa estar ativa por construção. Aprendizados #38, #56, #57 e #58 do CLAUDE.md — Opus 4.7 elimina ATIVAMENTE passos de audit trail invisíveis sob justificativa "funcionalmente OK". Esta seção bloqueia esse comportamento.
+> As 4 Camadas abaixo são **defesa estrutural por construção**, não cerimônia opcional. As Camadas 3 e 4 (state file + markers + hook auditor) têm efeito INVISÍVEL pro user (audit trail), mas ativam a proteção contra B-F1-10 e disparos precoces. **NÃO PULAR sob nenhum pretexto** — incluindo "pra encurtar", "pra agilizar", "sistema funciona sem", "TodoWrite não importa", "marker pode ficar pra depois". Confessar o pulo depois NÃO é aceitável; defesa precisa estar ativa por construção. Aprendizados #38, #56, #57 e #58 do CLAUDE.md — o Opus elimina ATIVAMENTE passos de audit trail invisíveis sob justificativa "funcionalmente OK". Esta seção bloqueia esse comportamento.
 
 **Camada 1 — TodoWrite obrigatório.** ANTES de renderizar T1, abrir TodoWrite com 17 itens (T1, T1.5, T2-T6, T7, T8-T10, T11, T12-T16 conforme `turnos-onboarding.md`). Marcar `in_progress` antes do turno e `completed` depois. Pular item deixa rastro visível na UI.
 
@@ -1455,7 +1455,7 @@ Onboarding leve para quando o usuário já tem o Sistema Maestro configurado (`~
 #### Camadas de defesa do Fluxo de Novo Projeto (F-Onb-2A)
 
 > [!danger] OBRIGATÓRIO — pular qualquer Camada = bug crítico
-> Mesmas regras do Fluxo de Primeira Vez. As Camadas 3 e 4 (state file + markers + hook auditor) têm efeito INVISÍVEL pro user, mas ativam a proteção contra B-F1-10 (slug duplicado entre projetos da mesma sessão) e bloqueiam dispatch precoce do Bibliotecário. **NÃO PULAR pra "encurtar"** — Opus 4.7 tende a tratar audit trail como opcional (aprendizados #38/#57/#58). Esta seção bloqueia.
+> Mesmas regras do Fluxo de Primeira Vez. As Camadas 3 e 4 (state file + markers + hook auditor) têm efeito INVISÍVEL pro user, mas ativam a proteção contra B-F1-10 (slug duplicado entre projetos da mesma sessão) e bloqueiam dispatch precoce do Bibliotecário. **NÃO PULAR pra "encurtar"** — o Opus tende a tratar audit trail como opcional (aprendizados #38/#57/#58). Esta seção bloqueia.
 
 **Camada 1 — TodoWrite obrigatório.** TodoWrite é aberto **dentro de 2B.-1** baseado no caso detectado:
 

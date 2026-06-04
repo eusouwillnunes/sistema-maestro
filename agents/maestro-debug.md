@@ -6,5 +6,5 @@ description: >
   passos e protocolos aplicados. Não afeta documentos produzidos.
 skills:
   - maestro-debug
-model: claude-haiku-4-5
+model: haiku
 ---

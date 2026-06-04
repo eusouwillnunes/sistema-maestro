@@ -7,7 +7,7 @@ description: >
   pesquisar, buscar dados, analisar mercado, concorrentes ou audiência.
 skills:
   - pesquisador
-model: claude-opus-4-7
+model: opus
 tools:
   - WebSearch
   - WebFetch

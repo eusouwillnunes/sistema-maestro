@@ -5,5 +5,5 @@ description: >
   cache. Mid-session sem mudar CWD. Acionado via /projeto, /projeto <slug>, /projeto listar.
 skills:
   - projeto
-model: claude-sonnet-4-6
+model: sonnet
 ---

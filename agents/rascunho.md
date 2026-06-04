@@ -6,5 +6,5 @@ description: >
   /rascunho [pedido].
 skills:
   - rascunho
-model: claude-opus-4-7
+model: opus
 ---

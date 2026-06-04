@@ -38,7 +38,7 @@ Marcar item 1 como `in_progress` antes do primeiro dispatch. Nunca começar com 
 
    **Se alguma condição falha** (ex: tarefa de bloqueada-por sem `resultado:`): reportar erro técnico ao usuário ("Cadeia inconsistente — filha N depende de M, mas M não tem resultado. Investigando."), abortar item 2, NÃO despachar.
 
-4. Despachar especialista via `Agent()` (se Opus 4.7 ou Sonnet 4.6 — ver política em `docs/decisions.md`).
+4. Despachar especialista via `Agent()` (se Opus ou Sonnet — ver política em `docs/decisions.md`).
 5. Tratar round-trips `NEEDS_*` lendo `fluxo-needs.md`. Durante round-trip, item 2 permanece `in_progress`.
 6. Quando especialista retornar com `STATUS: DONE` e sem `NEEDS_*`, marcar item 2 `completed` e avançar.
 

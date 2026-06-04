@@ -7,5 +7,5 @@ description: >
   e a sub-skill maestro:tarefas.
 skills:
   - gerente
-model: claude-sonnet-4-6
+model: sonnet
 ---

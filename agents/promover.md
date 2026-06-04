@@ -5,5 +5,5 @@ description: >
   (tarefa + QA + Revisor + grafo). Acionado via /promover [[slug]].
 skills:
   - promover
-model: claude-opus-4-7
+model: opus
 ---

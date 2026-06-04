@@ -2,7 +2,8 @@
 """
 Hook PreToolUse do Sistema Maestro.
 Bloqueia Edit/Write/MultiEdit/NotebookEdit do Maestro hub
-em paths de vault Maestro fora da whitelist Fase 1.
+em paths de vault Maestro fora da whitelist operacional do hub
+(WHITELIST_FASE_1 — design permanente, ver Decisao 112).
 
 Etapa 0 (F-Status): valida schema do frontmatter pra todos
 (hub + subagent), bloqueando mutilacao de campos canonicos
@@ -16,6 +17,12 @@ from pathlib import Path
 # Permite importar helper de catalogo
 sys.path.insert(0, str(Path(__file__).parent.parent / "core" / "helpers"))
 
+# Paths operacionais/config que o hub legitimamente toca (auditoria, rascunho,
+# estrutura). Design PERMANENTE e intencional — nao e' andaime temporario.
+# Decisao 112 (S104) fechou as Fases 2/3/4 (dirigir esta lista a vazio) como
+# YAGNI: nenhum path aqui carrega conteudo criativo, entao a defesa que importa
+# (texto autoral so via especialista) ja vem dos paths de conteudo FORA daqui.
+# Nome WHITELIST_FASE_1 mantido por compat com testes; le-se "whitelist do hub".
 WHITELIST_FASE_1 = {"rascunhos", "memorias", "maestro", ".obsidian", ".claude"}
 ERROR_LOG = Path.home() / ".maestro" / "hook-errors.log"
 MAX_DEPTH_ALPHA = 20  # limite de profundidade na escalada de parents
